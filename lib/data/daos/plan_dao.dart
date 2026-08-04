@@ -1,0 +1,222 @@
+import 'package:drift/drift.dart';
+
+import '../../models/enums.dart';
+import '../database.dart';
+import '../tables/customers.dart';
+import '../tables/follow_plans.dart';
+
+part 'plan_dao.g.dart';
+
+/// 待办项，含所属客户名，避免列表页逐条再查客户。
+class PlanWithCustomer {
+  const PlanWithCustomer({required this.plan, required this.customerName});
+
+  final FollowPlanRow plan;
+  final String customerName;
+
+  PlanStatus get status => PlanStatus.fromDb(plan.status);
+
+  DateTime get planAt =>
+      DateTime.fromMillisecondsSinceEpoch(plan.planAt, isUtc: true).toLocal();
+}
+
+/// 跟进计划数据访问。提醒链路的数据基础。
+@DriftAccessor(tables: [FollowPlans, Customers])
+class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
+  PlanDao(super.db);
+
+  Future<int> insertPlan({
+    required int customerId,
+    required String title,
+    required DateTime planAt,
+    DateTime? now,
+  }) {
+    final ts = (now ?? DateTime.now()).toUtc().millisecondsSinceEpoch;
+    return into(followPlans).insert(
+      FollowPlansCompanion.insert(
+        customerId: customerId,
+        title: title,
+        planAt: planAt.toUtc().millisecondsSinceEpoch,
+        status: Value(PlanStatus.pending.dbValue),
+        createdAt: ts,
+        updatedAt: ts,
+      ),
+    );
+  }
+
+  Future<FollowPlanRow?> findById(int id) =>
+      (select(followPlans)..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  Future<List<FollowPlanRow>> listOf(int customerId) =>
+      (select(followPlans)
+            ..where((t) => t.customerId.equals(customerId))
+            ..orderBy([(t) => OrderingTerm.asc(t.planAt)]))
+          .get();
+
+  Future<int> countOf(int customerId) async {
+    final q = selectOnly(followPlans)
+      ..addColumns([followPlans.id.count()])
+      ..where(followPlans.customerId.equals(customerId));
+    final row = await q.getSingle();
+    return row.read(followPlans.id.count()) ?? 0;
+  }
+
+  /// 到期待提醒的计划。阶段 2 的闹钟回调用它决定发哪些通知。
+  ///
+  /// 只取 pending：已提醒过的不重复推送，已完成的不再打扰。
+  Future<List<PlanWithCustomer>> listDue({required DateTime now}) {
+    final nowMs = now.toUtc().millisecondsSinceEpoch;
+    final q = select(followPlans).join([
+      innerJoin(customers, customers.id.equalsExp(followPlans.customerId)),
+    ])
+      ..where(
+        followPlans.status.equals(PlanStatus.pending.dbValue) &
+            followPlans.planAt.isSmallerOrEqualValue(nowMs),
+      )
+      ..orderBy([OrderingTerm.asc(followPlans.planAt)]);
+
+    return q
+        .map(
+          (row) => PlanWithCustomer(
+            plan: row.readTable(followPlans),
+            customerName: row.readTable(customers).name,
+          ),
+        )
+        .get();
+  }
+
+  /// 未来待排期的计划。设备重启后靠它重建全部闹钟。
+  Future<List<FollowPlanRow>> listUpcoming({required DateTime now}) {
+    final nowMs = now.toUtc().millisecondsSinceEpoch;
+    return (select(followPlans)
+          ..where(
+            (t) =>
+                t.status.equals(PlanStatus.pending.dbValue) &
+                t.planAt.isBiggerThanValue(nowMs),
+          )
+          ..orderBy([(t) => OrderingTerm.asc(t.planAt)]))
+        .get();
+  }
+
+  /// 今日待办与逾期项，首页用。
+  Future<List<PlanWithCustomer>> listOpenUntil({required DateTime until}) {
+    final untilMs = until.toUtc().millisecondsSinceEpoch;
+    final q = select(followPlans).join([
+      innerJoin(customers, customers.id.equalsExp(followPlans.customerId)),
+    ])
+      ..where(
+        followPlans.status.isNotValue(PlanStatus.completed.dbValue) &
+            followPlans.planAt.isSmallerOrEqualValue(untilMs),
+      )
+      ..orderBy([OrderingTerm.asc(followPlans.planAt)]);
+
+    return q
+        .map(
+          (row) => PlanWithCustomer(
+            plan: row.readTable(followPlans),
+            customerName: row.readTable(customers).name,
+          ),
+        )
+        .get();
+  }
+
+  /// 标记提醒已触发，记下实际触发时间。
+  ///
+  /// notifiedAt 与 planAt 的偏差是阶段 2 判断 ColorOS 有没有掐掉闹钟的依据，
+  /// 所以这里存的是真实触发时刻，不是计划时刻。
+  Future<int> markNotified(int id, {DateTime? at}) {
+    final ts = (at ?? DateTime.now()).toUtc().millisecondsSinceEpoch;
+    return (update(followPlans)..where((t) => t.id.equals(id))).write(
+      FollowPlansCompanion(
+        status: Value(PlanStatus.notified.dbValue),
+        notifiedAt: Value(ts),
+        updatedAt: Value(ts),
+      ),
+    );
+  }
+
+  /// 标记完成。通知上的「已完成」按钮走这里。
+  Future<int> markCompleted(int id, {DateTime? at}) {
+    final ts = (at ?? DateTime.now()).toUtc().millisecondsSinceEpoch;
+    return (update(followPlans)..where((t) => t.id.equals(id))).write(
+      FollowPlansCompanion(
+        status: Value(PlanStatus.completed.dbValue),
+        completedAt: Value(ts),
+        updatedAt: Value(ts),
+      ),
+    );
+  }
+
+  /// 推迟。通知上的「推迟一天」按钮走这里。
+  ///
+  /// 状态回到 pending，这样闹钟会被重新排期。
+  Future<int> postpone(
+    int id, {
+    Duration by = const Duration(days: 1),
+    DateTime? now,
+  }) async {
+    final plan = await findById(id);
+    if (plan == null) return 0;
+
+    final ts = (now ?? DateTime.now()).toUtc().millisecondsSinceEpoch;
+    final base = DateTime.fromMillisecondsSinceEpoch(plan.planAt, isUtc: true);
+    final next = base.add(by).millisecondsSinceEpoch;
+
+    return (update(followPlans)..where((t) => t.id.equals(id))).write(
+      FollowPlansCompanion(
+        planAt: Value(next),
+        status: Value(PlanStatus.pending.dbValue),
+        notifiedAt: const Value(null),
+        updatedAt: Value(ts),
+      ),
+    );
+  }
+
+  /// 把超过计划时间 24 小时仍未完成的计划标为逾期。
+  ///
+  /// 逾期是派生状态，由这个方法在应用启动与每日首次打开时批量刷新，
+  /// 而不是查询时实时计算，否则每次列表查询都要额外算一遍。
+  Future<int> markOverdue({required DateTime now}) {
+    final cutoff = now
+        .subtract(const Duration(hours: 24))
+        .toUtc()
+        .millisecondsSinceEpoch;
+    final ts = now.toUtc().millisecondsSinceEpoch;
+
+    return (update(followPlans)..where(
+          (t) =>
+              t.status.isIn([
+                PlanStatus.pending.dbValue,
+                PlanStatus.notified.dbValue,
+              ]) &
+              t.planAt.isSmallerThanValue(cutoff),
+        ))
+        .write(
+          FollowPlansCompanion(
+            status: Value(PlanStatus.overdue.dbValue),
+            updatedAt: Value(ts),
+          ),
+        );
+  }
+
+  Future<int> updatePlan(
+    int id, {
+    String? title,
+    DateTime? planAt,
+    DateTime? now,
+  }) {
+    final ts = (now ?? DateTime.now()).toUtc().millisecondsSinceEpoch;
+    return (update(followPlans)..where((t) => t.id.equals(id))).write(
+      FollowPlansCompanion(
+        title: title == null ? const Value.absent() : Value(title),
+        planAt: planAt == null
+            ? const Value.absent()
+            : Value(planAt.toUtc().millisecondsSinceEpoch),
+        updatedAt: Value(ts),
+      ),
+    );
+  }
+
+  Future<int> deletePlan(int id) =>
+      (delete(followPlans)..where((t) => t.id.equals(id))).go();
+}
