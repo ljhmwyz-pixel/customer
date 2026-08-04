@@ -173,6 +173,7 @@ lib/
   data/
     database.dart             # drift 数据库定义
     attachment_path.dart      # 附件相对路径生成与解析，纯函数
+    database_provider.dart    # 数据库与六个 DAO 的 provider
     tables/                   # 八张表的定义
     daos/                     # 各表的数据访问对象
   models/                     # 领域模型与枚举
@@ -180,18 +181,39 @@ lib/
     home/                     # 今日待办首页
     customers/                # 客户列表、详情、编辑
     followups/                # 跟进记录与时间线
-    reminders/                # 提醒调度与权限引导
+    reminders/                # 提醒相关页面
+      permission_page.dart    # 五项权限引导
+      vendor_steps.dart       # 厂商权限图文步骤
+      reminder_log_page.dart  # 提醒记录，含计划/实际时间与差值
+      reminder_test_page.dart # 提醒自检，排测试提醒
     orders/                   # 订单
     funnel/                   # 开发漏斗
     backup/                   # 导出与恢复
   widgets/                    # 跨功能复用组件
   services/
-    notification_service.dart # 通知与闹钟封装
-    permission_service.dart   # ColorOS 权限引导
+    reminder_scheduler.dart   # 调度抽象接口，便于整体替换实现
+    notification_service.dart # 通知与闹钟封装，含时区反查
+    notification_payload.dart # 通知 payload 编解码
+    permission_service.dart   # 权限查询与申请
+    oem_settings_channel.dart # 厂商设置页跳转通道
+    app_prefs.dart            # 极简键值存储，落 JSON 文件
+    service_providers.dart    # 服务层 provider
     attachment_service.dart   # 附件存取与压缩
     backup_service.dart       # zip 打包与还原
   utils/
 ```
+
+`reminder_scheduler.dart` 这层抽象是刻意留的：ColorOS 对后台闹钟的管控很激进,
+真机验证可能发现首选方案被压制，届时只需换一个实现并改
+`service_providers.dart` 一处，不必翻遍散落各处的调用点。
+
+`app_prefs.dart` 没有用 `shared_preferences`：依赖版本被 `flutter_test` 的
+meta 1.18.0 压得很紧（见第 3 节），为存两三个布尔值去动依赖树不划算。
+需要持久化的量级也确实只有这些，业务数据全在 drift 里。
+
+原生侧另有 `android/app/src/main/kotlin/com/snyder/customer/OemSettingsBridge.kt`,
+负责厂商私有权限页的组件名跳转与三层回退。这两项权限没有任何公开 API,
+只能靠未文档化的 Activity 组件名，每次跳转都必须假定它会失败。
 
 ## 6. 代码规范
 

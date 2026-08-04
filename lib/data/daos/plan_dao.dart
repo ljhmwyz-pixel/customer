@@ -98,6 +98,29 @@ class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
         .get();
   }
 
+  /// 已实际触发过提醒的计划，按触发时间倒序。触发日志页用。
+  ///
+  /// 判据是 notifiedAt 非空而不是 status，因为提醒触发后用户可能马上点了
+  /// 「已完成」，状态就不再是 notified 了，但那条提醒确实响过。
+  /// 状态过滤会漏掉这类记录，让日志显得比实际触发得少。
+  Future<List<PlanWithCustomer>> listNotified({int limit = 100}) {
+    final q = select(followPlans).join([
+      innerJoin(customers, customers.id.equalsExp(followPlans.customerId)),
+    ])
+      ..where(followPlans.notifiedAt.isNotNull())
+      ..orderBy([OrderingTerm.desc(followPlans.notifiedAt)])
+      ..limit(limit);
+
+    return q
+        .map(
+          (row) => PlanWithCustomer(
+            plan: row.readTable(followPlans),
+            customerName: row.readTable(customers).name,
+          ),
+        )
+        .get();
+  }
+
   /// 今日待办与逾期项，首页用。
   Future<List<PlanWithCustomer>> listOpenUntil({required DateTime until}) {
     final untilMs = until.toUtc().millisecondsSinceEpoch;

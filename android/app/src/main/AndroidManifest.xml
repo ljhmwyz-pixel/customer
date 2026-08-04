@@ -4,7 +4,12 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <!-- 精确闹钟，保证提醒按分钟准时触发 -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+    <!--
+      刻意不声明 USE_EXACT_ALARM。它是免申请的替代权限，一旦声明系统直接授予，
+      SCHEDULE_EXACT_ALARM 的申请流程就永远不会触发，导致权限引导代码无法验证。
+      且该权限仅允许闹钟/日历类应用使用，本应用是 CRM 工具，用它属于滥用。
+      详见 docs/phase2/PLAN.md 第 2.2 节。
+    -->
     <!-- 开机后重建已排期的提醒 -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <!-- 引导用户把本应用加入电池优化白名单，ColorOS 后台管控较激进 -->
@@ -46,6 +51,76 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- ── 提醒链路的原生接收器（阶段 2） ── -->
+
+        <!--
+          到点真正弹出通知的接收器。flutter_local_notifications 的插件 Manifest
+          只声明权限、不注册任何组件，全部要由宿主应用自己注册。
+
+          漏了这一条的症状极具误导性：dumpsys alarm 能看到闹钟正常排期、
+          到点也确实触发（1 wakes 1 alarms），但通知不会出现，且没有任何报错。
+          容易误判成 Doze 压制或渠道重要性不足，实际是广播根本没有接收方。
+          插件 README 第 383 行有写，本项目在阶段 2A 实测时踩到过。
+        -->
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
+            android:exported="false"/>
+
+        <!--
+          重建已排期的闹钟。AlarmManager 的闹钟存在内存中，以下四种情况会被清空：
+          开机、应用被覆盖安装、部分国产 ROM 的快速启动。
+
+          MY_PACKAGE_REPLACED 尤其重要：开发期每次 flutter run 覆盖安装都会清掉
+          全部闹钟，漏了这条会让验证时断时续，症状看起来像「闹钟随机失效」。
+        -->
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
+
+        <!--
+          处理通知上的「已完成」「推迟一天」按钮。
+          不注册的话按钮点了没反应，且不会有任何报错。
+        -->
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver"
+            android:exported="false"/>
+
+        <!--
+          android_alarm_manager_plus 的组件，用于「记账闹钟」：
+          flutter_local_notifications 的通知由原生侧到点直接弹出，Dart 侧不会被
+          唤醒，因此没有任何代码去写 follow_plans.notified_at，
+          验收第 9 项要的「实际触发时间」就无从记录。
+
+          解法是每条提醒并排一个同时刻的 AlarmManager 回调，
+          它会拉起一个后台 isolate 把真实触发时刻落库。详见
+          lib/services/notification_service.dart 中 _scheduleNotifiedMark 的注释。
+
+          RebootBroadcastReceiver 的 enabled 必须保持 false：
+          插件在 initialize() 里按需自行启用它，写成 true 会与插件的状态管理冲突。
+        -->
+        <service
+            android:name="dev.fluttercommunity.plus.androidalarmmanager.AlarmService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false"/>
+        <receiver
+            android:name="dev.fluttercommunity.plus.androidalarmmanager.AlarmBroadcastReceiver"
+            android:exported="false"/>
+        <receiver
+            android:name="dev.fluttercommunity.plus.androidalarmmanager.RebootBroadcastReceiver"
+            android:enabled="false"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
