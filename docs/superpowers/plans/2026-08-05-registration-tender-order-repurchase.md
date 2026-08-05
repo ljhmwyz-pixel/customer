@@ -160,16 +160,20 @@ The compatibility `status` column remains readable during Phase E, but all new w
 **Files:**
 - Modify: `docs/phase6/VERIFICATION.md`
 - Modify: `docs/superpowers/plans/2026-08-05-registration-tender-order-repurchase.md`
+- Create: `docs/superpowers/plans/2026-08-05-phase-e-end-to-end-verification.md`
 
-- [ ] Run build generation and assert generated files have no uncommitted drift.
-- [ ] Run `dart format --output=none --set-exit-if-changed lib test` and `flutter analyze`.
-- [ ] Run the complete `flutter test` suite and record the exact passing count.
-- [ ] Run `flutter build apk --debug` and record the resulting APK path and size.
-- [ ] Install the APK on the configured Android emulator without clearing existing app data, then cold-start and verify v5→v6 upgrade, registration, tender, decomposed order, and repurchase flows.
-- [ ] Capture emulator evidence and append commands, results, migration outcome, and remaining later-phase boundaries to `docs/phase6/VERIFICATION.md`.
-- [ ] Compare implemented fields/rules against SPRD sections 5.7, 5.8, 5.9, 6.2, 7.4, 7.5, 12, 17, and 18.
-- [ ] Run `rg -n '[T]ODO|[T]BD|待[定]|占[位]' lib test docs/phase6/VERIFICATION.md docs/superpowers/plans/2026-08-05-registration-tender-order-repurchase.md` and resolve every Phase E placeholder.
-- [ ] Stage only E-6 verification/plan files and commit `阶段 E-6：完成注册招标订单复购验收`.
+- [x] Run build generation and assert generated files have no uncommitted drift.
+- [x] Run `dart format --output=none --set-exit-if-changed lib test` and `flutter analyze`.
+- [x] Run the complete `flutter test` suite and record the exact passing count: 240 tests.
+- [x] Run `flutter build apk --debug` and record the resulting APK path, 192328026-byte size, and SHA-256 digest.
+- [x] Install the APK on the configured Android emulator without clearing existing app data, then cold-start and verify the retained database upgrades from v5 to v6 with its 9 customers and 9 opportunities preserved.
+- [x] Inspect the registration, tender, decomposed order, and dashboard routes without saving acceptance-only records; use automated tests for lifecycle/rule cases that the retained database cannot exhibit.
+- [x] Capture emulator evidence and append commands, results, migration outcome, and remaining later-phase boundaries to `docs/phase6/VERIFICATION.md`.
+- [x] Compare implemented fields/rules against SPRD sections 5.7, 5.8, 5.9, 6.2, 7.4, 7.5, 12, 17, and 18.
+- [x] Run the Phase E placeholder scan, final formatting, analysis, complete tests, and diff review against the three verification documents.
+- [x] Stage only the three E-6 verification/plan files and commit `阶段 E-6：完成注册招标订单复购验收`.
+
+**Evidence boundary:** The retained emulator had zero v5 order rows and no current registration, tender, or repurchase anomalies. The five-state order mapping and concrete anomaly-card behavior are therefore proven by controlled automated tests, while the emulator proves retained-data v5→v6 migration, UI reachability, and anomaly empty-state behavior. OnePlus 13/ColorOS behavior and seven-day notification observation remain release gates outside this E-6 commit.
 
 ## Coverage Review
 

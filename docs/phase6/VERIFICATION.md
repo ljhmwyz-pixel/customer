@@ -177,3 +177,48 @@ Android emulator evidence:
 - Screenshot captured at `/tmp/customer-stageD.png`.
 
 Manual-risk boundary: quote/sample forms currently provide core creation and milestone persistence; full history timeline presentation and Phase E registration/tender/order decomposition/repurchase remain later work.
+
+## Stage E: Registration, Tender, Order Lifecycle, and Repurchase
+
+Date: 2026-08-05
+
+Fresh source and package evidence:
+
+- `dart run build_runner build --delete-conflicting-outputs`: exit 0 with 166 outputs; generated files had no uncommitted drift.
+- `dart format --output=none --set-exit-if-changed lib test`: 109 files checked, 0 changed.
+- `flutter analyze`: `No issues found!`.
+- `flutter test`: 240 tests passed, zero failures. The suite includes migration, schema, DAO, service, task-rule, and Widget coverage for Phase E.
+- `flutter build apk --debug`: generated `build/app/outputs/flutter-apk/app-debug.apk`, 192328026 bytes, SHA-256 `a1895727eb452634813aa75fab87922ba6e97a8e60e954b313875f049b812755`.
+
+Retained-data Android emulator migration evidence:
+
+- Device: `sdk_gphone16k_arm64` AOSP emulator (`emulator-5554`), Android API 37; package `com.snyder.customer`.
+- Before upgrade, a fresh read-only copy of `app_flutter/customer.sqlite` reported SHA-256 `5ef5ff356b75d9e41882e6ed6fd7b632bc7e2e9cfca39535a52b39068c6df084`, `PRAGMA user_version = 5`, 9 customers, 9 opportunities, 0 orders, an empty `PRAGMA foreign_key_check`, and no registration or tender tables.
+- Upgrade used `adb -s emulator-5554 install -r build/app/outputs/flutter-apk/app-debug.apk`; result `Success`. The package was not uninstalled and its application data was not cleared.
+- After force-stop and cold launch, `topResumedActivity` was `com.snyder.customer/.MainActivity`. The inspected logcat window contained no `FATAL EXCEPTION`, `SQLiteException`, or Drift migration error.
+- After upgrade, a fresh database copy reported SHA-256 `b6bc45dfa73247d06817271e811f56fc79d5cb28bc294a3a522d4f02fc3e4a33`, `PRAGMA user_version = 6`, 9 customers, 9 opportunities, 0 orders, and an empty `PRAGMA foreign_key_check`.
+- The upgraded database contains the registration and tender tables and indexes, plus the decomposed payment, production, shipping, result, arrival, and repurchase order columns.
+- The retained emulator database contained no v5 orders, so it does not prove the five legacy-order mappings. `test/data/migration_test.dart` supplies that evidence with controlled v5 rows for `pending`, `shipped`, `paid`, `completed`, and `cancelled`, asserting the fixed v6 mapping and preservation of legacy fields.
+
+Read-only emulator UI observations:
+
+- Home loaded the retained tasks and showed `逾期 3 · 今天 1`, four task rows, customer/project/next-action/owner context, and all four bottom navigation destinations.
+- Customer list and customer detail loaded retained data. The inspected customer showed project `历史项目 · 新线索 · 活跃`, its next action, quote/sample/project actions, the order entry, two follow-up plans, and the follow-up entry.
+- The registration route exposed country/region, requirements, document checklist and status, submitted/expected/actual dates, cost bearer, registration status, blocker, next action, document deadline, and user milestone fields. Defaults and the save entry were visible; no acceptance-only record was saved.
+- The tender route exposed project identity, bid deadline, document and qualification status, bidder, deposit, experience, local-team and funding checks, risk, authorization, authorization expiry, exclusive quote scope, floor-price support, tender status, next action, and save entry. High-risk controls were visible; no acceptance-only record was saved.
+- The order route exposed generated order number, order date, amount, PI/PO number, currency, independent payment/production/shipping states, estimated arrival, result, estimated repurchase date, description, and save entry. The actual-arrival field was not claimed as manually observed in this pass; persistence and lifecycle behavior remain covered by source and automated tests.
+- The management dashboard loaded against the upgraded database and reported 9 customers (`A 0 · B 0 · C 9 · D 0`), two current-week follow-ups, zero three-month forecast/weighted forecast/completed revenue, and the anomaly section.
+- The anomaly section correctly rendered its empty state because this retained database has no registration, tender, or due-repurchase anomaly rows. Specific overdue-registration, imminent-tender, and due-repurchase cards and navigation are covered by `test/features/funnel/funnel_page_test.dart`, not claimed as manual emulator observations.
+
+SPRD coverage evidence:
+
+- Sections 5.7–5.9: the registration, tender, and decomposed order fields are represented by schema, service, form, and Widget coverage; records are scoped to a real customer-owned opportunity.
+- Sections 6.2, 7.4, and 7.5: registration milestones, tender deadline boundaries, and repurchase rules use stable source/rule identities, suppress ineligible closed states, persist before scheduling, and retain persisted tasks if scheduling fails.
+- Section 12: the dashboard integrates supported overdue registration, imminent tender, and due repurchase anomalies with customer/project context; unsupported or absent data is not presented as a false positive.
+- Sections 17 and 18: integer minor-unit money, explicit currency, date/ownership validation, tender qualification/authorization prerequisites, default risk, explicit high-risk acknowledgement, and the fixed v5 order migration mapping are exercised by automated tests.
+
+Remaining target-device and time-based boundaries:
+
+- This AOSP emulator does not substitute for the required OnePlus 13/ColorOS permission, notification, keyboard, and visual smoke test.
+- A real seven-day reminder observation window has not elapsed; scheduling boundaries, idempotency, and failure degradation are automated-test evidence only until that release gate is completed.
+- No acceptance-only registration, tender, or order rows were inserted into the retained user database during this pass.
