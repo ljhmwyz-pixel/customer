@@ -100,12 +100,9 @@ class _DashboardBody extends StatelessWidget {
         const SizedBox(height: AppTokens.s16),
         _heading(context, '异常入口'),
         if (data.anomalies.isEmpty)
-          const _UnavailableRow(label: '当前没有长期沉默或内部支持异常')
+          const _UnavailableRow(label: '当前没有需要处理的业务异常')
         else
           for (final anomaly in data.anomalies) _AnomalyRow(anomaly: anomaly),
-        const SizedBox(height: AppTokens.s16),
-        _heading(context, '业务模块'),
-        const _UnavailableRow(label: '报价、样品、注册、招标、复购异常将在对应业务模块接入后启用'),
         const SizedBox(height: AppTokens.s8),
         Text(
           '统计金额单位为数据库中的最小货币单位。',
@@ -180,9 +177,16 @@ class _AnomalyRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final semantic = AppSemanticColors.of(context);
-    final label = anomaly.kind == DashboardAnomalyKind.longSilence
-        ? '长期沉默'
-        : '需要内部支持';
+    final (label, icon) = switch (anomaly.kind) {
+      DashboardAnomalyKind.longSilence => ('长期沉默', Icons.hourglass_empty),
+      DashboardAnomalyKind.internalSupport => ('需要内部支持', Icons.support_agent),
+      DashboardAnomalyKind.registrationDue => (
+        '注册节点到期',
+        Icons.assignment_late_outlined,
+      ),
+      DashboardAnomalyKind.tenderImminent => ('招标临近截止', Icons.gavel_outlined),
+      DashboardAnomalyKind.repurchaseDue => ('近期复购', Icons.autorenew),
+    };
     return Padding(
       padding: const EdgeInsets.only(bottom: AppTokens.s8),
       child: Material(
@@ -194,12 +198,7 @@ class _AnomalyRow extends StatelessWidget {
           ),
           onTap: () => context.go('/customers/${anomaly.customerId}'),
           child: ListTile(
-            leading: Icon(
-              anomaly.kind == DashboardAnomalyKind.longSilence
-                  ? Icons.hourglass_empty
-                  : Icons.support_agent,
-              color: semantic.overdue,
-            ),
+            leading: Icon(icon, color: semantic.overdue),
             title: Text(
               '$label · ${anomaly.customerName}',
               maxLines: 1,

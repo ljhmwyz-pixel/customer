@@ -4,6 +4,7 @@ import '../../models/enums.dart';
 import '../database.dart';
 import '../tables/contacts.dart';
 import '../tables/customers.dart';
+import '../tables/follow_plans.dart';
 import '../tables/followups.dart';
 import '../tables/opportunities.dart';
 import '../tables/orders.dart';
@@ -63,7 +64,13 @@ class DashboardMetrics {
   final int wonAmountMinor;
 }
 
-enum DashboardAnomalyKind { longSilence, internalSupport }
+enum DashboardAnomalyKind {
+  longSilence,
+  internalSupport,
+  registrationDue,
+  tenderImminent,
+  repurchaseDue,
+}
 
 class DashboardAnomaly {
   const DashboardAnomaly({
@@ -92,6 +99,7 @@ class DashboardAnomaly {
     Contacts,
     Tags,
     CustomerTags,
+    FollowPlans,
     Followups,
     Opportunities,
     Orders,
@@ -441,42 +449,71 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
     required DateTime now,
   }) async {
     final rows = await customSelect(
-      '''SELECT c.id AS customer_id, c.name AS customer_name,
-                NULL AS opportunity_id, NULL AS opportunity_name,
-                'long_silence' AS kind,
-                CAST((? - COALESCE(c.last_follow_at, c.created_at)) / 86400000 AS INTEGER) AS severity,
-                CAST((? - COALESCE(c.last_follow_at, c.created_at)) / 86400000 AS TEXT) || ' 天未联系' AS detail
-         FROM customers c
-         WHERE c.stage NOT IN ('deal', 'lost')
-           AND (? - COALESCE(c.last_follow_at, c.created_at)) >=
-             CASE c.grade WHEN 'a' THEN 14 * 86400000
-                          WHEN 'b' THEN 30 * 86400000
-                          ELSE 60 * 86400000 END
-         UNION ALL
-         SELECT c.id, c.name, o.id, o.name, 'internal_support', 1000,
-                o.current_obstacle
-         FROM customers c JOIN opportunities o ON o.customer_id = c.id
-         WHERE o.current_obstacle IS NOT NULL AND TRIM(o.current_obstacle) <> ''
-           AND o.status NOT IN ('paused', 'won', 'closed')
-           AND o.stage NOT IN ('lost', 'paused')
-         ORDER BY severity DESC, customer_id ASC''',
+      '''SELECT customer_id, customer_name, opportunity_id, opportunity_name,
+                kind, severity, detail
+         FROM (
+           SELECT c.id AS customer_id, c.name AS customer_name,
+                  NULL AS opportunity_id, NULL AS opportunity_name,
+                  'long_silence' AS kind,
+                  CAST((? - COALESCE(c.last_follow_at, c.created_at)) / 86400000 AS INTEGER) AS severity,
+                  CAST((? - COALESCE(c.last_follow_at, c.created_at)) / 86400000 AS TEXT) || ' 天未联系' AS detail,
+                  0 AS sort_group, 0 AS sort_time, c.id AS sort_id
+           FROM customers c
+           WHERE c.stage NOT IN ('deal', 'lost')
+             AND (? - COALESCE(c.last_follow_at, c.created_at)) >=
+               CASE c.grade WHEN 'a' THEN 14 * 86400000
+                            WHEN 'b' THEN 30 * 86400000
+                            ELSE 60 * 86400000 END
+           UNION ALL
+           SELECT c.id, c.name, o.id, o.name, 'internal_support', 1000,
+                  o.current_obstacle, 0, 0, c.id
+           FROM customers c JOIN opportunities o ON o.customer_id = c.id
+           WHERE o.current_obstacle IS NOT NULL AND TRIM(o.current_obstacle) <> ''
+             AND o.status NOT IN ('paused', 'won', 'closed')
+             AND o.stage NOT IN ('lost', 'paused')
+           UNION ALL
+           SELECT c.id, c.name, o.id, o.name,
+                  CASE fp.source_type
+                    WHEN 'registration' THEN 'registration_due'
+                    WHEN 'tender' THEN 'tender_imminent'
+                    WHEN 'repurchase' THEN 'repurchase_due'
+                  END,
+                  0,
+                  COALESCE(NULLIF(TRIM(fp.next_action), ''), fp.title),
+                  1, fp.plan_at, fp.id
+           FROM follow_plans fp
+           JOIN customers c ON c.id = fp.customer_id
+           LEFT JOIN opportunities o ON o.id = fp.opportunity_id
+           WHERE fp.source_type IN ('registration', 'tender', 'repurchase')
+             AND fp.status IN ('pending', 'notified', 'overdue')
+             AND fp.plan_at <= ?
+         ) anomalies
+         ORDER BY sort_group ASC, severity DESC, sort_time ASC,
+                  sort_id ASC, customer_id ASC''',
       variables: [
         Variable.withInt(now.toUtc().millisecondsSinceEpoch),
         Variable.withInt(now.toUtc().millisecondsSinceEpoch),
         Variable.withInt(now.toUtc().millisecondsSinceEpoch),
+        Variable.withInt(now.toUtc().millisecondsSinceEpoch),
       ],
-      readsFrom: {customers, db.opportunities},
+      readsFrom: {customers, db.opportunities, followPlans},
     ).get();
     return rows.map((row) {
-      final kind = row.read<String>('kind');
       return DashboardAnomaly(
         customerId: row.read<int>('customer_id'),
         customerName: row.read<String>('customer_name'),
         opportunityId: row.readNullable<int>('opportunity_id'),
         opportunityName: row.readNullable<String>('opportunity_name'),
-        kind: kind == 'internal_support'
-            ? DashboardAnomalyKind.internalSupport
-            : DashboardAnomalyKind.longSilence,
+        kind: switch (row.read<String>('kind')) {
+          'long_silence' => DashboardAnomalyKind.longSilence,
+          'internal_support' => DashboardAnomalyKind.internalSupport,
+          'registration_due' => DashboardAnomalyKind.registrationDue,
+          'tender_imminent' => DashboardAnomalyKind.tenderImminent,
+          'repurchase_due' => DashboardAnomalyKind.repurchaseDue,
+          final value => throw StateError(
+            'Unknown dashboard anomaly kind: $value',
+          ),
+        },
         severity: row.read<int>('severity'),
         detail: row.read<String>('detail'),
       );

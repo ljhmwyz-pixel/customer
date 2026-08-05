@@ -1,6 +1,7 @@
 import 'package:customer/data/database.dart';
 import 'package:customer/data/daos/customer_dao.dart';
 import 'package:customer/models/enums.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 
 import 'helpers.dart';
@@ -118,6 +119,127 @@ void main() {
         ),
         isTrue,
       );
+    },
+  );
+
+  test(
+    'dashboardAnomalies reports only due open registration tender and repurchase tasks',
+    () async {
+      final now = DateTime(2026, 8, 5, 12);
+      final customerId = await db.customerDao.insertCustomer(
+        name: '业务任务客户',
+        now: now,
+      );
+      final opportunityId = await db.opportunityDao.insertOpportunity(
+        customerId: customerId,
+        name: '海外项目',
+        now: now,
+      );
+      final sameDueAt = now.subtract(const Duration(hours: 3));
+      await db.planDao.insertPlan(
+        customerId: customerId,
+        opportunityId: opportunityId,
+        sourceType: TaskSourceType.registration,
+        title: '注册标题',
+        nextAction: '补齐注册资料',
+        planAt: sameDueAt,
+        now: now,
+      );
+      final tenderId = await db.planDao.insertPlan(
+        customerId: customerId,
+        opportunityId: opportunityId,
+        sourceType: TaskSourceType.tender,
+        title: '招标标题',
+        nextAction: '确认投标文件',
+        planAt: sameDueAt,
+        now: now,
+      );
+      await db.planDao.markNotified(tenderId, at: now);
+      final repurchaseId = await db.planDao.insertPlan(
+        customerId: customerId,
+        opportunityId: opportunityId,
+        sourceType: TaskSourceType.repurchase,
+        title: '联系客户确认复购',
+        planAt: now.subtract(const Duration(hours: 1)),
+        now: now,
+      );
+      await (db.update(
+        db.followPlans,
+      )..where((table) => table.id.equals(repurchaseId))).write(
+        FollowPlansCompanion(
+          nextAction: const Value(null),
+          status: Value(PlanStatus.overdue.dbValue),
+        ),
+      );
+
+      final completedId = await db.planDao.insertPlan(
+        customerId: customerId,
+        opportunityId: opportunityId,
+        sourceType: TaskSourceType.registration,
+        title: '已完成注册',
+        planAt: now.subtract(const Duration(days: 1)),
+        now: now,
+      );
+      await db.planDao.markCompleted(completedId, at: now);
+      final cancelledId = await db.planDao.insertPlan(
+        customerId: customerId,
+        opportunityId: opportunityId,
+        sourceType: TaskSourceType.tender,
+        title: '已取消招标',
+        planAt: now.subtract(const Duration(days: 1)),
+        now: now,
+      );
+      await db.planDao.markCancelled(cancelledId, at: now);
+      await db.planDao.insertPlan(
+        customerId: customerId,
+        opportunityId: opportunityId,
+        sourceType: TaskSourceType.repurchase,
+        title: '未来复购',
+        planAt: now.add(const Duration(days: 1)),
+        now: now,
+      );
+      await db.planDao.insertPlan(
+        customerId: customerId,
+        opportunityId: opportunityId,
+        sourceType: TaskSourceType.manual,
+        title: '手工到期任务',
+        planAt: now.subtract(const Duration(hours: 2)),
+        now: now,
+      );
+
+      final anomalies = await db.customerDao.dashboardAnomalies(now: now);
+      final businessAnomalies = anomalies
+          .where(
+            (item) => {
+              DashboardAnomalyKind.registrationDue,
+              DashboardAnomalyKind.tenderImminent,
+              DashboardAnomalyKind.repurchaseDue,
+            }.contains(item.kind),
+          )
+          .toList();
+
+      expect(businessAnomalies.map((item) => item.kind), [
+        DashboardAnomalyKind.registrationDue,
+        DashboardAnomalyKind.tenderImminent,
+        DashboardAnomalyKind.repurchaseDue,
+      ]);
+      expect(
+        businessAnomalies.map((item) => item.customerId),
+        everyElement(customerId),
+      );
+      expect(
+        businessAnomalies.map((item) => item.opportunityId),
+        everyElement(opportunityId),
+      );
+      expect(
+        businessAnomalies.map((item) => item.opportunityName),
+        everyElement('海外项目'),
+      );
+      expect(businessAnomalies.map((item) => item.detail), [
+        '补齐注册资料',
+        '确认投标文件',
+        '联系客户确认复购',
+      ]);
     },
   );
 }
