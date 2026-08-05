@@ -4,6 +4,7 @@ import '../../models/enums.dart';
 import '../database.dart';
 import '../tables/customers.dart';
 import '../tables/follow_plans.dart';
+import '../tables/opportunities.dart';
 
 part 'plan_dao.g.dart';
 
@@ -20,8 +21,40 @@ class PlanWithCustomer {
       DateTime.fromMillisecondsSinceEpoch(plan.planAt, isUtc: true).toLocal();
 }
 
+class TodayPlanItem {
+  const TodayPlanItem({
+    required this.plan,
+    required this.customer,
+    required this.opportunity,
+  });
+
+  final FollowPlanRow plan;
+  final CustomerRow customer;
+  final OpportunityRow opportunity;
+
+  String get customerGrade => customer.grade.toUpperCase();
+  String get opportunityImportance => opportunity.importance;
+  String get projectLabel => opportunity.name;
+  String get productLabel =>
+      opportunity.productModel ?? opportunity.productCategory ?? '未填写产品';
+  String get latestFeedback => opportunity.latestFeedback ?? '暂无反馈';
+  String get reason => plan.reason ?? '历史任务';
+  String get nextAction => plan.nextAction ?? plan.title;
+  String get owner => plan.owner;
+
+  int overdueDays(DateTime now) {
+    final due = DateTime.fromMillisecondsSinceEpoch(
+      plan.planAt,
+      isUtc: true,
+    ).toLocal();
+    final start = DateTime(now.year, now.month, now.day);
+    if (!due.isBefore(start)) return 0;
+    return start.difference(DateTime(due.year, due.month, due.day)).inDays;
+  }
+}
+
 /// 跟进计划数据访问。提醒链路的数据基础。
-@DriftAccessor(tables: [FollowPlans, Customers])
+@DriftAccessor(tables: [FollowPlans, Customers, Opportunities])
 class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
   PlanDao(super.db);
 
@@ -190,6 +223,78 @@ class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
           (row) => PlanWithCustomer(
             plan: row.readTable(followPlans),
             customerName: row.readTable(customers).name,
+          ),
+        )
+        .get();
+  }
+
+  /// Project-aware Today dashboard query. Boundaries are local calendar days,
+  /// while stored timestamps remain UTC milliseconds.
+  Future<List<TodayPlanItem>> listToday({required DateTime now}) {
+    final localNow = now.toLocal();
+    final start = DateTime(localNow.year, localNow.month, localNow.day);
+    final end = start.add(const Duration(days: 1));
+    final startMs = start.toUtc().millisecondsSinceEpoch;
+    final endMs = end.toUtc().millisecondsSinceEpoch;
+    final q =
+        select(followPlans).join([
+            innerJoin(
+              customers,
+              customers.id.equalsExp(followPlans.customerId),
+            ),
+            innerJoin(
+              opportunities,
+              opportunities.id.equalsExp(followPlans.opportunityId),
+            ),
+          ])
+          ..where(
+            followPlans.status.isIn(_openStatusValues) &
+                followPlans.planAt.isSmallerThanValue(endMs) &
+                opportunities.status.isNotIn(['paused', 'won', 'closed']) &
+                opportunities.stage.isNotIn(['lost', 'paused']),
+          )
+          ..orderBy([
+            OrderingTerm(
+              expression: CaseWhenExpression<int>(
+                cases: [
+                  CaseWhen(
+                    followPlans.planAt.isSmallerThanValue(startMs),
+                    then: const Constant(0),
+                  ),
+                ],
+                orElse: const Constant(1),
+              ),
+              mode: OrderingMode.asc,
+            ),
+            OrderingTerm(
+              expression: CaseWhenExpression<int>(
+                cases: [
+                  CaseWhen(
+                    followPlans.planAt.isSmallerThanValue(startMs),
+                    then: Constant(startMs) - followPlans.planAt,
+                  ),
+                ],
+                orElse: const Constant(0),
+              ),
+              mode: OrderingMode.desc,
+            ),
+            OrderingTerm(expression: customers.grade, mode: OrderingMode.desc),
+            OrderingTerm(
+              expression: opportunities.importance,
+              mode: OrderingMode.desc,
+            ),
+            OrderingTerm(
+              expression: followPlans.planAt,
+              mode: OrderingMode.asc,
+            ),
+            OrderingTerm(expression: followPlans.id, mode: OrderingMode.asc),
+          ]);
+    return q
+        .map(
+          (row) => TodayPlanItem(
+            plan: row.readTable(followPlans),
+            customer: row.readTable(customers),
+            opportunity: row.readTable(opportunities),
           ),
         )
         .get();

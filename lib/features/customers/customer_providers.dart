@@ -342,6 +342,28 @@ class CustomerService {
   }
 
   /// 取消任务先写入数据库，再清除通知；通知清除失败不恢复业务状态。
+  Future<String?> completePlan(int customerId, int planId) async {
+    await _requireCustomer(customerId);
+    final plan = await _db.planDao.findById(planId);
+    if (plan == null || plan.customerId != customerId) {
+      throw const CustomerValidationException('计划不存在或不属于当前客户');
+    }
+    if (!PlanStatus.fromDb(plan.status).isOpen) {
+      throw const CustomerValidationException('只有开放中的计划可以完成');
+    }
+    final affected = await _db.planDao.markCompleted(planId);
+    if (affected == 0) {
+      throw const CustomerValidationException('计划状态已变化，请刷新后重试');
+    }
+    try {
+      await _scheduler.cancelForPlan(planId);
+      return null;
+    } catch (_) {
+      return '计划已完成，但提醒清理失败；下次启动会自动重建提醒';
+    }
+  }
+
+  /// 取消任务先写入数据库，再清除通知；通知清除失败不恢复业务状态。
   Future<String?> cancelPlan(int customerId, int planId) async {
     await _requireCustomer(customerId);
     final plan = await _db.planDao.findById(planId);
@@ -547,16 +569,7 @@ final customerDetailProvider = FutureProvider.family<CustomerDetailData?, int>((
   );
 });
 
-final homePlansProvider = FutureProvider<List<PlanWithCustomer>>((ref) {
+final homePlansProvider = FutureProvider<List<TodayPlanItem>>((ref) {
   ref.watch(customerRevisionProvider);
-  final now = DateTime.now();
-  final endOfWeek = DateTime(
-    now.year,
-    now.month,
-    now.day + (DateTime.sunday - now.weekday),
-    23,
-    59,
-    59,
-  );
-  return ref.watch(databaseProvider).planDao.listOpenUntil(until: endOfWeek);
+  return ref.watch(databaseProvider).planDao.listToday(now: DateTime.now());
 });

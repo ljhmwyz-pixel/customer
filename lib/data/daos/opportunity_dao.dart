@@ -21,6 +21,8 @@ class OpportunityDao extends DatabaseAccessor<AppDatabase>
   Future<int> insertOpportunity({
     required int customerId,
     required String name,
+    String owner = '本人',
+    OpportunityImportance importance = OpportunityImportance.normal,
     String? productCategory,
     String? productModel,
     String? equipmentBrand,
@@ -58,6 +60,8 @@ class OpportunityDao extends DatabaseAccessor<AppDatabase>
       OpportunitiesCompanion.insert(
         customerId: customerId,
         name: name,
+        owner: Value(owner),
+        importance: Value(importance.dbValue),
         productCategory: Value(productCategory),
         productModel: Value(productModel),
         equipmentBrand: Value(equipmentBrand),

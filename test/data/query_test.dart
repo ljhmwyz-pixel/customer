@@ -507,6 +507,83 @@ void main() {
       expect(await db.planDao.markCompleted(cancelled), 0);
       expect(await db.planDao.postpone(cancelled), 0);
     });
+
+    test('listToday 联表过滤、排序与旧快照回退', () async {
+      final now = DateTime(2026, 8, 5, 12);
+      final oldCustomer = await db.customerDao.insertCustomer(
+        name: '旧客户',
+        grade: CustomerGrade.d,
+        now: now,
+      );
+      final highCustomer = await db.customerDao.insertCustomer(
+        name: '高等级客户',
+        grade: CustomerGrade.a,
+        now: now,
+      );
+      final closedCustomer = await db.customerDao.insertCustomer(
+        name: '关闭客户',
+        now: now,
+      );
+      final oldOpportunity = await db.opportunityDao.insertOpportunity(
+        customerId: oldCustomer,
+        name: 'CT 注射器',
+        productCategory: '耗材',
+        latestFeedback: '待反馈',
+        now: now,
+      );
+      final highOpportunity = await db.opportunityDao.insertOpportunity(
+        customerId: highCustomer,
+        name: '高优先级项目',
+        importance: OpportunityImportance.high,
+        now: now,
+      );
+      final closedOpportunity = await db.opportunityDao.insertOpportunity(
+        customerId: closedCustomer,
+        name: '已关闭项目',
+        status: OpportunityStatus.closed,
+        now: now,
+      );
+      final oldest = await db.planDao.insertPlan(
+        customerId: oldCustomer,
+        opportunityId: oldOpportunity,
+        planAt: now.subtract(const Duration(days: 3)),
+        title: '旧任务',
+      );
+      final graded = await db.planDao.insertPlan(
+        customerId: highCustomer,
+        opportunityId: highOpportunity,
+        planAt: now.subtract(const Duration(hours: 2)),
+        reason: '催报价',
+        nextAction: '电话确认',
+      );
+      final today = await db.planDao.insertPlan(
+        customerId: highCustomer,
+        opportunityId: highOpportunity,
+        planAt: now.add(const Duration(hours: 2)),
+        title: '今天任务',
+      );
+      await db.planDao.insertPlan(
+        customerId: closedCustomer,
+        opportunityId: closedOpportunity,
+        planAt: now,
+        title: '不应显示',
+      );
+      await db.planDao.insertPlan(
+        customerId: highCustomer,
+        opportunityId: highOpportunity,
+        planAt: now.add(const Duration(days: 1)),
+        title: '明天任务',
+      );
+
+      final rows = await db.planDao.listToday(now: now);
+      expect(rows.map((item) => item.plan.id), [oldest, graded, today]);
+      expect(rows.first.projectLabel, 'CT 注射器');
+      expect(rows.first.productLabel, '耗材');
+      expect(rows.first.latestFeedback, '待反馈');
+      expect(rows.first.reason, '历史任务');
+      expect(rows.first.nextAction, '旧任务');
+      expect(rows.first.overdueDays(now), 3);
+    });
   });
 
   group('客户组合筛选', () {

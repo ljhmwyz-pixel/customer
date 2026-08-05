@@ -596,6 +596,49 @@ void main() {
       expect(PlanStatus.fromDb(plan!.status), PlanStatus.cancelled);
       expect(scheduler.cancelledPlanIds, isEmpty);
     });
+
+    test('完成计划记录时间并清理提醒', () async {
+      final customerId = await seedCustomer(db);
+      final opportunityId = await _seedOpportunity(
+        db,
+        customerId,
+        name: '项目 A',
+      );
+      final planId = await db.planDao.insertPlan(
+        customerId: customerId,
+        opportunityId: opportunityId,
+        title: '完成我',
+        planAt: DateTime(2026, 8, 5),
+      );
+      final warning = await service.completePlan(customerId, planId);
+      final row = await db.planDao.findById(planId);
+      expect(warning, isNull);
+      expect(PlanStatus.fromDb(row!.status), PlanStatus.completed);
+      expect(row.completedAt, isNotNull);
+      expect(scheduler.cancelledPlanIds, [planId]);
+    });
+
+    test('完成计划提醒清理失败返回警告但保留完成状态', () async {
+      final customerId = await seedCustomer(db);
+      final opportunityId = await _seedOpportunity(
+        db,
+        customerId,
+        name: '项目 A',
+      );
+      final planId = await db.planDao.insertPlan(
+        customerId: customerId,
+        opportunityId: opportunityId,
+        title: '完成我',
+        planAt: DateTime(2026, 8, 5),
+      );
+      scheduler.throwOnCancel = true;
+      final warning = await service.completePlan(customerId, planId);
+      expect(warning, contains('计划已完成'));
+      expect(
+        PlanStatus.fromDb((await db.planDao.findById(planId))!.status),
+        PlanStatus.completed,
+      );
+    });
   });
 
   group('删除客户', () {

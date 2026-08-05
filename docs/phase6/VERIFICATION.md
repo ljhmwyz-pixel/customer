@@ -91,3 +91,32 @@ Manual-risk boundaries:
 
 - The emulator pass this stage records migration and cold-start preservation. Follow-up-generated v4 field values and cancellation behavior are covered by service/DAO tests rather than a second manual data mutation on the existing user database.
 - The Today presentation, task sorting UI, and management statistics remain reserved for stages 9B and 9C.
+
+## Stage 9B: Today Task Dashboard
+
+Date: 2026-08-05
+
+Fresh automated evidence:
+
+- `dart run build_runner build --delete-conflicting-outputs`: exit 0; installed build_runner reports the legacy flag is ignored.
+- `dart format`: changed Stage 9B Dart files formatted.
+- `flutter analyze`: `No issues found!`.
+- `flutter test`: 199 tests passed, zero failures.
+- `flutter build apk --debug`: generated `build/app/outputs/flutter-apk/app-debug.apk`.
+- `git diff --check`: passed with no whitespace errors.
+
+Stage coverage:
+
+- `PlanDao.listToday` joins customer/project data, excludes future and closed/lost projects, and applies deterministic overdue/grade/importance/time/id ordering.
+- Today rows expose project, product, feedback, reason, talking direction, next action, owner, country-safe customer text, and timing.
+- Home actions complete or cancel tasks through `CustomerService`, preserving rows and cleaning reminders with warnings on scheduler failure.
+- Widget coverage verifies future-task exclusion and narrow-page rendering; service coverage verifies completion timestamps and reminder cleanup degradation.
+
+Android emulator evidence:
+
+- Device: Pixel 8 AVD (`emulator-5554`), Android API 37.
+- Upgrade: `adb -s emulator-5554 install -r build/app/outputs/flutter-apk/app-debug.apk`; result `Success`, no data clear.
+- Cold launch: `adb -s emulator-5554 shell monkey -p com.snyder.customer 1`; launch completed, no `FATAL EXCEPTION`, `SQLiteException`, or Drift error.
+- Screenshot captured at `/tmp/customer-stage9b.png` for manual visual inspection.
+
+Manual-risk boundary: the emulator pass confirms install and cold-start compatibility; task action taps remain covered by widget/service tests.
