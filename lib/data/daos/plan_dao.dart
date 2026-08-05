@@ -106,6 +106,19 @@ class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
   Future<FollowPlanRow?> findById(int id) =>
       (select(followPlans)..where((t) => t.id.equals(id))).getSingleOrNull();
 
+  Future<FollowPlanRow?> findBySourceRule(
+    TaskSourceType sourceType,
+    int sourceId,
+    String ruleKey,
+  ) =>
+      (select(followPlans)..where(
+            (t) =>
+                t.sourceType.equals(sourceType.dbValue) &
+                t.sourceId.equals(sourceId) &
+                t.ruleKey.equals(ruleKey),
+          ))
+          .getSingleOrNull();
+
   Future<List<FollowPlanRow>> listOf(int customerId) =>
       (select(followPlans)
             ..where((t) => t.customerId.equals(customerId))
