@@ -462,17 +462,35 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(addOrderButton);
     await tester.pumpAndSettle();
-    await tester.enterText(
-      find.byKey(const ValueKey('order-no')),
-      'ORDER-CREATE-001',
+    await _enterOrderText(tester, 'order-no', 'ORDER-CREATE-001');
+    await _enterOrderText(tester, 'order-amount', '123.45');
+    await _enterOrderText(tester, 'order-pi-po-no', 'PI-2026-001');
+    await _enterOrderText(tester, 'order-currency', 'usd');
+    await _selectDropdownValue<PaymentStatus>(
+      tester,
+      'order-payment-status',
+      PaymentStatus.partial,
     );
-    await tester.enterText(
-      find.byKey(const ValueKey('order-amount')),
-      '123.45',
+    await _selectDropdownValue<ProductionStatus>(
+      tester,
+      'order-production-status',
+      ProductionStatus.inProgress,
     );
-    await tester.enterText(
-      find.byKey(const ValueKey('order-description')),
-      '年度服务套餐',
+    await _selectDropdownValue<ShippingStatus>(
+      tester,
+      'order-shipping-status',
+      ShippingStatus.shipped,
+    );
+    await _selectDropdownValue<OrderResult>(
+      tester,
+      'order-result',
+      OrderResult.inProgress,
+    );
+    await _enterOrderText(tester, 'order-description', '年度服务套餐');
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('save-order')),
+      300,
+      scrollable: find.byType(Scrollable).first,
     );
     await tester.tap(find.byKey(const ValueKey('save-order')));
     await tester.pumpAndSettle();
@@ -483,6 +501,12 @@ void main() {
     expect(orders.single.amountCents, 12345);
     expect(orders.single.description, '年度服务套餐');
     expect(orders.single.opportunityId, opportunityId);
+    expect(orders.single.piPoNo, 'PI-2026-001');
+    expect(orders.single.currency, 'USD');
+    expect(orders.single.paymentStatus, PaymentStatus.partial.dbValue);
+    expect(orders.single.productionStatus, ProductionStatus.inProgress.dbValue);
+    expect(orders.single.shippingStatus, ShippingStatus.shipped.dbValue);
+    expect(orders.single.orderResult, OrderResult.inProgress.dbValue);
     expect(find.text('ORDER-CREATE-001'), findsOneWidget);
     expect(find.textContaining('¥123.45'), findsOneWidget);
   });
@@ -577,6 +601,14 @@ void main() {
       orderNo: 'ORDER-OLD',
       orderedAt: DateTime(2026, 8, 5),
       amountCents: 100,
+      piPoNo: 'PI-OLD',
+      currency: 'EUR',
+      paymentStatus: PaymentStatus.partial,
+      productionStatus: ProductionStatus.inProgress,
+      shippingStatus: ShippingStatus.shipped,
+      estimatedArrivalAt: DateTime(2026, 8, 20),
+      orderResult: OrderResult.inProgress,
+      estimatedRepurchaseAt: DateTime(2027, 2, 5),
       description: '旧描述',
     );
     final harness = _TestHarness(
@@ -589,14 +621,110 @@ void main() {
 
     await harness.pump(tester);
     await _selectOrderAction(tester, orderId, '编辑');
-    await tester.enterText(
-      find.byKey(const ValueKey('order-no')),
-      'ORDER-EDITED',
+    await _enterOrderText(tester, 'order-no', 'ORDER-EDITED');
+    await _enterOrderText(tester, 'order-amount', '88.80');
+    await _scrollOrderFieldIntoView(tester, 'order-pi-po-no');
+    expect(
+      tester
+          .widget<TextFormField>(find.byKey(const ValueKey('order-pi-po-no')))
+          .controller
+          ?.text,
+      'PI-OLD',
     );
-    await tester.enterText(find.byKey(const ValueKey('order-amount')), '88.80');
     await tester.enterText(
-      find.byKey(const ValueKey('order-description')),
-      '更新后的服务内容',
+      find.byKey(const ValueKey('order-pi-po-no')),
+      'PI-UPDATED',
+    );
+    await _scrollOrderFieldIntoView(tester, 'order-currency');
+    expect(
+      tester
+          .widget<TextFormField>(find.byKey(const ValueKey('order-currency')))
+          .controller
+          ?.text,
+      'EUR',
+    );
+    await tester.enterText(find.byKey(const ValueKey('order-currency')), 'gbp');
+    await _scrollOrderFieldIntoView(tester, 'order-payment-status');
+    expect(
+      tester
+          .widget<DropdownButtonFormField<PaymentStatus>>(
+            find.byKey(const ValueKey('order-payment-status')),
+          )
+          .initialValue,
+      PaymentStatus.partial,
+    );
+    await _selectDropdownValue<PaymentStatus>(
+      tester,
+      'order-payment-status',
+      PaymentStatus.paid,
+    );
+    await _scrollOrderFieldIntoView(tester, 'order-production-status');
+    expect(
+      tester
+          .widget<DropdownButtonFormField<ProductionStatus>>(
+            find.byKey(const ValueKey('order-production-status')),
+          )
+          .initialValue,
+      ProductionStatus.inProgress,
+    );
+    await _selectDropdownValue<ProductionStatus>(
+      tester,
+      'order-production-status',
+      ProductionStatus.completed,
+    );
+    await _scrollOrderFieldIntoView(tester, 'order-shipping-status');
+    expect(
+      tester
+          .widget<DropdownButtonFormField<ShippingStatus>>(
+            find.byKey(const ValueKey('order-shipping-status')),
+          )
+          .initialValue,
+      ShippingStatus.shipped,
+    );
+    await _selectDropdownValue<ShippingStatus>(
+      tester,
+      'order-shipping-status',
+      ShippingStatus.delivered,
+    );
+    await _scrollOrderFieldIntoView(tester, 'order-estimated-arrival');
+    expect(
+      tester
+          .widget<TextFormField>(
+            find.byKey(const ValueKey('order-estimated-arrival')),
+          )
+          .controller
+          ?.text,
+      '2026-08-20',
+    );
+    await _scrollOrderFieldIntoView(tester, 'order-result');
+    expect(
+      tester
+          .widget<DropdownButtonFormField<OrderResult>>(
+            find.byKey(const ValueKey('order-result')),
+          )
+          .initialValue,
+      OrderResult.inProgress,
+    );
+    await _selectDropdownValue<OrderResult>(
+      tester,
+      'order-result',
+      OrderResult.completed,
+    );
+    await _scrollOrderFieldIntoView(tester, 'order-estimated-repurchase');
+    expect(
+      tester
+          .widget<TextFormField>(
+            find.byKey(const ValueKey('order-estimated-repurchase')),
+          )
+          .controller
+          ?.text,
+      '2027-02-05',
+    );
+    await _enterOrderText(tester, 'order-description', '更新后的服务内容');
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('save-order')),
+      300,
+      scrollable: find.byType(Scrollable).first,
     );
     await tester.tap(find.byKey(const ValueKey('save-order')));
     await tester.pumpAndSettle();
@@ -605,6 +733,20 @@ void main() {
     expect(order?.orderNo, 'ORDER-EDITED');
     expect(order?.amountCents, 8880);
     expect(order?.description, '更新后的服务内容');
+    expect(order?.piPoNo, 'PI-UPDATED');
+    expect(order?.currency, 'GBP');
+    expect(order?.paymentStatus, PaymentStatus.paid.dbValue);
+    expect(order?.productionStatus, ProductionStatus.completed.dbValue);
+    expect(order?.shippingStatus, ShippingStatus.delivered.dbValue);
+    expect(order?.orderResult, OrderResult.completed.dbValue);
+    expect(
+      order?.estimatedArrivalAt,
+      DateTime(2026, 8, 20).toUtc().millisecondsSinceEpoch,
+    );
+    expect(
+      order?.estimatedRepurchaseAt,
+      DateTime(2027, 2, 5).toUtc().millisecondsSinceEpoch,
+    );
     expect(find.text('ORDER-EDITED'), findsOneWidget);
   });
 
@@ -866,6 +1008,50 @@ Future<void> _selectOrderAction(
   await tester.pumpAndSettle();
   await tester.tap(find.text(action).last);
   await tester.pumpAndSettle();
+}
+
+Future<void> _selectDropdownValue<T>(
+  WidgetTester tester,
+  String key,
+  T value,
+) async {
+  FocusManager.instance.primaryFocus?.unfocus();
+  await tester.pump();
+  final dropdown = find.byKey(ValueKey(key));
+  await tester.scrollUntilVisible(
+    dropdown,
+    300,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.tap(dropdown);
+  await tester.pumpAndSettle();
+  final item = find.byWidgetPredicate(
+    (widget) => widget is DropdownMenuItem<T> && widget.value == value,
+  );
+  await tester.ensureVisible(item.last);
+  await tester.pumpAndSettle();
+  await tester.tapAt(tester.getCenter(item.last));
+  await tester.pumpAndSettle();
+}
+
+Future<void> _scrollOrderFieldIntoView(WidgetTester tester, String key) async {
+  final field = find.byKey(ValueKey(key));
+  await tester.scrollUntilVisible(
+    field,
+    300,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.ensureVisible(field);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _enterOrderText(
+  WidgetTester tester,
+  String key,
+  String value,
+) async {
+  await _scrollOrderFieldIntoView(tester, key);
+  await tester.enterText(find.byKey(ValueKey(key)), value);
 }
 
 Future<void> _selectOpportunityAction(

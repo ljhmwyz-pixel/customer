@@ -56,11 +56,21 @@ class OrderFormPage extends ConsumerStatefulWidget {
 class _OrderFormPageState extends ConsumerState<OrderFormPage> {
   final _formKey = GlobalKey<FormState>();
   final _orderNoController = TextEditingController();
+  final _piPoNoController = TextEditingController();
+  final _currencyController = TextEditingController(text: 'CNY');
   final _dateController = TextEditingController();
   final _amountController = TextEditingController();
+  final _estimatedArrivalController = TextEditingController();
+  final _estimatedRepurchaseController = TextEditingController();
   final _descriptionController = TextEditingController();
 
   DateTime _orderedAt = DateTime.now();
+  DateTime? _estimatedArrivalAt;
+  DateTime? _estimatedRepurchaseAt;
+  PaymentStatus _paymentStatus = PaymentStatus.pending;
+  ProductionStatus _productionStatus = ProductionStatus.pending;
+  ShippingStatus _shippingStatus = ShippingStatus.pending;
+  OrderResult _orderResult = OrderResult.inProgress;
   List<OpportunityRow> _opportunities = [];
   int? _selectedOpportunityId;
   String? _statusLabel;
@@ -108,10 +118,30 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
           return;
         }
         _orderNoController.text = order.orderNo;
+        _piPoNoController.text = order.piPoNo ?? '';
+        _currencyController.text = order.currency;
         _amountController.text = _editableAmount(order.amountCents);
         _descriptionController.text = order.description ?? '';
         _orderedAt = localDateTime(order.orderedAt);
         _dateController.text = formatDateTime(_orderedAt);
+        final estimatedArrivalAt = order.estimatedArrivalAt;
+        _estimatedArrivalAt = estimatedArrivalAt == null
+            ? null
+            : localDateTime(estimatedArrivalAt);
+        _estimatedArrivalController.text = _formatOptionalDate(
+          _estimatedArrivalAt,
+        );
+        final estimatedRepurchaseAt = order.estimatedRepurchaseAt;
+        _estimatedRepurchaseAt = estimatedRepurchaseAt == null
+            ? null
+            : localDateTime(estimatedRepurchaseAt);
+        _estimatedRepurchaseController.text = _formatOptionalDate(
+          _estimatedRepurchaseAt,
+        );
+        _paymentStatus = PaymentStatus.fromDb(order.paymentStatus);
+        _productionStatus = ProductionStatus.fromDb(order.productionStatus);
+        _shippingStatus = ShippingStatus.fromDb(order.shippingStatus);
+        _orderResult = OrderResult.fromDb(order.orderResult);
         _statusLabel = OrderStatus.fromDb(order.status).label;
         final currentOpportunityId = order.opportunityId;
         _selectedOpportunityId =
@@ -147,11 +177,18 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
   @override
   void dispose() {
     _orderNoController.dispose();
+    _piPoNoController.dispose();
+    _currencyController.dispose();
     _dateController.dispose();
     _amountController.dispose();
+    _estimatedArrivalController.dispose();
+    _estimatedRepurchaseController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
+
+  String _formatOptionalDate(DateTime? value) =>
+      value == null ? '' : formatDateTime(value).split(' ').first;
 
   Future<void> _pickDate() async {
     final date = await showDatePicker(
@@ -171,6 +208,20 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
       );
       _dateController.text = formatDateTime(_orderedAt);
     });
+  }
+
+  Future<void> _pickOptionalDate({
+    required DateTime? value,
+    required ValueChanged<DateTime?> onChanged,
+  }) async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: value ?? _orderedAt,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now().add(const Duration(days: 3650)),
+    );
+    if (date == null || !mounted) return;
+    onChanged(DateTime(date.year, date.month, date.day));
   }
 
   String? _validateAmount(String? value) {
@@ -196,6 +247,14 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
         orderNo: _orderNoController.text,
         orderedAt: _orderedAt,
         amountCents: parseAmountCents(_amountController.text),
+        piPoNo: _piPoNoController.text,
+        currency: _currencyController.text,
+        paymentStatus: _paymentStatus,
+        productionStatus: _productionStatus,
+        shippingStatus: _shippingStatus,
+        estimatedArrivalAt: _estimatedArrivalAt,
+        orderResult: _orderResult,
+        estimatedRepurchaseAt: _estimatedRepurchaseAt,
         description: _descriptionController.text,
       );
       final service = ref.read(orderServiceProvider);
@@ -306,6 +365,121 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
           ),
           const SizedBox(height: AppTokens.s12),
           TextFormField(
+            key: const ValueKey('order-pi-po-no'),
+            controller: _piPoNoController,
+            maxLength: 100,
+            decoration: const InputDecoration(labelText: 'PI/PO 编号'),
+          ),
+          const SizedBox(height: AppTokens.s12),
+          TextFormField(
+            key: const ValueKey('order-currency'),
+            controller: _currencyController,
+            maxLength: 3,
+            textCapitalization: TextCapitalization.characters,
+            decoration: const InputDecoration(labelText: '币种', hintText: 'CNY'),
+          ),
+          const SizedBox(height: AppTokens.s12),
+          DropdownButtonFormField<PaymentStatus>(
+            key: const ValueKey('order-payment-status'),
+            initialValue: _paymentStatus,
+            decoration: const InputDecoration(labelText: '付款状态'),
+            items: PaymentStatus.values
+                .map(
+                  (status) => DropdownMenuItem(
+                    value: status,
+                    child: Text(status.label),
+                  ),
+                )
+                .toList(growable: false),
+            onChanged: _saving
+                ? null
+                : (value) {
+                    if (value != null) setState(() => _paymentStatus = value);
+                  },
+          ),
+          const SizedBox(height: AppTokens.s12),
+          DropdownButtonFormField<ProductionStatus>(
+            key: const ValueKey('order-production-status'),
+            initialValue: _productionStatus,
+            decoration: const InputDecoration(labelText: '生产状态'),
+            items: ProductionStatus.values
+                .map(
+                  (status) => DropdownMenuItem(
+                    value: status,
+                    child: Text(status.label),
+                  ),
+                )
+                .toList(growable: false),
+            onChanged: _saving
+                ? null
+                : (value) {
+                    if (value != null) {
+                      setState(() => _productionStatus = value);
+                    }
+                  },
+          ),
+          const SizedBox(height: AppTokens.s12),
+          DropdownButtonFormField<ShippingStatus>(
+            key: const ValueKey('order-shipping-status'),
+            initialValue: _shippingStatus,
+            decoration: const InputDecoration(labelText: '发货状态'),
+            items: ShippingStatus.values
+                .map(
+                  (status) => DropdownMenuItem(
+                    value: status,
+                    child: Text(status.label),
+                  ),
+                )
+                .toList(growable: false),
+            onChanged: _saving
+                ? null
+                : (value) {
+                    if (value != null) setState(() => _shippingStatus = value);
+                  },
+          ),
+          const SizedBox(height: AppTokens.s12),
+          _optionalDateField(
+            key: 'order-estimated-arrival',
+            label: '预计到货日期',
+            controller: _estimatedArrivalController,
+            value: _estimatedArrivalAt,
+            onChanged: (value) => setState(() {
+              _estimatedArrivalAt = value;
+              _estimatedArrivalController.text = _formatOptionalDate(value);
+            }),
+          ),
+          const SizedBox(height: AppTokens.s12),
+          DropdownButtonFormField<OrderResult>(
+            key: const ValueKey('order-result'),
+            initialValue: _orderResult,
+            decoration: const InputDecoration(labelText: '订单结果'),
+            items: OrderResult.values
+                .map(
+                  (result) => DropdownMenuItem(
+                    value: result,
+                    child: Text(result.label),
+                  ),
+                )
+                .toList(growable: false),
+            onChanged: _saving
+                ? null
+                : (value) {
+                    if (value != null) setState(() => _orderResult = value);
+                  },
+          ),
+          const SizedBox(height: AppTokens.s12),
+          _optionalDateField(
+            key: 'order-estimated-repurchase',
+            label: '预计复购日期',
+            controller: _estimatedRepurchaseController,
+            value: _estimatedRepurchaseAt,
+            onChanged: (value) => setState(() {
+              _estimatedRepurchaseAt = value;
+              _estimatedRepurchaseController.text = _formatOptionalDate(value);
+            }),
+          ),
+          const SizedBox(height: AppTokens.s12),
+          TextFormField(
             key: const ValueKey('order-description'),
             controller: _descriptionController,
             minLines: 3,
@@ -337,6 +511,29 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
       ),
     );
   }
+
+  Widget _optionalDateField({
+    required String key,
+    required String label,
+    required TextEditingController controller,
+    required DateTime? value,
+    required ValueChanged<DateTime?> onChanged,
+  }) => TextFormField(
+    key: ValueKey(key),
+    controller: controller,
+    readOnly: true,
+    onTap: () => _pickOptionalDate(value: value, onChanged: onChanged),
+    decoration: InputDecoration(
+      labelText: label,
+      suffixIcon: value == null
+          ? const Icon(Icons.calendar_today_outlined)
+          : IconButton(
+              tooltip: '清除$label',
+              onPressed: _saving ? null : () => onChanged(null),
+              icon: const Icon(Icons.clear),
+            ),
+    ),
+  );
 }
 
 class _NoOpportunityMessage extends StatelessWidget {
