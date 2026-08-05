@@ -7,16 +7,16 @@ import 'package:sqlite3/sqlite3.dart' as sqlite;
 
 import 'helpers.dart';
 
-/// v3 数据库初始化与 v1/v2 真库升级。
+/// v4 数据库初始化与 v1/v2/v3 真库升级。
 void main() {
   late AppDatabase db;
 
-  group('v3 新库', () {
+  group('v4 新库', () {
     setUp(() async => db = await openTestDb());
     tearDown(() async => db.close());
 
-    test('schemaVersion 为 3', () {
-      expect(db.schemaVersion, 3);
+    test('schemaVersion 为 4', () {
+      expect(db.schemaVersion, 4);
     });
 
     test('空库初始化后九张表全部建成', () async {
@@ -66,11 +66,12 @@ void main() {
         'idx_plans_customer_status',
         'idx_plans_opportunity_status',
         'idx_plans_plan_at',
+        'idx_plans_source_rule',
         'idx_followups_opportunity',
       });
     });
 
-    test('跟进快照与项目最后跟进字段已建成', () async {
+    test('v3 跟进字段和 v4 任务基础字段已建成', () async {
       expect(
         await _columnNames(db, 'followups'),
         containsAll({
@@ -83,15 +84,29 @@ void main() {
       );
       expect(
         await _columnNames(db, 'opportunities'),
-        contains('last_follow_at'),
+        containsAll({'last_follow_at', 'owner', 'importance'}),
+      );
+      expect(await _columnNames(db, 'customers'), contains('country'));
+      expect(
+        await _columnNames(db, 'follow_plans'),
+        containsAll({
+          'source_type',
+          'source_id',
+          'rule_key',
+          'reason',
+          'talking_direction',
+          'next_action',
+          'owner',
+          'cancelled_at',
+        }),
       );
     });
 
-    test('user_version 写入为 3', () async {
+    test('user_version 写入为 4', () async {
       // drift 用 SQLite 的 user_version 记录 schema 版本，
       // 这个值不对的话后续 onUpgrade 会走错分支。
       final row = await db.customSelect('PRAGMA user_version').getSingle();
-      expect(row.data.values.first, 3);
+      expect(row.data.values.first, 4);
     });
 
     test('外键约束在 beforeOpen 后处于开启状态', () async {
@@ -139,7 +154,7 @@ void main() {
           )
           .get();
       // 索引没有被重复创建成两条。
-      expect(rows.length, 16);
+      expect(rows.length, 17);
     });
   });
 
@@ -162,7 +177,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 3);
+      expect(version.data.values.first, 4);
 
       final opportunities = await migrated.customSelect('''
             SELECT customer_id, name, stage, status, is_legacy_default
@@ -225,9 +240,14 @@ void main() {
       expect(migratedFollowup.read<String?>('pause_reason'), isNull);
 
       final projectLastFollowAt = await migrated.customSelect('''
-            SELECT last_follow_at FROM opportunities WHERE customer_id = 1
+            SELECT last_follow_at, owner, importance
+            FROM opportunities WHERE customer_id = 1
           ''').getSingle();
       expect(projectLastFollowAt.read<int>('last_follow_at'), 1785888000000);
+      expect(projectLastFollowAt.read<String>('owner'), '本人');
+      expect(projectLastFollowAt.read<String>('importance'), 'normal');
+
+      await _expectLegacyTaskBackfill(migrated);
 
       final foreignKeyErrors = await migrated
           .customSelect('PRAGMA foreign_key_check')
@@ -258,7 +278,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 3);
+      expect(version.data.values.first, 4);
 
       final followup = await migrated.customSelect('''
             SELECT opportunity_id, content, conclusion, feedback, stage,
@@ -286,6 +306,13 @@ void main() {
       expect(opportunity.read<String>('next_action'), '发送修订报价');
       expect(opportunity.read<int>('next_follow_at'), 1786492800000);
       expect(opportunity.read<int>('last_follow_at'), 1785888000000);
+      final taskFields = await migrated.customSelect('''
+            SELECT owner, importance FROM opportunities WHERE id = 1
+          ''').getSingle();
+      expect(taskFields.read<String>('owner'), '本人');
+      expect(taskFields.read<String>('importance'), 'normal');
+
+      await _expectLegacyTaskBackfill(migrated);
 
       for (final table in [
         'customers',
@@ -313,11 +340,75 @@ void main() {
       await directory.delete(recursive: true);
     }
   });
+
+  test('v3 真库升级只增加任务基础字段并保留原记录', () async {
+    final directory = await Directory.systemTemp.createTemp('customer-v3-');
+    final file = File('${directory.path}/customer.sqlite');
+    final raw = sqlite.sqlite3.open(file.path);
+    try {
+      _createV1Schema(raw);
+      _seedV1Data(raw);
+      _upgradeFixtureToV2(raw);
+      _upgradeFixtureToV3(raw);
+    } finally {
+      raw.close();
+    }
+
+    final migrated = AppDatabase.forTesting(NativeDatabase(file));
+    try {
+      await migrated.customSelect('SELECT 1').getSingle();
+      final version = await migrated
+          .customSelect('PRAGMA user_version')
+          .getSingle();
+      expect(version.data.values.first, 4);
+      await _expectLegacyTaskBackfill(migrated);
+
+      final followup = await migrated.customSelect('''
+            SELECT feedback, stage, next_action FROM followups WHERE id = 1
+          ''').getSingle();
+      expect(followup.read<String>('feedback'), '旧结论');
+      expect(followup.read<String>('stage'), 'quoted');
+      expect(followup.read<String>('next_action'), '发送修订报价');
+
+      final foreignKeyErrors = await migrated
+          .customSelect('PRAGMA foreign_key_check')
+          .get();
+      expect(foreignKeyErrors, isEmpty);
+    } finally {
+      await migrated.close();
+      await directory.delete(recursive: true);
+    }
+  });
 }
 
 Future<Set<String>> _columnNames(AppDatabase db, String table) async {
   final rows = await db.customSelect('PRAGMA table_info($table)').get();
   return rows.map((row) => row.read<String>('name')).toSet();
+}
+
+Future<void> _expectLegacyTaskBackfill(AppDatabase db) async {
+  final task = await db.customSelect('''
+        SELECT id, customer_id, opportunity_id, title, plan_at, status,
+               notified_at, completed_at, source_type, source_id, rule_key,
+               reason, talking_direction, next_action, owner, cancelled_at
+        FROM follow_plans WHERE id = 1
+      ''').getSingle();
+  expect(task.read<int>('id'), 1);
+  expect(task.read<int>('customer_id'), 1);
+  expect(task.read<int>('opportunity_id'), 1);
+  expect(task.read<String>('title'), '旧计划');
+  expect(task.read<int>('plan_at'), 1785888000000);
+  expect(task.read<String>('status'), 'pending');
+  expect(task.read<int?>('notified_at'), isNull);
+  expect(task.read<int?>('completed_at'), isNull);
+  expect(task.read<String>('source_type'), 'legacy');
+  expect(task.read<int?>('source_id'), isNull);
+  expect(task.read<String?>('rule_key'), isNull);
+  expect(task.read<String?>('reason'), isNull);
+  expect(task.read<String?>('talking_direction'), isNull);
+  expect(task.read<String>('next_action'), '旧计划');
+  expect(task.read<String>('owner'), '本人');
+  expect(task.read<int?>('cancelled_at'), isNull);
 }
 
 void _createV1Schema(sqlite.Database db) {
@@ -523,4 +614,21 @@ void _upgradeFixtureToV2(sqlite.Database db) {
   db.execute('UPDATE follow_plans SET opportunity_id = 1');
   db.execute('UPDATE orders SET opportunity_id = 1');
   db.execute('PRAGMA user_version = 2');
+}
+
+void _upgradeFixtureToV3(sqlite.Database db) {
+  db.execute('ALTER TABLE followups ADD COLUMN feedback TEXT');
+  db.execute('ALTER TABLE followups ADD COLUMN stage TEXT');
+  db.execute('ALTER TABLE followups ADD COLUMN next_action TEXT');
+  db.execute('ALTER TABLE followups ADD COLUMN next_follow_at INTEGER');
+  db.execute('ALTER TABLE followups ADD COLUMN pause_reason TEXT');
+  db.execute('ALTER TABLE opportunities ADD COLUMN last_follow_at INTEGER');
+  db.execute('''
+    UPDATE followups
+    SET feedback = '旧结论',
+        stage = 'quoted',
+        next_action = '发送修订报价'
+  ''');
+  db.execute('UPDATE opportunities SET last_follow_at = 1785888000000');
+  db.execute('PRAGMA user_version = 3');
 }

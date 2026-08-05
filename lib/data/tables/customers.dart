@@ -12,6 +12,9 @@ class Customers extends Table {
 
   TextColumn get company => text().nullable()();
 
+  /// 国家/地区。v4 增量字段，旧客户无法可靠推断所以保持可空。
+  TextColumn get country => text().nullable()();
+
   /// 电话。建索引以支持模糊搜索。
   TextColumn get phone => text().nullable()();
 

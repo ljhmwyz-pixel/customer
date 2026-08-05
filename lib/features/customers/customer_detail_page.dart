@@ -874,6 +874,7 @@ class _PlanTile extends StatelessWidget {
       PlanStatus.overdue => semantic.overdue,
       PlanStatus.notified => semantic.today,
       PlanStatus.pending => semantic.upcoming,
+      PlanStatus.cancelled => scheme.outline,
     };
     return Container(
       key: ValueKey('plan-${plan.id}'),

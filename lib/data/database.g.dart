@@ -46,6 +46,17 @@ class $CustomersTable extends Customers
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _countryMeta = const VerificationMeta(
+    'country',
+  );
+  @override
+  late final GeneratedColumn<String> country = GeneratedColumn<String>(
+    'country',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _phoneMeta = const VerificationMeta('phone');
   @override
   late final GeneratedColumn<String> phone = GeneratedColumn<String>(
@@ -151,6 +162,7 @@ class $CustomersTable extends Customers
     id,
     name,
     company,
+    country,
     phone,
     wechat,
     address,
@@ -189,6 +201,12 @@ class $CustomersTable extends Customers
       context.handle(
         _companyMeta,
         company.isAcceptableOrUnknown(data['company']!, _companyMeta),
+      );
+    }
+    if (data.containsKey('country')) {
+      context.handle(
+        _countryMeta,
+        country.isAcceptableOrUnknown(data['country']!, _countryMeta),
       );
     }
     if (data.containsKey('phone')) {
@@ -279,6 +297,10 @@ class $CustomersTable extends Customers
         DriftSqlType.string,
         data['${effectivePrefix}company'],
       ),
+      country: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}country'],
+      ),
       phone: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}phone'],
@@ -335,6 +357,9 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
   final String name;
   final String? company;
 
+  /// 国家/地区。v4 增量字段，旧客户无法可靠推断所以保持可空。
+  final String? country;
+
   /// 电话。建索引以支持模糊搜索。
   final String? phone;
   final String? wechat;
@@ -361,6 +386,7 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
     required this.id,
     required this.name,
     this.company,
+    this.country,
     this.phone,
     this.wechat,
     this.address,
@@ -379,6 +405,9 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
     map['name'] = Variable<String>(name);
     if (!nullToAbsent || company != null) {
       map['company'] = Variable<String>(company);
+    }
+    if (!nullToAbsent || country != null) {
+      map['country'] = Variable<String>(country);
     }
     if (!nullToAbsent || phone != null) {
       map['phone'] = Variable<String>(phone);
@@ -412,6 +441,9 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
       company: company == null && nullToAbsent
           ? const Value.absent()
           : Value(company),
+      country: country == null && nullToAbsent
+          ? const Value.absent()
+          : Value(country),
       phone: phone == null && nullToAbsent
           ? const Value.absent()
           : Value(phone),
@@ -444,6 +476,7 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       company: serializer.fromJson<String?>(json['company']),
+      country: serializer.fromJson<String?>(json['country']),
       phone: serializer.fromJson<String?>(json['phone']),
       wechat: serializer.fromJson<String?>(json['wechat']),
       address: serializer.fromJson<String?>(json['address']),
@@ -463,6 +496,7 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
       'company': serializer.toJson<String?>(company),
+      'country': serializer.toJson<String?>(country),
       'phone': serializer.toJson<String?>(phone),
       'wechat': serializer.toJson<String?>(wechat),
       'address': serializer.toJson<String?>(address),
@@ -480,6 +514,7 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
     int? id,
     String? name,
     Value<String?> company = const Value.absent(),
+    Value<String?> country = const Value.absent(),
     Value<String?> phone = const Value.absent(),
     Value<String?> wechat = const Value.absent(),
     Value<String?> address = const Value.absent(),
@@ -494,6 +529,7 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
     id: id ?? this.id,
     name: name ?? this.name,
     company: company.present ? company.value : this.company,
+    country: country.present ? country.value : this.country,
     phone: phone.present ? phone.value : this.phone,
     wechat: wechat.present ? wechat.value : this.wechat,
     address: address.present ? address.value : this.address,
@@ -510,6 +546,7 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       company: data.company.present ? data.company.value : this.company,
+      country: data.country.present ? data.country.value : this.country,
       phone: data.phone.present ? data.phone.value : this.phone,
       wechat: data.wechat.present ? data.wechat.value : this.wechat,
       address: data.address.present ? data.address.value : this.address,
@@ -531,6 +568,7 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('company: $company, ')
+          ..write('country: $country, ')
           ..write('phone: $phone, ')
           ..write('wechat: $wechat, ')
           ..write('address: $address, ')
@@ -550,6 +588,7 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
     id,
     name,
     company,
+    country,
     phone,
     wechat,
     address,
@@ -568,6 +607,7 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
           other.id == this.id &&
           other.name == this.name &&
           other.company == this.company &&
+          other.country == this.country &&
           other.phone == this.phone &&
           other.wechat == this.wechat &&
           other.address == this.address &&
@@ -584,6 +624,7 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
   final Value<int> id;
   final Value<String> name;
   final Value<String?> company;
+  final Value<String?> country;
   final Value<String?> phone;
   final Value<String?> wechat;
   final Value<String?> address;
@@ -598,6 +639,7 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.company = const Value.absent(),
+    this.country = const Value.absent(),
     this.phone = const Value.absent(),
     this.wechat = const Value.absent(),
     this.address = const Value.absent(),
@@ -613,6 +655,7 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
     this.id = const Value.absent(),
     required String name,
     this.company = const Value.absent(),
+    this.country = const Value.absent(),
     this.phone = const Value.absent(),
     this.wechat = const Value.absent(),
     this.address = const Value.absent(),
@@ -630,6 +673,7 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
     Expression<int>? id,
     Expression<String>? name,
     Expression<String>? company,
+    Expression<String>? country,
     Expression<String>? phone,
     Expression<String>? wechat,
     Expression<String>? address,
@@ -645,6 +689,7 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (company != null) 'company': company,
+      if (country != null) 'country': country,
       if (phone != null) 'phone': phone,
       if (wechat != null) 'wechat': wechat,
       if (address != null) 'address': address,
@@ -662,6 +707,7 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
     Value<int>? id,
     Value<String>? name,
     Value<String?>? company,
+    Value<String?>? country,
     Value<String?>? phone,
     Value<String?>? wechat,
     Value<String?>? address,
@@ -677,6 +723,7 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
       id: id ?? this.id,
       name: name ?? this.name,
       company: company ?? this.company,
+      country: country ?? this.country,
       phone: phone ?? this.phone,
       wechat: wechat ?? this.wechat,
       address: address ?? this.address,
@@ -701,6 +748,9 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
     }
     if (company.present) {
       map['company'] = Variable<String>(company.value);
+    }
+    if (country.present) {
+      map['country'] = Variable<String>(country.value);
     }
     if (phone.present) {
       map['phone'] = Variable<String>(phone.value);
@@ -741,6 +791,7 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('company: $company, ')
+          ..write('country: $country, ')
           ..write('phone: $phone, ')
           ..write('wechat: $wechat, ')
           ..write('address: $address, ')
@@ -801,6 +852,28 @@ class $OpportunitiesTable extends Opportunities
     ),
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ownerMeta = const VerificationMeta('owner');
+  @override
+  late final GeneratedColumn<String> owner = GeneratedColumn<String>(
+    'owner',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('本人'),
+  );
+  static const VerificationMeta _importanceMeta = const VerificationMeta(
+    'importance',
+  );
+  @override
+  late final GeneratedColumn<String> importance = GeneratedColumn<String>(
+    'importance',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('normal'),
   );
   static const VerificationMeta _productCategoryMeta = const VerificationMeta(
     'productCategory',
@@ -1183,6 +1256,8 @@ class $OpportunitiesTable extends Opportunities
     id,
     customerId,
     name,
+    owner,
+    importance,
     productCategory,
     productModel,
     equipmentBrand,
@@ -1247,6 +1322,18 @@ class $OpportunitiesTable extends Opportunities
       );
     } else if (isInserting) {
       context.missing(_nameMeta);
+    }
+    if (data.containsKey('owner')) {
+      context.handle(
+        _ownerMeta,
+        owner.isAcceptableOrUnknown(data['owner']!, _ownerMeta),
+      );
+    }
+    if (data.containsKey('importance')) {
+      context.handle(
+        _importanceMeta,
+        importance.isAcceptableOrUnknown(data['importance']!, _importanceMeta),
+      );
     }
     if (data.containsKey('product_category')) {
       context.handle(
@@ -1549,6 +1636,14 @@ class $OpportunitiesTable extends Opportunities
         DriftSqlType.string,
         data['${effectivePrefix}name'],
       )!,
+      owner: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner'],
+      )!,
+      importance: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}importance'],
+      )!,
       productCategory: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}product_category'],
@@ -1694,6 +1789,12 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
   final int id;
   final int customerId;
   final String name;
+
+  /// 单人版默认由本人负责，保留文本字段供后续表单覆盖。
+  final String owner;
+
+  /// 项目重要程度，存 OpportunityImportance.dbValue。
+  final String importance;
   final String? productCategory;
   final String? productModel;
   final String? equipmentBrand;
@@ -1741,6 +1842,8 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
     required this.id,
     required this.customerId,
     required this.name,
+    required this.owner,
+    required this.importance,
     this.productCategory,
     this.productModel,
     this.equipmentBrand,
@@ -1781,6 +1884,8 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
     map['id'] = Variable<int>(id);
     map['customer_id'] = Variable<int>(customerId);
     map['name'] = Variable<String>(name);
+    map['owner'] = Variable<String>(owner);
+    map['importance'] = Variable<String>(importance);
     if (!nullToAbsent || productCategory != null) {
       map['product_category'] = Variable<String>(productCategory);
     }
@@ -1872,6 +1977,8 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
       id: Value(id),
       customerId: Value(customerId),
       name: Value(name),
+      owner: Value(owner),
+      importance: Value(importance),
       productCategory: productCategory == null && nullToAbsent
           ? const Value.absent()
           : Value(productCategory),
@@ -1966,6 +2073,8 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
       id: serializer.fromJson<int>(json['id']),
       customerId: serializer.fromJson<int>(json['customerId']),
       name: serializer.fromJson<String>(json['name']),
+      owner: serializer.fromJson<String>(json['owner']),
+      importance: serializer.fromJson<String>(json['importance']),
       productCategory: serializer.fromJson<String?>(json['productCategory']),
       productModel: serializer.fromJson<String?>(json['productModel']),
       equipmentBrand: serializer.fromJson<String?>(json['equipmentBrand']),
@@ -2022,6 +2131,8 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
       'id': serializer.toJson<int>(id),
       'customerId': serializer.toJson<int>(customerId),
       'name': serializer.toJson<String>(name),
+      'owner': serializer.toJson<String>(owner),
+      'importance': serializer.toJson<String>(importance),
       'productCategory': serializer.toJson<String?>(productCategory),
       'productModel': serializer.toJson<String?>(productModel),
       'equipmentBrand': serializer.toJson<String?>(equipmentBrand),
@@ -2066,6 +2177,8 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
     int? id,
     int? customerId,
     String? name,
+    String? owner,
+    String? importance,
     Value<String?> productCategory = const Value.absent(),
     Value<String?> productModel = const Value.absent(),
     Value<String?> equipmentBrand = const Value.absent(),
@@ -2103,6 +2216,8 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
     id: id ?? this.id,
     customerId: customerId ?? this.customerId,
     name: name ?? this.name,
+    owner: owner ?? this.owner,
+    importance: importance ?? this.importance,
     productCategory: productCategory.present
         ? productCategory.value
         : this.productCategory,
@@ -2182,6 +2297,10 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
           ? data.customerId.value
           : this.customerId,
       name: data.name.present ? data.name.value : this.name,
+      owner: data.owner.present ? data.owner.value : this.owner,
+      importance: data.importance.present
+          ? data.importance.value
+          : this.importance,
       productCategory: data.productCategory.present
           ? data.productCategory.value
           : this.productCategory,
@@ -2280,6 +2399,8 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
           ..write('id: $id, ')
           ..write('customerId: $customerId, ')
           ..write('name: $name, ')
+          ..write('owner: $owner, ')
+          ..write('importance: $importance, ')
           ..write('productCategory: $productCategory, ')
           ..write('productModel: $productModel, ')
           ..write('equipmentBrand: $equipmentBrand, ')
@@ -2322,6 +2443,8 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
     id,
     customerId,
     name,
+    owner,
+    importance,
     productCategory,
     productModel,
     equipmentBrand,
@@ -2363,6 +2486,8 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
           other.id == this.id &&
           other.customerId == this.customerId &&
           other.name == this.name &&
+          other.owner == this.owner &&
+          other.importance == this.importance &&
           other.productCategory == this.productCategory &&
           other.productModel == this.productModel &&
           other.equipmentBrand == this.equipmentBrand &&
@@ -2402,6 +2527,8 @@ class OpportunitiesCompanion extends UpdateCompanion<OpportunityRow> {
   final Value<int> id;
   final Value<int> customerId;
   final Value<String> name;
+  final Value<String> owner;
+  final Value<String> importance;
   final Value<String?> productCategory;
   final Value<String?> productModel;
   final Value<String?> equipmentBrand;
@@ -2439,6 +2566,8 @@ class OpportunitiesCompanion extends UpdateCompanion<OpportunityRow> {
     this.id = const Value.absent(),
     this.customerId = const Value.absent(),
     this.name = const Value.absent(),
+    this.owner = const Value.absent(),
+    this.importance = const Value.absent(),
     this.productCategory = const Value.absent(),
     this.productModel = const Value.absent(),
     this.equipmentBrand = const Value.absent(),
@@ -2477,6 +2606,8 @@ class OpportunitiesCompanion extends UpdateCompanion<OpportunityRow> {
     this.id = const Value.absent(),
     required int customerId,
     required String name,
+    this.owner = const Value.absent(),
+    this.importance = const Value.absent(),
     this.productCategory = const Value.absent(),
     this.productModel = const Value.absent(),
     this.equipmentBrand = const Value.absent(),
@@ -2518,6 +2649,8 @@ class OpportunitiesCompanion extends UpdateCompanion<OpportunityRow> {
     Expression<int>? id,
     Expression<int>? customerId,
     Expression<String>? name,
+    Expression<String>? owner,
+    Expression<String>? importance,
     Expression<String>? productCategory,
     Expression<String>? productModel,
     Expression<String>? equipmentBrand,
@@ -2556,6 +2689,8 @@ class OpportunitiesCompanion extends UpdateCompanion<OpportunityRow> {
       if (id != null) 'id': id,
       if (customerId != null) 'customer_id': customerId,
       if (name != null) 'name': name,
+      if (owner != null) 'owner': owner,
+      if (importance != null) 'importance': importance,
       if (productCategory != null) 'product_category': productCategory,
       if (productModel != null) 'product_model': productModel,
       if (equipmentBrand != null) 'equipment_brand': equipmentBrand,
@@ -2601,6 +2736,8 @@ class OpportunitiesCompanion extends UpdateCompanion<OpportunityRow> {
     Value<int>? id,
     Value<int>? customerId,
     Value<String>? name,
+    Value<String>? owner,
+    Value<String>? importance,
     Value<String?>? productCategory,
     Value<String?>? productModel,
     Value<String?>? equipmentBrand,
@@ -2639,6 +2776,8 @@ class OpportunitiesCompanion extends UpdateCompanion<OpportunityRow> {
       id: id ?? this.id,
       customerId: customerId ?? this.customerId,
       name: name ?? this.name,
+      owner: owner ?? this.owner,
+      importance: importance ?? this.importance,
       productCategory: productCategory ?? this.productCategory,
       productModel: productModel ?? this.productModel,
       equipmentBrand: equipmentBrand ?? this.equipmentBrand,
@@ -2689,6 +2828,12 @@ class OpportunitiesCompanion extends UpdateCompanion<OpportunityRow> {
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
+    }
+    if (owner.present) {
+      map['owner'] = Variable<String>(owner.value);
+    }
+    if (importance.present) {
+      map['importance'] = Variable<String>(importance.value);
     }
     if (productCategory.present) {
       map['product_category'] = Variable<String>(productCategory.value);
@@ -2806,6 +2951,8 @@ class OpportunitiesCompanion extends UpdateCompanion<OpportunityRow> {
           ..write('id: $id, ')
           ..write('customerId: $customerId, ')
           ..write('name: $name, ')
+          ..write('owner: $owner, ')
+          ..write('importance: $importance, ')
           ..write('productCategory: $productCategory, ')
           ..write('productModel: $productModel, ')
           ..write('equipmentBrand: $equipmentBrand, ')
@@ -4248,6 +4395,40 @@ class $FollowPlansTable extends FollowPlans
       'REFERENCES opportunities (id) ON DELETE SET NULL',
     ),
   );
+  static const VerificationMeta _sourceTypeMeta = const VerificationMeta(
+    'sourceType',
+  );
+  @override
+  late final GeneratedColumn<String> sourceType = GeneratedColumn<String>(
+    'source_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('legacy'),
+  );
+  static const VerificationMeta _sourceIdMeta = const VerificationMeta(
+    'sourceId',
+  );
+  @override
+  late final GeneratedColumn<int> sourceId = GeneratedColumn<int>(
+    'source_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _ruleKeyMeta = const VerificationMeta(
+    'ruleKey',
+  );
+  @override
+  late final GeneratedColumn<String> ruleKey = GeneratedColumn<String>(
+    'rule_key',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _titleMeta = const VerificationMeta('title');
   @override
   late final GeneratedColumn<String> title = GeneratedColumn<String>(
@@ -4260,6 +4441,47 @@ class $FollowPlansTable extends FollowPlans
     ),
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+  );
+  static const VerificationMeta _reasonMeta = const VerificationMeta('reason');
+  @override
+  late final GeneratedColumn<String> reason = GeneratedColumn<String>(
+    'reason',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _talkingDirectionMeta = const VerificationMeta(
+    'talkingDirection',
+  );
+  @override
+  late final GeneratedColumn<String> talkingDirection = GeneratedColumn<String>(
+    'talking_direction',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nextActionMeta = const VerificationMeta(
+    'nextAction',
+  );
+  @override
+  late final GeneratedColumn<String> nextAction = GeneratedColumn<String>(
+    'next_action',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _ownerMeta = const VerificationMeta('owner');
+  @override
+  late final GeneratedColumn<String> owner = GeneratedColumn<String>(
+    'owner',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('本人'),
   );
   static const VerificationMeta _planAtMeta = const VerificationMeta('planAt');
   @override
@@ -4302,6 +4524,17 @@ class $FollowPlansTable extends FollowPlans
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _cancelledAtMeta = const VerificationMeta(
+    'cancelledAt',
+  );
+  @override
+  late final GeneratedColumn<int> cancelledAt = GeneratedColumn<int>(
+    'cancelled_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -4329,11 +4562,19 @@ class $FollowPlansTable extends FollowPlans
     id,
     customerId,
     opportunityId,
+    sourceType,
+    sourceId,
+    ruleKey,
     title,
+    reason,
+    talkingDirection,
+    nextAction,
+    owner,
     planAt,
     status,
     notifiedAt,
     completedAt,
+    cancelledAt,
     createdAt,
     updatedAt,
   ];
@@ -4369,6 +4610,24 @@ class $FollowPlansTable extends FollowPlans
         ),
       );
     }
+    if (data.containsKey('source_type')) {
+      context.handle(
+        _sourceTypeMeta,
+        sourceType.isAcceptableOrUnknown(data['source_type']!, _sourceTypeMeta),
+      );
+    }
+    if (data.containsKey('source_id')) {
+      context.handle(
+        _sourceIdMeta,
+        sourceId.isAcceptableOrUnknown(data['source_id']!, _sourceIdMeta),
+      );
+    }
+    if (data.containsKey('rule_key')) {
+      context.handle(
+        _ruleKeyMeta,
+        ruleKey.isAcceptableOrUnknown(data['rule_key']!, _ruleKeyMeta),
+      );
+    }
     if (data.containsKey('title')) {
       context.handle(
         _titleMeta,
@@ -4376,6 +4635,33 @@ class $FollowPlansTable extends FollowPlans
       );
     } else if (isInserting) {
       context.missing(_titleMeta);
+    }
+    if (data.containsKey('reason')) {
+      context.handle(
+        _reasonMeta,
+        reason.isAcceptableOrUnknown(data['reason']!, _reasonMeta),
+      );
+    }
+    if (data.containsKey('talking_direction')) {
+      context.handle(
+        _talkingDirectionMeta,
+        talkingDirection.isAcceptableOrUnknown(
+          data['talking_direction']!,
+          _talkingDirectionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('next_action')) {
+      context.handle(
+        _nextActionMeta,
+        nextAction.isAcceptableOrUnknown(data['next_action']!, _nextActionMeta),
+      );
+    }
+    if (data.containsKey('owner')) {
+      context.handle(
+        _ownerMeta,
+        owner.isAcceptableOrUnknown(data['owner']!, _ownerMeta),
+      );
     }
     if (data.containsKey('plan_at')) {
       context.handle(
@@ -4403,6 +4689,15 @@ class $FollowPlansTable extends FollowPlans
         completedAt.isAcceptableOrUnknown(
           data['completed_at']!,
           _completedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cancelled_at')) {
+      context.handle(
+        _cancelledAtMeta,
+        cancelledAt.isAcceptableOrUnknown(
+          data['cancelled_at']!,
+          _cancelledAtMeta,
         ),
       );
     }
@@ -4443,9 +4738,37 @@ class $FollowPlansTable extends FollowPlans
         DriftSqlType.int,
         data['${effectivePrefix}opportunity_id'],
       ),
+      sourceType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_type'],
+      )!,
+      sourceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}source_id'],
+      ),
+      ruleKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rule_key'],
+      ),
       title: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}title'],
+      )!,
+      reason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reason'],
+      ),
+      talkingDirection: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}talking_direction'],
+      ),
+      nextAction: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}next_action'],
+      ),
+      owner: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner'],
       )!,
       planAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
@@ -4462,6 +4785,10 @@ class $FollowPlansTable extends FollowPlans
       completedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}completed_at'],
+      ),
+      cancelledAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cancelled_at'],
       ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
@@ -4487,8 +4814,29 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
   /// v2 项目归属。为兼容原表结构保持可空，迁移会为全部旧记录回填。
   final int? opportunityId;
 
+  /// 业务来源，存 TaskSourceType.dbValue。
+  final String sourceType;
+
+  /// 来源业务记录主键。手工和历史任务为空。
+  final int? sourceId;
+
+  /// 自动任务规则稳定键，与 sourceType/sourceId 共同用于去重。
+  final String? ruleKey;
+
   /// 事项标题，如「催合同」。
   final String title;
+
+  /// 任务生成或手工安排的原因。历史任务保持为空。
+  final String? reason;
+
+  /// 建议沟通重点，只提供方向，不生成对外消息。
+  final String? talkingDirection;
+
+  /// 任务创建时的下一步行动快照。
+  final String? nextAction;
+
+  /// 任务负责人快照。单人版默认本人。
+  final String owner;
 
   /// 计划时间，UTC 毫秒。建索引，待办查询与闹钟排期都按它过滤。
   final int planAt;
@@ -4502,17 +4850,26 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
   /// 靠它与 planAt 的偏差判断 ColorOS 有没有掐掉闹钟。
   final int? notifiedAt;
   final int? completedAt;
+  final int? cancelledAt;
   final int createdAt;
   final int updatedAt;
   const FollowPlanRow({
     required this.id,
     required this.customerId,
     this.opportunityId,
+    required this.sourceType,
+    this.sourceId,
+    this.ruleKey,
     required this.title,
+    this.reason,
+    this.talkingDirection,
+    this.nextAction,
+    required this.owner,
     required this.planAt,
     required this.status,
     this.notifiedAt,
     this.completedAt,
+    this.cancelledAt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -4524,7 +4881,24 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
     if (!nullToAbsent || opportunityId != null) {
       map['opportunity_id'] = Variable<int>(opportunityId);
     }
+    map['source_type'] = Variable<String>(sourceType);
+    if (!nullToAbsent || sourceId != null) {
+      map['source_id'] = Variable<int>(sourceId);
+    }
+    if (!nullToAbsent || ruleKey != null) {
+      map['rule_key'] = Variable<String>(ruleKey);
+    }
     map['title'] = Variable<String>(title);
+    if (!nullToAbsent || reason != null) {
+      map['reason'] = Variable<String>(reason);
+    }
+    if (!nullToAbsent || talkingDirection != null) {
+      map['talking_direction'] = Variable<String>(talkingDirection);
+    }
+    if (!nullToAbsent || nextAction != null) {
+      map['next_action'] = Variable<String>(nextAction);
+    }
+    map['owner'] = Variable<String>(owner);
     map['plan_at'] = Variable<int>(planAt);
     map['status'] = Variable<String>(status);
     if (!nullToAbsent || notifiedAt != null) {
@@ -4532,6 +4906,9 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
     }
     if (!nullToAbsent || completedAt != null) {
       map['completed_at'] = Variable<int>(completedAt);
+    }
+    if (!nullToAbsent || cancelledAt != null) {
+      map['cancelled_at'] = Variable<int>(cancelledAt);
     }
     map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
@@ -4545,7 +4922,24 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
       opportunityId: opportunityId == null && nullToAbsent
           ? const Value.absent()
           : Value(opportunityId),
+      sourceType: Value(sourceType),
+      sourceId: sourceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceId),
+      ruleKey: ruleKey == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ruleKey),
       title: Value(title),
+      reason: reason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reason),
+      talkingDirection: talkingDirection == null && nullToAbsent
+          ? const Value.absent()
+          : Value(talkingDirection),
+      nextAction: nextAction == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextAction),
+      owner: Value(owner),
       planAt: Value(planAt),
       status: Value(status),
       notifiedAt: notifiedAt == null && nullToAbsent
@@ -4554,6 +4948,9 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
       completedAt: completedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(completedAt),
+      cancelledAt: cancelledAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cancelledAt),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -4568,11 +4965,19 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
       id: serializer.fromJson<int>(json['id']),
       customerId: serializer.fromJson<int>(json['customerId']),
       opportunityId: serializer.fromJson<int?>(json['opportunityId']),
+      sourceType: serializer.fromJson<String>(json['sourceType']),
+      sourceId: serializer.fromJson<int?>(json['sourceId']),
+      ruleKey: serializer.fromJson<String?>(json['ruleKey']),
       title: serializer.fromJson<String>(json['title']),
+      reason: serializer.fromJson<String?>(json['reason']),
+      talkingDirection: serializer.fromJson<String?>(json['talkingDirection']),
+      nextAction: serializer.fromJson<String?>(json['nextAction']),
+      owner: serializer.fromJson<String>(json['owner']),
       planAt: serializer.fromJson<int>(json['planAt']),
       status: serializer.fromJson<String>(json['status']),
       notifiedAt: serializer.fromJson<int?>(json['notifiedAt']),
       completedAt: serializer.fromJson<int?>(json['completedAt']),
+      cancelledAt: serializer.fromJson<int?>(json['cancelledAt']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
     );
@@ -4584,11 +4989,19 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
       'id': serializer.toJson<int>(id),
       'customerId': serializer.toJson<int>(customerId),
       'opportunityId': serializer.toJson<int?>(opportunityId),
+      'sourceType': serializer.toJson<String>(sourceType),
+      'sourceId': serializer.toJson<int?>(sourceId),
+      'ruleKey': serializer.toJson<String?>(ruleKey),
       'title': serializer.toJson<String>(title),
+      'reason': serializer.toJson<String?>(reason),
+      'talkingDirection': serializer.toJson<String?>(talkingDirection),
+      'nextAction': serializer.toJson<String?>(nextAction),
+      'owner': serializer.toJson<String>(owner),
       'planAt': serializer.toJson<int>(planAt),
       'status': serializer.toJson<String>(status),
       'notifiedAt': serializer.toJson<int?>(notifiedAt),
       'completedAt': serializer.toJson<int?>(completedAt),
+      'cancelledAt': serializer.toJson<int?>(cancelledAt),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
     };
@@ -4598,11 +5011,19 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
     int? id,
     int? customerId,
     Value<int?> opportunityId = const Value.absent(),
+    String? sourceType,
+    Value<int?> sourceId = const Value.absent(),
+    Value<String?> ruleKey = const Value.absent(),
     String? title,
+    Value<String?> reason = const Value.absent(),
+    Value<String?> talkingDirection = const Value.absent(),
+    Value<String?> nextAction = const Value.absent(),
+    String? owner,
     int? planAt,
     String? status,
     Value<int?> notifiedAt = const Value.absent(),
     Value<int?> completedAt = const Value.absent(),
+    Value<int?> cancelledAt = const Value.absent(),
     int? createdAt,
     int? updatedAt,
   }) => FollowPlanRow(
@@ -4611,11 +5032,21 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
     opportunityId: opportunityId.present
         ? opportunityId.value
         : this.opportunityId,
+    sourceType: sourceType ?? this.sourceType,
+    sourceId: sourceId.present ? sourceId.value : this.sourceId,
+    ruleKey: ruleKey.present ? ruleKey.value : this.ruleKey,
     title: title ?? this.title,
+    reason: reason.present ? reason.value : this.reason,
+    talkingDirection: talkingDirection.present
+        ? talkingDirection.value
+        : this.talkingDirection,
+    nextAction: nextAction.present ? nextAction.value : this.nextAction,
+    owner: owner ?? this.owner,
     planAt: planAt ?? this.planAt,
     status: status ?? this.status,
     notifiedAt: notifiedAt.present ? notifiedAt.value : this.notifiedAt,
     completedAt: completedAt.present ? completedAt.value : this.completedAt,
+    cancelledAt: cancelledAt.present ? cancelledAt.value : this.cancelledAt,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -4628,7 +5059,20 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
       opportunityId: data.opportunityId.present
           ? data.opportunityId.value
           : this.opportunityId,
+      sourceType: data.sourceType.present
+          ? data.sourceType.value
+          : this.sourceType,
+      sourceId: data.sourceId.present ? data.sourceId.value : this.sourceId,
+      ruleKey: data.ruleKey.present ? data.ruleKey.value : this.ruleKey,
       title: data.title.present ? data.title.value : this.title,
+      reason: data.reason.present ? data.reason.value : this.reason,
+      talkingDirection: data.talkingDirection.present
+          ? data.talkingDirection.value
+          : this.talkingDirection,
+      nextAction: data.nextAction.present
+          ? data.nextAction.value
+          : this.nextAction,
+      owner: data.owner.present ? data.owner.value : this.owner,
       planAt: data.planAt.present ? data.planAt.value : this.planAt,
       status: data.status.present ? data.status.value : this.status,
       notifiedAt: data.notifiedAt.present
@@ -4637,6 +5081,9 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
       completedAt: data.completedAt.present
           ? data.completedAt.value
           : this.completedAt,
+      cancelledAt: data.cancelledAt.present
+          ? data.cancelledAt.value
+          : this.cancelledAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -4648,11 +5095,19 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
           ..write('id: $id, ')
           ..write('customerId: $customerId, ')
           ..write('opportunityId: $opportunityId, ')
+          ..write('sourceType: $sourceType, ')
+          ..write('sourceId: $sourceId, ')
+          ..write('ruleKey: $ruleKey, ')
           ..write('title: $title, ')
+          ..write('reason: $reason, ')
+          ..write('talkingDirection: $talkingDirection, ')
+          ..write('nextAction: $nextAction, ')
+          ..write('owner: $owner, ')
           ..write('planAt: $planAt, ')
           ..write('status: $status, ')
           ..write('notifiedAt: $notifiedAt, ')
           ..write('completedAt: $completedAt, ')
+          ..write('cancelledAt: $cancelledAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -4664,11 +5119,19 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
     id,
     customerId,
     opportunityId,
+    sourceType,
+    sourceId,
+    ruleKey,
     title,
+    reason,
+    talkingDirection,
+    nextAction,
+    owner,
     planAt,
     status,
     notifiedAt,
     completedAt,
+    cancelledAt,
     createdAt,
     updatedAt,
   );
@@ -4679,11 +5142,19 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
           other.id == this.id &&
           other.customerId == this.customerId &&
           other.opportunityId == this.opportunityId &&
+          other.sourceType == this.sourceType &&
+          other.sourceId == this.sourceId &&
+          other.ruleKey == this.ruleKey &&
           other.title == this.title &&
+          other.reason == this.reason &&
+          other.talkingDirection == this.talkingDirection &&
+          other.nextAction == this.nextAction &&
+          other.owner == this.owner &&
           other.planAt == this.planAt &&
           other.status == this.status &&
           other.notifiedAt == this.notifiedAt &&
           other.completedAt == this.completedAt &&
+          other.cancelledAt == this.cancelledAt &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -4692,22 +5163,38 @@ class FollowPlansCompanion extends UpdateCompanion<FollowPlanRow> {
   final Value<int> id;
   final Value<int> customerId;
   final Value<int?> opportunityId;
+  final Value<String> sourceType;
+  final Value<int?> sourceId;
+  final Value<String?> ruleKey;
   final Value<String> title;
+  final Value<String?> reason;
+  final Value<String?> talkingDirection;
+  final Value<String?> nextAction;
+  final Value<String> owner;
   final Value<int> planAt;
   final Value<String> status;
   final Value<int?> notifiedAt;
   final Value<int?> completedAt;
+  final Value<int?> cancelledAt;
   final Value<int> createdAt;
   final Value<int> updatedAt;
   const FollowPlansCompanion({
     this.id = const Value.absent(),
     this.customerId = const Value.absent(),
     this.opportunityId = const Value.absent(),
+    this.sourceType = const Value.absent(),
+    this.sourceId = const Value.absent(),
+    this.ruleKey = const Value.absent(),
     this.title = const Value.absent(),
+    this.reason = const Value.absent(),
+    this.talkingDirection = const Value.absent(),
+    this.nextAction = const Value.absent(),
+    this.owner = const Value.absent(),
     this.planAt = const Value.absent(),
     this.status = const Value.absent(),
     this.notifiedAt = const Value.absent(),
     this.completedAt = const Value.absent(),
+    this.cancelledAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
@@ -4715,11 +5202,19 @@ class FollowPlansCompanion extends UpdateCompanion<FollowPlanRow> {
     this.id = const Value.absent(),
     required int customerId,
     this.opportunityId = const Value.absent(),
+    this.sourceType = const Value.absent(),
+    this.sourceId = const Value.absent(),
+    this.ruleKey = const Value.absent(),
     required String title,
+    this.reason = const Value.absent(),
+    this.talkingDirection = const Value.absent(),
+    this.nextAction = const Value.absent(),
+    this.owner = const Value.absent(),
     required int planAt,
     this.status = const Value.absent(),
     this.notifiedAt = const Value.absent(),
     this.completedAt = const Value.absent(),
+    this.cancelledAt = const Value.absent(),
     required int createdAt,
     required int updatedAt,
   }) : customerId = Value(customerId),
@@ -4731,11 +5226,19 @@ class FollowPlansCompanion extends UpdateCompanion<FollowPlanRow> {
     Expression<int>? id,
     Expression<int>? customerId,
     Expression<int>? opportunityId,
+    Expression<String>? sourceType,
+    Expression<int>? sourceId,
+    Expression<String>? ruleKey,
     Expression<String>? title,
+    Expression<String>? reason,
+    Expression<String>? talkingDirection,
+    Expression<String>? nextAction,
+    Expression<String>? owner,
     Expression<int>? planAt,
     Expression<String>? status,
     Expression<int>? notifiedAt,
     Expression<int>? completedAt,
+    Expression<int>? cancelledAt,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
   }) {
@@ -4743,11 +5246,19 @@ class FollowPlansCompanion extends UpdateCompanion<FollowPlanRow> {
       if (id != null) 'id': id,
       if (customerId != null) 'customer_id': customerId,
       if (opportunityId != null) 'opportunity_id': opportunityId,
+      if (sourceType != null) 'source_type': sourceType,
+      if (sourceId != null) 'source_id': sourceId,
+      if (ruleKey != null) 'rule_key': ruleKey,
       if (title != null) 'title': title,
+      if (reason != null) 'reason': reason,
+      if (talkingDirection != null) 'talking_direction': talkingDirection,
+      if (nextAction != null) 'next_action': nextAction,
+      if (owner != null) 'owner': owner,
       if (planAt != null) 'plan_at': planAt,
       if (status != null) 'status': status,
       if (notifiedAt != null) 'notified_at': notifiedAt,
       if (completedAt != null) 'completed_at': completedAt,
+      if (cancelledAt != null) 'cancelled_at': cancelledAt,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
@@ -4757,11 +5268,19 @@ class FollowPlansCompanion extends UpdateCompanion<FollowPlanRow> {
     Value<int>? id,
     Value<int>? customerId,
     Value<int?>? opportunityId,
+    Value<String>? sourceType,
+    Value<int?>? sourceId,
+    Value<String?>? ruleKey,
     Value<String>? title,
+    Value<String?>? reason,
+    Value<String?>? talkingDirection,
+    Value<String?>? nextAction,
+    Value<String>? owner,
     Value<int>? planAt,
     Value<String>? status,
     Value<int?>? notifiedAt,
     Value<int?>? completedAt,
+    Value<int?>? cancelledAt,
     Value<int>? createdAt,
     Value<int>? updatedAt,
   }) {
@@ -4769,11 +5288,19 @@ class FollowPlansCompanion extends UpdateCompanion<FollowPlanRow> {
       id: id ?? this.id,
       customerId: customerId ?? this.customerId,
       opportunityId: opportunityId ?? this.opportunityId,
+      sourceType: sourceType ?? this.sourceType,
+      sourceId: sourceId ?? this.sourceId,
+      ruleKey: ruleKey ?? this.ruleKey,
       title: title ?? this.title,
+      reason: reason ?? this.reason,
+      talkingDirection: talkingDirection ?? this.talkingDirection,
+      nextAction: nextAction ?? this.nextAction,
+      owner: owner ?? this.owner,
       planAt: planAt ?? this.planAt,
       status: status ?? this.status,
       notifiedAt: notifiedAt ?? this.notifiedAt,
       completedAt: completedAt ?? this.completedAt,
+      cancelledAt: cancelledAt ?? this.cancelledAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -4791,8 +5318,29 @@ class FollowPlansCompanion extends UpdateCompanion<FollowPlanRow> {
     if (opportunityId.present) {
       map['opportunity_id'] = Variable<int>(opportunityId.value);
     }
+    if (sourceType.present) {
+      map['source_type'] = Variable<String>(sourceType.value);
+    }
+    if (sourceId.present) {
+      map['source_id'] = Variable<int>(sourceId.value);
+    }
+    if (ruleKey.present) {
+      map['rule_key'] = Variable<String>(ruleKey.value);
+    }
     if (title.present) {
       map['title'] = Variable<String>(title.value);
+    }
+    if (reason.present) {
+      map['reason'] = Variable<String>(reason.value);
+    }
+    if (talkingDirection.present) {
+      map['talking_direction'] = Variable<String>(talkingDirection.value);
+    }
+    if (nextAction.present) {
+      map['next_action'] = Variable<String>(nextAction.value);
+    }
+    if (owner.present) {
+      map['owner'] = Variable<String>(owner.value);
     }
     if (planAt.present) {
       map['plan_at'] = Variable<int>(planAt.value);
@@ -4805,6 +5353,9 @@ class FollowPlansCompanion extends UpdateCompanion<FollowPlanRow> {
     }
     if (completedAt.present) {
       map['completed_at'] = Variable<int>(completedAt.value);
+    }
+    if (cancelledAt.present) {
+      map['cancelled_at'] = Variable<int>(cancelledAt.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<int>(createdAt.value);
@@ -4821,11 +5372,19 @@ class FollowPlansCompanion extends UpdateCompanion<FollowPlanRow> {
           ..write('id: $id, ')
           ..write('customerId: $customerId, ')
           ..write('opportunityId: $opportunityId, ')
+          ..write('sourceType: $sourceType, ')
+          ..write('sourceId: $sourceId, ')
+          ..write('ruleKey: $ruleKey, ')
           ..write('title: $title, ')
+          ..write('reason: $reason, ')
+          ..write('talkingDirection: $talkingDirection, ')
+          ..write('nextAction: $nextAction, ')
+          ..write('owner: $owner, ')
           ..write('planAt: $planAt, ')
           ..write('status: $status, ')
           ..write('notifiedAt: $notifiedAt, ')
           ..write('completedAt: $completedAt, ')
+          ..write('cancelledAt: $cancelledAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -6749,6 +7308,7 @@ typedef $$CustomersTableCreateCompanionBuilder =
       Value<int> id,
       required String name,
       Value<String?> company,
+      Value<String?> country,
       Value<String?> phone,
       Value<String?> wechat,
       Value<String?> address,
@@ -6765,6 +7325,7 @@ typedef $$CustomersTableUpdateCompanionBuilder =
       Value<int> id,
       Value<String> name,
       Value<String?> company,
+      Value<String?> country,
       Value<String?> phone,
       Value<String?> wechat,
       Value<String?> address,
@@ -6912,6 +7473,11 @@ class $$CustomersTableFilterComposer
 
   ColumnFilters<String> get company => $composableBuilder(
     column: $table.company,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get country => $composableBuilder(
+    column: $table.country,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7140,6 +7706,11 @@ class $$CustomersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get country => $composableBuilder(
+    column: $table.country,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get phone => $composableBuilder(
     column: $table.phone,
     builder: (column) => ColumnOrderings(column),
@@ -7208,6 +7779,9 @@ class $$CustomersTableAnnotationComposer
 
   GeneratedColumn<String> get company =>
       $composableBuilder(column: $table.company, builder: (column) => column);
+
+  GeneratedColumn<String> get country =>
+      $composableBuilder(column: $table.country, builder: (column) => column);
 
   GeneratedColumn<String> get phone =>
       $composableBuilder(column: $table.phone, builder: (column) => column);
@@ -7430,6 +8004,7 @@ class $$CustomersTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String?> company = const Value.absent(),
+                Value<String?> country = const Value.absent(),
                 Value<String?> phone = const Value.absent(),
                 Value<String?> wechat = const Value.absent(),
                 Value<String?> address = const Value.absent(),
@@ -7444,6 +8019,7 @@ class $$CustomersTableTableManager
                 id: id,
                 name: name,
                 company: company,
+                country: country,
                 phone: phone,
                 wechat: wechat,
                 address: address,
@@ -7460,6 +8036,7 @@ class $$CustomersTableTableManager
                 Value<int> id = const Value.absent(),
                 required String name,
                 Value<String?> company = const Value.absent(),
+                Value<String?> country = const Value.absent(),
                 Value<String?> phone = const Value.absent(),
                 Value<String?> wechat = const Value.absent(),
                 Value<String?> address = const Value.absent(),
@@ -7474,6 +8051,7 @@ class $$CustomersTableTableManager
                 id: id,
                 name: name,
                 company: company,
+                country: country,
                 phone: phone,
                 wechat: wechat,
                 address: address,
@@ -7675,6 +8253,8 @@ typedef $$OpportunitiesTableCreateCompanionBuilder =
       Value<int> id,
       required int customerId,
       required String name,
+      Value<String> owner,
+      Value<String> importance,
       Value<String?> productCategory,
       Value<String?> productModel,
       Value<String?> equipmentBrand,
@@ -7714,6 +8294,8 @@ typedef $$OpportunitiesTableUpdateCompanionBuilder =
       Value<int> id,
       Value<int> customerId,
       Value<String> name,
+      Value<String> owner,
+      Value<String> importance,
       Value<String?> productCategory,
       Value<String?> productModel,
       Value<String?> equipmentBrand,
@@ -7846,6 +8428,16 @@ class $$OpportunitiesTableFilterComposer
 
   ColumnFilters<String> get name => $composableBuilder(
     column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get owner => $composableBuilder(
+    column: $table.owner,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get importance => $composableBuilder(
+    column: $table.importance,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8132,6 +8724,16 @@ class $$OpportunitiesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get owner => $composableBuilder(
+    column: $table.owner,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get importance => $composableBuilder(
+    column: $table.importance,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get productCategory => $composableBuilder(
     column: $table.productCategory,
     builder: (column) => ColumnOrderings(column),
@@ -8335,6 +8937,14 @@ class $$OpportunitiesTableAnnotationComposer
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get owner =>
+      $composableBuilder(column: $table.owner, builder: (column) => column);
+
+  GeneratedColumn<String> get importance => $composableBuilder(
+    column: $table.importance,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get productCategory => $composableBuilder(
     column: $table.productCategory,
@@ -8626,6 +9236,8 @@ class $$OpportunitiesTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<int> customerId = const Value.absent(),
                 Value<String> name = const Value.absent(),
+                Value<String> owner = const Value.absent(),
+                Value<String> importance = const Value.absent(),
                 Value<String?> productCategory = const Value.absent(),
                 Value<String?> productModel = const Value.absent(),
                 Value<String?> equipmentBrand = const Value.absent(),
@@ -8663,6 +9275,8 @@ class $$OpportunitiesTableTableManager
                 id: id,
                 customerId: customerId,
                 name: name,
+                owner: owner,
+                importance: importance,
                 productCategory: productCategory,
                 productModel: productModel,
                 equipmentBrand: equipmentBrand,
@@ -8702,6 +9316,8 @@ class $$OpportunitiesTableTableManager
                 Value<int> id = const Value.absent(),
                 required int customerId,
                 required String name,
+                Value<String> owner = const Value.absent(),
+                Value<String> importance = const Value.absent(),
                 Value<String?> productCategory = const Value.absent(),
                 Value<String?> productModel = const Value.absent(),
                 Value<String?> equipmentBrand = const Value.absent(),
@@ -8739,6 +9355,8 @@ class $$OpportunitiesTableTableManager
                 id: id,
                 customerId: customerId,
                 name: name,
+                owner: owner,
+                importance: importance,
                 productCategory: productCategory,
                 productModel: productModel,
                 equipmentBrand: equipmentBrand,
@@ -9980,11 +10598,19 @@ typedef $$FollowPlansTableCreateCompanionBuilder =
       Value<int> id,
       required int customerId,
       Value<int?> opportunityId,
+      Value<String> sourceType,
+      Value<int?> sourceId,
+      Value<String?> ruleKey,
       required String title,
+      Value<String?> reason,
+      Value<String?> talkingDirection,
+      Value<String?> nextAction,
+      Value<String> owner,
       required int planAt,
       Value<String> status,
       Value<int?> notifiedAt,
       Value<int?> completedAt,
+      Value<int?> cancelledAt,
       required int createdAt,
       required int updatedAt,
     });
@@ -9993,11 +10619,19 @@ typedef $$FollowPlansTableUpdateCompanionBuilder =
       Value<int> id,
       Value<int> customerId,
       Value<int?> opportunityId,
+      Value<String> sourceType,
+      Value<int?> sourceId,
+      Value<String?> ruleKey,
       Value<String> title,
+      Value<String?> reason,
+      Value<String?> talkingDirection,
+      Value<String?> nextAction,
+      Value<String> owner,
       Value<int> planAt,
       Value<String> status,
       Value<int?> notifiedAt,
       Value<int?> completedAt,
+      Value<int?> cancelledAt,
       Value<int> createdAt,
       Value<int> updatedAt,
     });
@@ -10056,8 +10690,43 @@ class $$FollowPlansTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get sourceType => $composableBuilder(
+    column: $table.sourceType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sourceId => $composableBuilder(
+    column: $table.sourceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ruleKey => $composableBuilder(
+    column: $table.ruleKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get title => $composableBuilder(
     column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reason => $composableBuilder(
+    column: $table.reason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get talkingDirection => $composableBuilder(
+    column: $table.talkingDirection,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nextAction => $composableBuilder(
+    column: $table.nextAction,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get owner => $composableBuilder(
+    column: $table.owner,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10078,6 +10747,11 @@ class $$FollowPlansTableFilterComposer
 
   ColumnFilters<int> get completedAt => $composableBuilder(
     column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get cancelledAt => $composableBuilder(
+    column: $table.cancelledAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10152,8 +10826,43 @@ class $$FollowPlansTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get sourceType => $composableBuilder(
+    column: $table.sourceType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sourceId => $composableBuilder(
+    column: $table.sourceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ruleKey => $composableBuilder(
+    column: $table.ruleKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get title => $composableBuilder(
     column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reason => $composableBuilder(
+    column: $table.reason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get talkingDirection => $composableBuilder(
+    column: $table.talkingDirection,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nextAction => $composableBuilder(
+    column: $table.nextAction,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get owner => $composableBuilder(
+    column: $table.owner,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -10174,6 +10883,11 @@ class $$FollowPlansTableOrderingComposer
 
   ColumnOrderings<int> get completedAt => $composableBuilder(
     column: $table.completedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get cancelledAt => $composableBuilder(
+    column: $table.cancelledAt,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -10246,8 +10960,35 @@ class $$FollowPlansTableAnnotationComposer
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
+  GeneratedColumn<String> get sourceType => $composableBuilder(
+    column: $table.sourceType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sourceId =>
+      $composableBuilder(column: $table.sourceId, builder: (column) => column);
+
+  GeneratedColumn<String> get ruleKey =>
+      $composableBuilder(column: $table.ruleKey, builder: (column) => column);
+
   GeneratedColumn<String> get title =>
       $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get reason =>
+      $composableBuilder(column: $table.reason, builder: (column) => column);
+
+  GeneratedColumn<String> get talkingDirection => $composableBuilder(
+    column: $table.talkingDirection,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get nextAction => $composableBuilder(
+    column: $table.nextAction,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get owner =>
+      $composableBuilder(column: $table.owner, builder: (column) => column);
 
   GeneratedColumn<int> get planAt =>
       $composableBuilder(column: $table.planAt, builder: (column) => column);
@@ -10262,6 +11003,11 @@ class $$FollowPlansTableAnnotationComposer
 
   GeneratedColumn<int> get completedAt => $composableBuilder(
     column: $table.completedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get cancelledAt => $composableBuilder(
+    column: $table.cancelledAt,
     builder: (column) => column,
   );
 
@@ -10349,22 +11095,38 @@ class $$FollowPlansTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<int> customerId = const Value.absent(),
                 Value<int?> opportunityId = const Value.absent(),
+                Value<String> sourceType = const Value.absent(),
+                Value<int?> sourceId = const Value.absent(),
+                Value<String?> ruleKey = const Value.absent(),
                 Value<String> title = const Value.absent(),
+                Value<String?> reason = const Value.absent(),
+                Value<String?> talkingDirection = const Value.absent(),
+                Value<String?> nextAction = const Value.absent(),
+                Value<String> owner = const Value.absent(),
                 Value<int> planAt = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<int?> notifiedAt = const Value.absent(),
                 Value<int?> completedAt = const Value.absent(),
+                Value<int?> cancelledAt = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
               }) => FollowPlansCompanion(
                 id: id,
                 customerId: customerId,
                 opportunityId: opportunityId,
+                sourceType: sourceType,
+                sourceId: sourceId,
+                ruleKey: ruleKey,
                 title: title,
+                reason: reason,
+                talkingDirection: talkingDirection,
+                nextAction: nextAction,
+                owner: owner,
                 planAt: planAt,
                 status: status,
                 notifiedAt: notifiedAt,
                 completedAt: completedAt,
+                cancelledAt: cancelledAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),
@@ -10373,22 +11135,38 @@ class $$FollowPlansTableTableManager
                 Value<int> id = const Value.absent(),
                 required int customerId,
                 Value<int?> opportunityId = const Value.absent(),
+                Value<String> sourceType = const Value.absent(),
+                Value<int?> sourceId = const Value.absent(),
+                Value<String?> ruleKey = const Value.absent(),
                 required String title,
+                Value<String?> reason = const Value.absent(),
+                Value<String?> talkingDirection = const Value.absent(),
+                Value<String?> nextAction = const Value.absent(),
+                Value<String> owner = const Value.absent(),
                 required int planAt,
                 Value<String> status = const Value.absent(),
                 Value<int?> notifiedAt = const Value.absent(),
                 Value<int?> completedAt = const Value.absent(),
+                Value<int?> cancelledAt = const Value.absent(),
                 required int createdAt,
                 required int updatedAt,
               }) => FollowPlansCompanion.insert(
                 id: id,
                 customerId: customerId,
                 opportunityId: opportunityId,
+                sourceType: sourceType,
+                sourceId: sourceId,
+                ruleKey: ruleKey,
                 title: title,
+                reason: reason,
+                talkingDirection: talkingDirection,
+                nextAction: nextAction,
+                owner: owner,
                 planAt: planAt,
                 status: status,
                 notifiedAt: notifiedAt,
                 completedAt: completedAt,
+                cancelledAt: cancelledAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),

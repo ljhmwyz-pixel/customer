@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../data/database_provider.dart';
+import '../../models/enums.dart';
 import '../../services/service_providers.dart';
 import '../../theme/tokens.dart';
 
@@ -49,7 +50,11 @@ class _ReminderTestPageState extends ConsumerState<ReminderTestPage> {
     );
     final planId = await db.planDao.insertPlan(
       customerId: customerId,
-      title: '${delay.inMinutes} 分钟后的测试提醒',
+      sourceType: TaskSourceType.manual,
+      reason: '提醒链路自检',
+      talkingDirection: '确认本地通知是否按时触发',
+      nextAction: '${delay.inMinutes} 分钟后的测试提醒',
+      owner: '本人',
       planAt: at,
     );
 

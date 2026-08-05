@@ -289,6 +289,13 @@ void main() {
 
       final plan = (await db.planDao.listOf(customerId)).single;
       expect(plan.opportunityId, opportunityId);
+      expect(TaskSourceType.fromDb(plan.sourceType), TaskSourceType.followup);
+      expect(plan.sourceId, followup.id);
+      expect(plan.ruleKey, 'next_followup');
+      expect(plan.reason, '按计划继续跟进');
+      expect(plan.talkingDirection, '确认年用量、具体型号、采购时间和注册要求');
+      expect(plan.nextAction, '发送正式报价');
+      expect(plan.owner, '本人');
       expect(plan.title, '发送正式报价');
       expect(plan.planAt, nextFollowAt.millisecondsSinceEpoch);
       expect(scheduler.scheduledPlanIds, [plan.id]);
@@ -494,10 +501,21 @@ void main() {
 
     test('创建独立计划成功后会调度提醒', () async {
       final customerId = await seedCustomer(db, name: '远山公司');
+      final opportunityId = await _seedOpportunity(
+        db,
+        customerId,
+        name: '项目 A',
+      );
 
       final result = await service.createPlan(
         customerId,
-        PlanDraft(title: ' 回访 ', planAt: DateTime(2026, 8, 8, 10)),
+        PlanDraft(
+          opportunityId: opportunityId,
+          reason: ' 回访确认 ',
+          talkingDirection: '确认采购时间和数量',
+          nextAction: ' 回访 ',
+          planAt: DateTime(2026, 8, 8, 10),
+        ),
       );
 
       expect(result.hasWarning, isFalse);
@@ -505,6 +523,78 @@ void main() {
       expect(scheduler.scheduledCustomerNames, ['远山公司']);
       final plan = await db.planDao.findById(result.value);
       expect(plan?.opportunityId, isNotNull);
+    });
+
+    test('独立计划必须绑定当前客户的项目并保存任务快照', () async {
+      final customerId = await seedCustomer(db);
+      final otherCustomerId = await seedCustomer(db, name: '其他客户');
+      final opportunityId = await _seedOpportunity(
+        db,
+        customerId,
+        name: '项目 A',
+      );
+      final otherOpportunityId = await _seedOpportunity(
+        db,
+        otherCustomerId,
+        name: '其他项目',
+      );
+
+      expect(
+        () => service.createPlan(
+          customerId,
+          PlanDraft(
+            opportunityId: otherOpportunityId,
+            reason: '原因',
+            talkingDirection: '方向',
+            nextAction: '行动',
+            planAt: DateTime(2026, 8, 8),
+          ),
+        ),
+        throwsA(isA<CustomerValidationException>()),
+      );
+
+      final result = await service.createPlan(
+        customerId,
+        PlanDraft(
+          opportunityId: opportunityId,
+          reason: '  确认采购计划 ',
+          talkingDirection: '确认采购时间和数量',
+          nextAction: '  电话确认 ',
+          owner: '  本人 ',
+          planAt: DateTime(2026, 8, 8),
+        ),
+      );
+      final plan = await db.planDao.findById(result.value);
+      expect(plan?.reason, '确认采购计划');
+      expect(plan?.nextAction, '电话确认');
+      expect(plan?.title, '电话确认');
+      expect(TaskSourceType.fromDb(plan!.sourceType), TaskSourceType.manual);
+    });
+
+    test('取消计划先持久化，提醒清理失败时返回警告', () async {
+      final customerId = await seedCustomer(db);
+      final opportunityId = await _seedOpportunity(
+        db,
+        customerId,
+        name: '项目 A',
+      );
+      final created = await service.createPlan(
+        customerId,
+        PlanDraft(
+          opportunityId: opportunityId,
+          reason: '确认采购计划',
+          talkingDirection: '确认采购时间和数量',
+          nextAction: '电话确认',
+          planAt: DateTime(2026, 8, 8),
+        ),
+      );
+      scheduler.throwOnCancel = true;
+
+      final warning = await service.cancelPlan(customerId, created.value);
+      expect(warning, contains('计划已取消'));
+      final plan = await db.planDao.findById(created.value);
+      expect(PlanStatus.fromDb(plan!.status), PlanStatus.cancelled);
+      expect(scheduler.cancelledPlanIds, isEmpty);
     });
   });
 

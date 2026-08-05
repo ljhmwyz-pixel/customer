@@ -12,6 +12,12 @@ class Opportunities extends Table {
 
   TextColumn get name => text().withLength(min: 1, max: 100)();
 
+  /// 单人版默认由本人负责，保留文本字段供后续表单覆盖。
+  TextColumn get owner => text().withDefault(const Constant('本人'))();
+
+  /// 项目重要程度，存 OpportunityImportance.dbValue。
+  TextColumn get importance => text().withDefault(const Constant('normal'))();
+
   TextColumn get productCategory => text().nullable()();
 
   TextColumn get productModel => text().nullable()();

@@ -56,7 +56,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -70,6 +70,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 3) {
         await _migrateV2ToV3(m, addOpportunityLastFollowAt: from >= 2);
+      }
+      if (from < 4) {
+        await _migrateV3ToV4(m, addOpportunityTaskFields: from >= 2);
       }
     },
     beforeOpen: (details) async {
@@ -85,7 +88,7 @@ class AppDatabase extends _$AppDatabase {
   /// 业务查询依赖的索引。
   ///
   /// 紧急度排序要在 500 客户下低于 200ms，靠这几个索引支撑。
-  Future<void> _createIndexes() async {
+  Future<void> _createIndexes({bool includeTaskSource = true}) async {
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_customers_phone '
       'ON customers(phone)',
@@ -134,6 +137,13 @@ class AppDatabase extends _$AppDatabase {
       'CREATE INDEX IF NOT EXISTS idx_plans_opportunity_status '
       'ON follow_plans(opportunity_id, status)',
     );
+    if (includeTaskSource) {
+      await customStatement(
+        'CREATE UNIQUE INDEX IF NOT EXISTS idx_plans_source_rule '
+        'ON follow_plans(source_type, source_id, rule_key) '
+        'WHERE source_id IS NOT NULL AND rule_key IS NOT NULL',
+      );
+    }
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_orders_customer '
       'ON orders(customer_id)',
@@ -207,7 +217,7 @@ class AppDatabase extends _$AppDatabase {
       ''');
     }
 
-    await _createIndexes();
+    await _createIndexes(includeTaskSource: false);
   }
 
   /// 为跟进记录增加不可变五字段快照，并记录项目最近同步的跟进时间。
@@ -222,7 +232,7 @@ class AppDatabase extends _$AppDatabase {
     await m.addColumn(followups, followups.nextAction);
     await m.addColumn(followups, followups.nextFollowAt);
     await m.addColumn(followups, followups.pauseReason);
-    // v1 升级时 opportunities 会直接按当前 v3 表定义创建，已经包含此列；
+    // v1 升级时 opportunities 会直接按当前 v4 表定义创建，已经包含此列；
     // 只有真实 v2 数据库需要执行 ALTER TABLE。
     if (addOpportunityLastFollowAt) {
       await m.addColumn(opportunities, opportunities.lastFollowAt);
@@ -254,6 +264,44 @@ class AppDatabase extends _$AppDatabase {
         WHERE followup.opportunity_id = opportunities.id
       )
     ''');
+  }
+
+  /// 增加今日任务所需的客户、项目和任务基础字段。
+  ///
+  /// v1 升级时 opportunities 会按当前 v4 定义直接创建，已经包含 owner 和
+  /// importance；真实 v2/v3 数据库才需要补这两列。其余表在所有历史版本中
+  /// 都已存在，因此统一原位加列。
+  Future<void> _migrateV3ToV4(
+    Migrator m, {
+    required bool addOpportunityTaskFields,
+  }) async {
+    await m.addColumn(customers, customers.country);
+    if (addOpportunityTaskFields) {
+      await m.addColumn(opportunities, opportunities.owner);
+      await m.addColumn(opportunities, opportunities.importance);
+    }
+    await m.addColumn(followPlans, followPlans.sourceType);
+    await m.addColumn(followPlans, followPlans.sourceId);
+    await m.addColumn(followPlans, followPlans.ruleKey);
+    await m.addColumn(followPlans, followPlans.reason);
+    await m.addColumn(followPlans, followPlans.talkingDirection);
+    await m.addColumn(followPlans, followPlans.nextAction);
+    await m.addColumn(followPlans, followPlans.owner);
+    await m.addColumn(followPlans, followPlans.cancelledAt);
+
+    await customStatement('''
+      UPDATE follow_plans
+      SET source_type = 'legacy',
+          next_action = title,
+          owner = '本人'
+      WHERE source_type = 'legacy'
+    ''');
+
+    await customStatement(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_plans_source_rule '
+      'ON follow_plans(source_type, source_id, rule_key) '
+      'WHERE source_id IS NOT NULL AND rule_key IS NOT NULL',
+    );
   }
 }
 

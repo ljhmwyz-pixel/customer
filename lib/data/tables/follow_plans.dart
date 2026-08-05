@@ -24,8 +24,29 @@ class FollowPlans extends Table {
     onDelete: KeyAction.setNull,
   )();
 
+  /// 业务来源，存 TaskSourceType.dbValue。
+  TextColumn get sourceType => text().withDefault(const Constant('legacy'))();
+
+  /// 来源业务记录主键。手工和历史任务为空。
+  IntColumn get sourceId => integer().nullable()();
+
+  /// 自动任务规则稳定键，与 sourceType/sourceId 共同用于去重。
+  TextColumn get ruleKey => text().nullable()();
+
   /// 事项标题，如「催合同」。
   TextColumn get title => text().withLength(min: 1, max: 100)();
+
+  /// 任务生成或手工安排的原因。历史任务保持为空。
+  TextColumn get reason => text().nullable()();
+
+  /// 建议沟通重点，只提供方向，不生成对外消息。
+  TextColumn get talkingDirection => text().nullable()();
+
+  /// 任务创建时的下一步行动快照。
+  TextColumn get nextAction => text().nullable()();
+
+  /// 任务负责人快照。单人版默认本人。
+  TextColumn get owner => text().withDefault(const Constant('本人'))();
 
   /// 计划时间，UTC 毫秒。建索引，待办查询与闹钟排期都按它过滤。
   IntColumn get planAt => integer()();
@@ -40,6 +61,8 @@ class FollowPlans extends Table {
   IntColumn get notifiedAt => integer().nullable()();
 
   IntColumn get completedAt => integer().nullable()();
+
+  IntColumn get cancelledAt => integer().nullable()();
 
   IntColumn get createdAt => integer()();
 

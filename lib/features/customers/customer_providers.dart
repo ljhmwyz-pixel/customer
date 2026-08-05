@@ -50,9 +50,20 @@ class ContactDraft {
 }
 
 class PlanDraft {
-  const PlanDraft({required this.title, required this.planAt});
+  const PlanDraft({
+    required this.opportunityId,
+    required this.reason,
+    required this.talkingDirection,
+    required this.nextAction,
+    this.owner = '本人',
+    required this.planAt,
+  });
 
-  final String title;
+  final int opportunityId;
+  final String reason;
+  final String talkingDirection;
+  final String nextAction;
+  final String owner;
   final DateTime planAt;
 }
 
@@ -97,6 +108,22 @@ class CustomerValidationException implements Exception {
   @override
   String toString() => message;
 }
+
+/// 按 SPRD 第 9 节给任务提供可解释的沟通方向，不自动生成外发消息。
+String talkingDirectionForStage(OpportunityStage stage) => switch (stage) {
+  OpportunityStage.newLead ||
+  OpportunityStage.contactEstablished => '确认设备品牌/型号、经营品牌、现有供应商、医院覆盖和产品需求',
+  OpportunityStage.needsConfirmed => '确认年用量、具体型号、采购时间和注册要求',
+  OpportunityStage.quoted ||
+  OpportunityStage.priceNegotiation => '确认报价是否收到、内部反馈、目标价格、竞争价格和决策时间',
+  OpportunityStage.samplePreparing ||
+  OpportunityStage.sampleTesting => '确认物流、签收、测试负责人、测试日期、初步结果和正式报告',
+  OpportunityStage.registrationInProgress ||
+  OpportunityStage.tenderPreparing => '确认文件截止、投标主体、资质、保证金、授权和项目时间表',
+  OpportunityStage.awaitingOrder => '确认 PI/PO、付款安排、采购审批和预计下单时间',
+  OpportunityStage.won => '确认库存、销售速度、终端反馈和下一次补货时间',
+  OpportunityStage.paused || OpportunityStage.lost => '确认暂停或流失原因，以及是否存在恢复推进的条件',
+};
 
 class CustomerFilter {
   const CustomerFilter({this.keyword = '', this.stage, this.tagId});
@@ -229,16 +256,19 @@ class CustomerService {
 
   Future<WriteResult<int>> createPlan(int customerId, PlanDraft draft) async {
     final customer = await _requireCustomer(customerId);
+    final opportunity = await _db.opportunityDao.findById(draft.opportunityId);
+    if (opportunity == null || opportunity.customerId != customerId) {
+      throw const CustomerValidationException('项目不存在或不属于当前客户');
+    }
     final normalized = _normalizePlan(draft);
-    final opportunityId = await _db.opportunityDao
-        .ensureLegacyDefaultForCustomer(
-          customerId,
-          legacyStage: CustomerStage.fromDb(customer.stage),
-        );
     final planId = await _db.planDao.insertPlan(
       customerId: customerId,
-      opportunityId: opportunityId,
-      title: normalized.title,
+      opportunityId: normalized.opportunityId,
+      sourceType: TaskSourceType.manual,
+      reason: normalized.reason,
+      talkingDirection: normalized.talkingDirection,
+      nextAction: normalized.nextAction,
+      owner: normalized.owner,
       planAt: normalized.planAt,
     );
     final warning = await _schedule(planId, customer.name);
@@ -259,6 +289,7 @@ class CustomerService {
     final nextAction = _required(draft.nextAction, '下一步行动', 100);
     final pauseReason = _optional(draft.pauseReason);
     final content = _optional(draft.content) ?? feedback;
+    final owner = _required(opportunity.owner, '负责人', 100);
     final hasNextFollowAt = draft.nextFollowAt != null;
     final hasPauseReason = pauseReason != null;
     if (hasNextFollowAt == hasPauseReason) {
@@ -292,7 +323,13 @@ class CustomerService {
         planId = await _db.planDao.insertPlan(
           customerId: customerId,
           opportunityId: draft.opportunityId,
-          title: nextAction,
+          sourceType: TaskSourceType.followup,
+          sourceId: followupId,
+          ruleKey: 'next_followup',
+          reason: '按计划继续跟进',
+          talkingDirection: talkingDirectionForStage(draft.stage),
+          nextAction: nextAction,
+          owner: owner,
           planAt: draft.nextFollowAt!,
         );
       }
@@ -302,6 +339,28 @@ class CustomerService {
         ? null
         : await _schedule(planId!, customer.name);
     return WriteResult(followupId, warning: warning);
+  }
+
+  /// 取消任务先写入数据库，再清除通知；通知清除失败不恢复业务状态。
+  Future<String?> cancelPlan(int customerId, int planId) async {
+    await _requireCustomer(customerId);
+    final plan = await _db.planDao.findById(planId);
+    if (plan == null || plan.customerId != customerId) {
+      throw const CustomerValidationException('计划不存在或不属于当前客户');
+    }
+    if (!PlanStatus.fromDb(plan.status).isOpen) {
+      throw const CustomerValidationException('只有开放中的计划可以取消');
+    }
+    final affected = await _db.planDao.markCancelled(planId);
+    if (affected == 0) {
+      throw const CustomerValidationException('计划状态已变化，请刷新后重试');
+    }
+    try {
+      await _scheduler.cancelForPlan(planId);
+      return null;
+    } catch (_) {
+      return '计划已取消，但提醒清理失败；下次启动会自动重建提醒';
+    }
   }
 
   Future<void> deleteCustomer(int customerId) async {
@@ -374,7 +433,11 @@ class CustomerService {
   );
 
   PlanDraft _normalizePlan(PlanDraft draft) => PlanDraft(
-    title: _required(draft.title, '计划标题', 100),
+    opportunityId: draft.opportunityId,
+    reason: _required(draft.reason, '跟进原因', 100),
+    talkingDirection: _required(draft.talkingDirection, '建议话术方向', 500),
+    nextAction: _required(draft.nextAction, '下一步行动', 100),
+    owner: _required(draft.owner, '负责人', 100),
     planAt: draft.planAt,
   );
 

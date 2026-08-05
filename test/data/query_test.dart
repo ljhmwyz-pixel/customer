@@ -476,6 +476,37 @@ void main() {
       final open = await db.planDao.listOpenOf(id);
       expect(open.map((plan) => plan.id), [earlier, first, second]);
     });
+
+    test('取消任务保留记录但从所有开放查询中排除', () async {
+      final id = await seedCustomer(db);
+      final now = DateTime(2026, 8, 8, 9);
+      final cancelled = await db.planDao.insertPlan(
+        customerId: id,
+        title: '取消的任务',
+        planAt: now.subtract(const Duration(hours: 1)),
+      );
+      final open = await db.planDao.insertPlan(
+        customerId: id,
+        title: '仍开放',
+        planAt: now,
+      );
+
+      expect(
+        await db.planDao.markCancelled(cancelled, at: DateTime(2026, 8, 8, 10)),
+        1,
+      );
+      final row = await db.planDao.findById(cancelled);
+      expect(PlanStatus.fromDb(row!.status), PlanStatus.cancelled);
+      expect(row.cancelledAt, DateTime(2026, 8, 8, 10).millisecondsSinceEpoch);
+      expect(await db.planDao.markCancelled(cancelled), 0);
+      expect((await db.planDao.listOpenOf(id)).map((e) => e.id), [open]);
+      expect(
+        (await db.planDao.listOpenUntil(until: now)).map((e) => e.plan.id),
+        [open],
+      );
+      expect(await db.planDao.markCompleted(cancelled), 0);
+      expect(await db.planDao.postpone(cancelled), 0);
+    });
   });
 
   group('客户组合筛选', () {

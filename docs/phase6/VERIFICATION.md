@@ -57,3 +57,37 @@ Remaining device-only checks before the Stage 8 commit:
 - Save a paused follow-up on the emulator, confirm the required pause reason, no new plan, and two independently visible history rows.
 
 These remaining paths are covered by widget and service tests, but are intentionally not recorded as manual emulator passes.
+
+## Stage 9A: Task Data Foundation v4
+
+Date: 2026-08-05
+
+Scope verified:
+
+- Additive v3-to-v4 migration for customer country, project owner/importance, task source/rule identity, task snapshots, and cancellation timestamp.
+- `PlanStatus.cancelled` terminal behavior and explicit open-task query filtering.
+- Strict service-level project ownership and task snapshot validation, with a compatibility adapter retained only for low-level reminder fixtures.
+- Follow-up-generated task identity and de-duplication: `followup + followupId + next_followup`.
+- Cancellation persistence before notification cleanup, including scheduler-failure warning behavior.
+
+Fresh automated evidence:
+
+- `dart run build_runner build --delete-conflicting-outputs`: exit 0; installed build_runner reports that the legacy flag is ignored.
+- `dart format`: 15 files checked, 4 formatted.
+- `flutter analyze`: `No issues found!`.
+- `flutter test`: 195 tests passed, zero failures.
+- `flutter build apk --debug`: generated `build/app/outputs/flutter-apk/app-debug.apk`.
+- Focused migration, DAO, service, and notification tests all passed; the generated follow-up task fields, unique source/rule index, cancellation terminal state, and historical backfill are covered.
+
+Android emulator evidence:
+
+- Device: Pixel 8 AVD (`emulator-5554`), Android API 37.
+- Upgrade command: `adb -s emulator-5554 install -r build/app/outputs/flutter-apk/app-debug.apk`; result `Success`. No uninstall or app-data clear was performed.
+- Cold start completed after force-stop/launch. Logcat contained Flutter startup output and no `FATAL EXCEPTION`, `SQLiteException`, or Drift error.
+- Read-only database copy reported `PRAGMA user_version = 4`, an empty `PRAGMA foreign_key_check`, `idx_plans_source_rule`, all v4 task columns, and 9 customers / 9 projects / 9 tasks retained.
+- Existing task/reminder rows remained available after upgrade; legacy tasks retained `source_type = legacy`, `owner = 本人`, and their original ids/statuses/timestamps.
+
+Manual-risk boundaries:
+
+- The emulator pass this stage records migration and cold-start preservation. Follow-up-generated v4 field values and cancellation behavior are covered by service/DAO tests rather than a second manual data mutation on the existing user database.
+- The Today presentation, task sorting UI, and management statistics remain reserved for stages 9B and 9C.

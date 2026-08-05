@@ -213,6 +213,9 @@ void main() {
 
       final row = await db.planDao.findById(id);
       expect(row!.title, '回访确认合同');
+      expect(row.nextAction, '回访确认合同');
+      expect(row.owner, '本人');
+      expect(TaskSourceType.fromDb(row.sourceType), TaskSourceType.legacy);
       expect(PlanStatus.fromDb(row.status), PlanStatus.pending);
       expect(row.notifiedAt, isNull);
       expect(await db.planDao.countOf(customerId), 1);
@@ -222,6 +225,48 @@ void main() {
 
       expect(await db.planDao.deletePlan(id), 1);
       expect(await db.planDao.countOf(customerId), 0);
+    });
+
+    test('相同来源和规则不能重复插入，规则不同可以并存', () async {
+      final customerId = await seedCustomer(db);
+      final source = DateTime(2026, 8, 10, 9);
+      await db.planDao.insertPlan(
+        customerId: customerId,
+        sourceType: TaskSourceType.quote,
+        sourceId: 42,
+        ruleKey: 'quote_day_2',
+        reason: '确认报价是否收到',
+        talkingDirection: '确认客户是否收到报价',
+        nextAction: '跟进报价',
+        owner: '本人',
+        planAt: source,
+      );
+      await expectLater(
+        db.planDao.insertPlan(
+          customerId: customerId,
+          sourceType: TaskSourceType.quote,
+          sourceId: 42,
+          ruleKey: 'quote_day_2',
+          reason: '重复规则',
+          talkingDirection: '重复规则',
+          nextAction: '重复规则',
+          owner: '本人',
+          planAt: source,
+        ),
+        throwsA(anything),
+      );
+      final second = await db.planDao.insertPlan(
+        customerId: customerId,
+        sourceType: TaskSourceType.quote,
+        sourceId: 42,
+        ruleKey: 'quote_day_7',
+        reason: '询问评估反馈',
+        talkingDirection: '确认内部评估和采购计划',
+        nextAction: '再次跟进报价',
+        owner: '本人',
+        planAt: source.add(const Duration(days: 5)),
+      );
+      expect((await db.planDao.findById(second))!.ruleKey, 'quote_day_7');
     });
   });
 

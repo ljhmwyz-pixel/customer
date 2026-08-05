@@ -135,6 +135,25 @@ enum OpportunityStatus {
       this == OpportunityStatus.closed;
 }
 
+/// 项目重要程度。首页任务排序使用，数值越大优先级越高。
+enum OpportunityImportance {
+  high('high', '高', 2),
+  normal('normal', '普通', 1),
+  low('low', '低', 0);
+
+  const OpportunityImportance(this.dbValue, this.label, this.weight);
+
+  final String dbValue;
+  final String label;
+  final int weight;
+
+  static OpportunityImportance fromDb(String value) => values.firstWhere(
+    (importance) => importance.dbValue == value,
+    orElse: () =>
+        throw InvalidEnumValueException('OpportunityImportance', value),
+  );
+}
+
 /// 跟进方式。
 enum FollowMethod {
   phone('phone', '电话'),
@@ -155,7 +174,8 @@ enum FollowMethod {
 
 /// 跟进计划状态。
 ///
-/// 状态机：pending → notified → completed，或 pending → overdue。
+/// 状态机：pending → notified → completed，或 pending → overdue；
+/// 任一开放状态都可以取消，completed/cancelled 为终态。
 /// 逾期定义为超过计划时间 24 小时未标记完成。
 enum PlanStatus {
   /// 待提醒
@@ -168,7 +188,10 @@ enum PlanStatus {
   completed('completed', '已完成'),
 
   /// 已逾期
-  overdue('overdue', '已逾期');
+  overdue('overdue', '已逾期'),
+
+  /// 已取消
+  cancelled('cancelled', '已取消');
 
   const PlanStatus(this.dbValue, this.label);
 
@@ -180,8 +203,31 @@ enum PlanStatus {
     orElse: () => throw InvalidEnumValueException('PlanStatus', value),
   );
 
-  /// 是否仍需要用户处理。已完成的计划不再出现在待办里。
-  bool get isOpen => this != completed;
+  /// 是否仍需要用户处理。完成和取消的计划不再出现在待办里。
+  bool get isOpen => this != completed && this != cancelled;
+}
+
+/// 任务的业务来源。sourceId 与 ruleKey 共同定位自动生成规则。
+enum TaskSourceType {
+  legacy('legacy', '历史任务'),
+  manual('manual', '手工创建'),
+  followup('followup', '跟进记录'),
+  quote('quote', '报价'),
+  sample('sample', '样品'),
+  registration('registration', '注册'),
+  tender('tender', '招标'),
+  order('order', '订单'),
+  repurchase('repurchase', '复购');
+
+  const TaskSourceType(this.dbValue, this.label);
+
+  final String dbValue;
+  final String label;
+
+  static TaskSourceType fromDb(String value) => values.firstWhere(
+    (source) => source.dbValue == value,
+    orElse: () => throw InvalidEnumValueException('TaskSourceType', value),
+  );
 }
 
 /// 订单状态。

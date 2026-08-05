@@ -25,19 +25,43 @@ class PlanWithCustomer {
 class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
   PlanDao(super.db);
 
+  static final _openStatusValues = [
+    PlanStatus.pending.dbValue,
+    PlanStatus.notified.dbValue,
+    PlanStatus.overdue.dbValue,
+  ];
+
   Future<int> insertPlan({
     required int customerId,
     int? opportunityId,
-    required String title,
+    TaskSourceType sourceType = TaskSourceType.legacy,
+    int? sourceId,
+    String? ruleKey,
+    String? reason,
+    String? talkingDirection,
+    String? nextAction,
+    String? owner,
+    String? title,
     required DateTime planAt,
     DateTime? now,
   }) {
+    final normalizedNextAction = nextAction ?? title;
+    if (normalizedNextAction == null || normalizedNextAction.trim().isEmpty) {
+      throw ArgumentError('nextAction or title is required');
+    }
     final ts = (now ?? DateTime.now()).toUtc().millisecondsSinceEpoch;
     return into(followPlans).insert(
       FollowPlansCompanion.insert(
         customerId: customerId,
         opportunityId: Value(opportunityId),
-        title: title,
+        sourceType: Value(sourceType.dbValue),
+        sourceId: Value(sourceId),
+        ruleKey: Value(ruleKey),
+        title: title ?? normalizedNextAction,
+        reason: Value(reason),
+        talkingDirection: Value(talkingDirection),
+        nextAction: Value(normalizedNextAction),
+        owner: Value(owner ?? '本人'),
         planAt: planAt.toUtc().millisecondsSinceEpoch,
         status: Value(PlanStatus.pending.dbValue),
         createdAt: ts,
@@ -61,7 +85,7 @@ class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
             ..where(
               (t) =>
                   t.customerId.equals(customerId) &
-                  t.status.isNotValue(PlanStatus.completed.dbValue),
+                  t.status.isIn(_openStatusValues),
             )
             ..orderBy([
               (t) => OrderingTerm.asc(t.planAt),
@@ -156,7 +180,7 @@ class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
             ),
           ])
           ..where(
-            followPlans.status.isNotValue(PlanStatus.completed.dbValue) &
+            followPlans.status.isIn(_openStatusValues) &
                 followPlans.planAt.isSmallerOrEqualValue(untilMs),
           )
           ..orderBy([OrderingTerm.asc(followPlans.planAt)]);
@@ -177,19 +201,24 @@ class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
   /// 所以这里存的是真实触发时刻，不是计划时刻。
   Future<int> markNotified(int id, {DateTime? at}) {
     final ts = (at ?? DateTime.now()).toUtc().millisecondsSinceEpoch;
-    return (update(followPlans)..where((t) => t.id.equals(id))).write(
-      FollowPlansCompanion(
-        status: Value(PlanStatus.notified.dbValue),
-        notifiedAt: Value(ts),
-        updatedAt: Value(ts),
-      ),
-    );
+    return (update(followPlans)..where(
+          (t) => t.id.equals(id) & t.status.equals(PlanStatus.pending.dbValue),
+        ))
+        .write(
+          FollowPlansCompanion(
+            status: Value(PlanStatus.notified.dbValue),
+            notifiedAt: Value(ts),
+            updatedAt: Value(ts),
+          ),
+        );
   }
 
   /// 标记完成。通知上的「已完成」按钮走这里。
   Future<int> markCompleted(int id, {DateTime? at}) {
     final ts = (at ?? DateTime.now()).toUtc().millisecondsSinceEpoch;
-    return (update(followPlans)..where((t) => t.id.equals(id))).write(
+    return (update(
+      followPlans,
+    )..where((t) => t.id.equals(id) & t.status.isIn(_openStatusValues))).write(
       FollowPlansCompanion(
         status: Value(PlanStatus.completed.dbValue),
         completedAt: Value(ts),
@@ -207,17 +236,33 @@ class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
     DateTime? now,
   }) async {
     final plan = await findById(id);
-    if (plan == null) return 0;
+    if (plan == null || !PlanStatus.fromDb(plan.status).isOpen) return 0;
 
     final ts = (now ?? DateTime.now()).toUtc().millisecondsSinceEpoch;
     final base = DateTime.fromMillisecondsSinceEpoch(plan.planAt, isUtc: true);
     final next = base.add(by).millisecondsSinceEpoch;
 
-    return (update(followPlans)..where((t) => t.id.equals(id))).write(
+    return (update(
+      followPlans,
+    )..where((t) => t.id.equals(id) & t.status.isIn(_openStatusValues))).write(
       FollowPlansCompanion(
         planAt: Value(next),
         status: Value(PlanStatus.pending.dbValue),
         notifiedAt: const Value(null),
+        updatedAt: Value(ts),
+      ),
+    );
+  }
+
+  /// 取消开放任务并保留历史行。已完成或已取消任务不可逆转。
+  Future<int> markCancelled(int id, {DateTime? at}) {
+    final ts = (at ?? DateTime.now()).toUtc().millisecondsSinceEpoch;
+    return (update(
+      followPlans,
+    )..where((t) => t.id.equals(id) & t.status.isIn(_openStatusValues))).write(
+      FollowPlansCompanion(
+        status: Value(PlanStatus.cancelled.dbValue),
+        cancelledAt: Value(ts),
         updatedAt: Value(ts),
       ),
     );

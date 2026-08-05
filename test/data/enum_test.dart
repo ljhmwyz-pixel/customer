@@ -65,6 +65,42 @@ void main() {
     expect(OpportunityStatus.closed.isClosed, isTrue);
   });
 
+  test('OpportunityImportance 往返一致且权重递减', () {
+    expect(OpportunityImportance.values.map((value) => value.dbValue), [
+      'high',
+      'normal',
+      'low',
+    ]);
+    expect(
+      OpportunityImportance.high.weight,
+      greaterThan(OpportunityImportance.normal.weight),
+    );
+    expect(
+      OpportunityImportance.normal.weight,
+      greaterThan(OpportunityImportance.low.weight),
+    );
+    for (final value in OpportunityImportance.values) {
+      expect(OpportunityImportance.fromDb(value.dbValue), value);
+    }
+  });
+
+  test('TaskSourceType 覆盖手工、历史及后续自动业务来源', () {
+    expect(TaskSourceType.values.map((value) => value.dbValue), [
+      'legacy',
+      'manual',
+      'followup',
+      'quote',
+      'sample',
+      'registration',
+      'tender',
+      'order',
+      'repurchase',
+    ]);
+    for (final value in TaskSourceType.values) {
+      expect(TaskSourceType.fromDb(value.dbValue), value);
+    }
+  });
+
   test('FollowMethod 往返一致', () {
     for (final v in FollowMethod.values) {
       expect(FollowMethod.fromDb(v.dbValue), v);
@@ -79,6 +115,7 @@ void main() {
     expect(PlanStatus.notified.isOpen, isTrue);
     expect(PlanStatus.overdue.isOpen, isTrue);
     expect(PlanStatus.completed.isOpen, isFalse);
+    expect(PlanStatus.cancelled.isOpen, isFalse);
   });
 
   test('OrderStatus 往返一致，仅已完成计入成交额', () {
@@ -138,6 +175,14 @@ void main() {
       throwsA(isA<InvalidEnumValueException>()),
     );
     expect(
+      () => OpportunityImportance.fromDb('urgent'),
+      throwsA(isA<InvalidEnumValueException>()),
+    );
+    expect(
+      () => TaskSourceType.fromDb('spreadsheet'),
+      throwsA(isA<InvalidEnumValueException>()),
+    );
+    expect(
       () => FollowMethod.fromDb(''),
       throwsA(isA<InvalidEnumValueException>()),
     );
@@ -180,6 +225,14 @@ void main() {
     checkUnique(
       'OpportunityStatus',
       OpportunityStatus.values.map((e) => e.dbValue).toList(),
+    );
+    checkUnique(
+      'OpportunityImportance',
+      OpportunityImportance.values.map((e) => e.dbValue).toList(),
+    );
+    checkUnique(
+      'TaskSourceType',
+      TaskSourceType.values.map((e) => e.dbValue).toList(),
     );
     checkUnique(
       'FollowMethod',
