@@ -20,7 +20,10 @@ void main() {
 
     test('厂商私有的两项排在最后', () {
       // 它们必然在 AOSP 上失败，放前面会让引导一开始就卡住。
-      expect(ReminderPermission.values.last, ReminderPermission.backgroundPopup);
+      expect(
+        ReminderPermission.values.last,
+        ReminderPermission.backgroundPopup,
+      );
       expect(
         ReminderPermission.values[ReminderPermission.values.length - 2],
         ReminderPermission.autoStart,
@@ -76,10 +79,7 @@ void main() {
   group('跳转结果映射', () {
     test('原生返回值能正确映射', () {
       expect(OemJumpResult.fromNative('oem'), OemJumpResult.oem);
-      expect(
-        OemJumpResult.fromNative('app_details'),
-        OemJumpResult.appDetails,
-      );
+      expect(OemJumpResult.fromNative('app_details'), OemJumpResult.appDetails);
       expect(OemJumpResult.fromNative('failed'), OemJumpResult.failed);
     });
 

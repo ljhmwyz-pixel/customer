@@ -134,7 +134,10 @@ void main() {
 
     expect(await db.orderDao.findById(ids.orderId), isNull);
     expect(await db.attachmentDao.findById(ids.orderAttachmentId), isNull);
-    expect(await db.attachmentDao.findById(ids.followupAttachmentId), isNotNull);
+    expect(
+      await db.attachmentDao.findById(ids.followupAttachmentId),
+      isNotNull,
+    );
     expect(await db.followupDao.countOf(ids.customerId), 1);
   });
 

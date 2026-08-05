@@ -16,7 +16,10 @@ abstract interface class ReminderScheduler {
   Future<void> init();
 
   /// 为一条计划排闹钟。已存在同 id 的排期时覆盖。
-  Future<void> scheduleForPlan(FollowPlanRow plan, {required String customerName});
+  Future<void> scheduleForPlan(
+    FollowPlanRow plan, {
+    required String customerName,
+  });
 
   /// 取消一条计划的闹钟。
   Future<void> cancelForPlan(int planId);

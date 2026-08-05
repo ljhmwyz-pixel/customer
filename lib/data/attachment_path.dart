@@ -32,7 +32,10 @@ abstract final class AttachmentPath {
   /// 把相对路径还原成当前设备上的绝对路径。
   ///
   /// [appDir] 为应用文档目录的绝对路径，由调用方在运行时取得。
-  static String resolve({required String appDir, required String relativePath}) {
+  static String resolve({
+    required String appDir,
+    required String relativePath,
+  }) {
     if (p.isAbsolute(relativePath)) {
       throw ArgumentError.value(
         relativePath,

@@ -14,13 +14,17 @@ import 'orders.dart';
 class Attachments extends Table {
   IntColumn get id => integer().autoIncrement()();
 
-  IntColumn get followupId => integer()
-      .nullable()
-      .references(Followups, #id, onDelete: KeyAction.cascade)();
+  IntColumn get followupId => integer().nullable().references(
+    Followups,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
 
-  IntColumn get orderId => integer()
-      .nullable()
-      .references(Orders, #id, onDelete: KeyAction.cascade)();
+  IntColumn get orderId => integer().nullable().references(
+    Orders,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
 
   /// 相对应用文档目录的路径，形如 `attachments/2026/08/uuid.jpg`。
   TextColumn get relativePath => text()();

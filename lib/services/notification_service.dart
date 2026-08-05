@@ -49,7 +49,9 @@ class NotificationService implements ReminderScheduler {
 
     await _initTimeZone();
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     await _plugin.initialize(
       settings: const InitializationSettings(android: androidSettings),
       onDidReceiveNotificationResponse: _onForegroundResponse,
@@ -246,10 +248,7 @@ class NotificationService implements ReminderScheduler {
 
     // 按钮动作交给统一处理器，与后台 isolate 走同一套逻辑，避免两份实现走偏。
     if (response.actionId != null) {
-      handleNotificationAction(
-        actionId: response.actionId!,
-        payload: payload,
-      );
+      handleNotificationAction(actionId: response.actionId!, payload: payload);
       return;
     }
 
@@ -377,10 +376,9 @@ Future<void> handleNotificationAction({
         final plan = await db.planDao.findById(payload.planId);
         final customer = await db.customerDao.findById(payload.customerId);
         if (plan != null && customer != null) {
-          await NotificationService(db: db).scheduleForPlan(
-            plan,
-            customerName: customer.name,
-          );
+          await NotificationService(
+            db: db,
+          ).scheduleForPlan(plan, customerName: customer.name);
         }
 
       default:

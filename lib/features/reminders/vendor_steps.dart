@@ -93,10 +93,7 @@ class VendorStepsSheet extends StatelessWidget {
   List<String> _steps() {
     if (result == OemJumpResult.oem) {
       return switch (permission) {
-        ReminderPermission.autoStart => const [
-          '在应用列表里找到「客户跟进」',
-          '把它的开关打开',
-        ],
+        ReminderPermission.autoStart => const ['在应用列表里找到「客户跟进」', '把它的开关打开'],
         ReminderPermission.backgroundPopup => const [
           '找到「客户跟进」并进入',
           '允许「后台弹出界面」',

@@ -138,14 +138,8 @@ void main() {
       expect(row.relativePath, isNot(contains('com.example')));
 
       // 同一条记录，换到另一个应用目录仍指向正确位置。
-      expect(
-        db.attachmentDao.absolutePathOf(row, appDir: dirA),
-        '$dirA/$rel',
-      );
-      expect(
-        db.attachmentDao.absolutePathOf(row, appDir: dirB),
-        '$dirB/$rel',
-      );
+      expect(db.attachmentDao.absolutePathOf(row, appDir: dirA), '$dirA/$rel');
+      expect(db.attachmentDao.absolutePathOf(row, appDir: dirB), '$dirB/$rel');
     });
 
     test('全表扫一遍确认没有任何绝对路径混进去', () async {

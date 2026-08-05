@@ -15,10 +15,7 @@ Future<void> main() async {
   await _bootstrapReminders(container);
 
   runApp(
-    UncontrolledProviderScope(
-      container: container,
-      child: const CustomerApp(),
-    ),
+    UncontrolledProviderScope(container: container, child: const CustomerApp()),
   );
 }
 
