@@ -215,7 +215,12 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
                WHEN p.next_plan_at <= ?2             THEN 1
                ELSE 2
              END AS urgency_bucket,
-             CASE c.grade WHEN 'a' THEN 3 WHEN 'b' THEN 2 ELSE 1 END AS grade_weight
+             CASE c.grade
+               WHEN 'a' THEN 3
+               WHEN 'b' THEN 2
+               WHEN 'c' THEN 1
+               ELSE 0
+             END AS grade_weight
       FROM customers c
       LEFT JOIN (
         SELECT customer_id,

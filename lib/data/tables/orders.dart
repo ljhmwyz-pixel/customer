@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import 'customers.dart';
+import 'opportunities.dart';
 
 /// 订单表。老客户订单跟踪。
 @DataClassName('OrderRow')
@@ -9,6 +10,13 @@ class Orders extends Table {
 
   IntColumn get customerId =>
       integer().references(Customers, #id, onDelete: KeyAction.cascade)();
+
+  /// v2 项目归属。为兼容原表结构保持可空，迁移会为全部旧记录回填。
+  IntColumn get opportunityId => integer().nullable().references(
+    Opportunities,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
 
   /// 订单编号。唯一，可由系统按日期序号自动生成。
   TextColumn get orderNo => text().withLength(min: 1, max: 50).unique()();

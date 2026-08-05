@@ -53,7 +53,8 @@ enum CustomerStage {
 enum CustomerGrade {
   a('a', 'A'),
   b('b', 'B'),
-  c('c', 'C');
+  c('c', 'C'),
+  d('d', 'D');
 
   const CustomerGrade(this.dbValue, this.label);
 
@@ -70,7 +71,68 @@ enum CustomerGrade {
     CustomerGrade.a => 3,
     CustomerGrade.b => 2,
     CustomerGrade.c => 1,
+    CustomerGrade.d => 0,
   };
+}
+
+/// 外贸项目销售阶段。项目而非客户承载阶段，允许同一客户同时推进多个机会。
+enum OpportunityStage {
+  newLead('new_lead', '新线索'),
+  contactEstablished('contact_established', '已建立联系'),
+  needsConfirmed('needs_confirmed', '需求确认'),
+  quoted('quoted', '已报价'),
+  priceNegotiation('price_negotiation', '价格谈判'),
+  samplePreparing('sample_preparing', '样品准备'),
+  sampleTesting('sample_testing', '样品测试'),
+  registrationInProgress('registration_in_progress', '注册进行中'),
+  tenderPreparing('tender_preparing', '招标准备'),
+  awaitingOrder('awaiting_order', '等待订单'),
+  won('won', '已成交'),
+  paused('paused', '暂停'),
+  lost('lost', '流失');
+
+  const OpportunityStage(this.dbValue, this.label);
+
+  final String dbValue;
+  final String label;
+
+  static OpportunityStage fromDb(String value) => values.firstWhere(
+    (stage) => stage.dbValue == value,
+    orElse: () => throw InvalidEnumValueException('OpportunityStage', value),
+  );
+
+  static OpportunityStage fromLegacyCustomerStage(CustomerStage stage) =>
+      switch (stage) {
+        CustomerStage.potential => newLead,
+        CustomerStage.contacted => contactEstablished,
+        CustomerStage.intent => needsConfirmed,
+        CustomerStage.deal => won,
+        CustomerStage.lost => lost,
+      };
+}
+
+/// 项目投入状态。与销售阶段分开，避免“暂停”同时承担业务阶段和投入决策。
+enum OpportunityStatus {
+  active('active', '活跃'),
+  lowFrequency('low_frequency', '低频维护'),
+  paused('paused', '暂停'),
+  won('won', '已成交'),
+  closed('closed', '已关闭');
+
+  const OpportunityStatus(this.dbValue, this.label);
+
+  final String dbValue;
+  final String label;
+
+  static OpportunityStatus fromDb(String value) => values.firstWhere(
+    (status) => status.dbValue == value,
+    orElse: () => throw InvalidEnumValueException('OpportunityStatus', value),
+  );
+
+  bool get isClosed =>
+      this == OpportunityStatus.paused ||
+      this == OpportunityStatus.won ||
+      this == OpportunityStatus.closed;
 }
 
 /// 跟进方式。

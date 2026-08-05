@@ -42,10 +42,16 @@ class OrderService {
   }
 
   Future<int> createOrder(int customerId, OrderDraft draft) async {
-    await _requireCustomer(customerId);
+    final customer = await _requireCustomer(customerId);
     final normalized = await _normalizeDraft(draft);
+    final opportunityId = await _db.opportunityDao
+        .ensureLegacyDefaultForCustomer(
+          customerId,
+          legacyStage: CustomerStage.fromDb(customer.stage),
+        );
     return _db.orderDao.insertOrder(
       customerId: customerId,
+      opportunityId: opportunityId,
       orderNo: normalized.orderNo,
       orderedAt: normalized.orderedAt,
       amountCents: normalized.amountCents,
@@ -92,10 +98,12 @@ class OrderService {
     await _db.orderDao.deleteOrder(order.id);
   }
 
-  Future<void> _requireCustomer(int customerId) async {
-    if (await _db.customerDao.findById(customerId) == null) {
+  Future<CustomerRow> _requireCustomer(int customerId) async {
+    final customer = await _db.customerDao.findById(customerId);
+    if (customer == null) {
       throw const OrderValidationException('客户不存在');
     }
+    return customer;
   }
 
   Future<OrderRow> _requireOrder(int customerId, int orderId) async {

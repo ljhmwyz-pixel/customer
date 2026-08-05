@@ -27,6 +27,7 @@ class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
 
   Future<int> insertPlan({
     required int customerId,
+    int? opportunityId,
     required String title,
     required DateTime planAt,
     DateTime? now,
@@ -35,6 +36,7 @@ class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
     return into(followPlans).insert(
       FollowPlansCompanion.insert(
         customerId: customerId,
+        opportunityId: Value(opportunityId),
         title: title,
         planAt: planAt.toUtc().millisecondsSinceEpoch,
         status: Value(PlanStatus.pending.dbValue),

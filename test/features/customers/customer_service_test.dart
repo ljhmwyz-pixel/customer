@@ -29,6 +29,11 @@ void main() {
       expect(customer?.name, '星河科技');
       expect(customer?.company, isNull);
       expect(customer?.stage, CustomerStage.potential.dbValue);
+      final opportunity = await db.opportunityDao.findLegacyDefaultOfCustomer(
+        id,
+      );
+      expect(opportunity?.name, '待确认项目');
+      expect(opportunity?.stage, OpportunityStage.newLead.dbValue);
     });
 
     test('空名称和超过 50 字符的名称会被拒绝', () async {
@@ -68,6 +73,23 @@ void main() {
       expect(customer?.company, isNull);
       expect(customer?.phone, isNull);
       expect(customer?.note, isNull);
+    });
+
+    test('旧客户编辑页修改阶段时同步兼容项目阶段', () async {
+      final id = await service.createCustomer(
+        const CustomerDraft(name: '推进中的客户'),
+      );
+
+      await service.updateCustomer(
+        id,
+        const CustomerDraft(name: '推进中的客户', stage: CustomerStage.deal),
+      );
+
+      final opportunity = await db.opportunityDao.findLegacyDefaultOfCustomer(
+        id,
+      );
+      expect(opportunity?.stage, OpportunityStage.won.dbValue);
+      expect(opportunity?.status, OpportunityStatus.won.dbValue);
     });
 
     test('标签会清理空格、去重并在编辑时同步', () async {
@@ -171,9 +193,12 @@ void main() {
       );
 
       expect(result.hasWarning, isFalse);
+      final followup = (await db.followupDao.listOf(customerId)).single;
+      expect(followup.content, '已发送产品资料');
+      expect(followup.opportunityId, isNotNull);
       expect(
-        (await db.followupDao.listOf(customerId)).single.content,
-        '已发送产品资料',
+        followup.opportunityId,
+        (await db.opportunityDao.findLegacyDefaultOfCustomer(customerId))?.id,
       );
       expect(await db.planDao.listOf(customerId), isEmpty);
       expect(scheduler.scheduledPlanIds, isEmpty);
@@ -211,6 +236,8 @@ void main() {
       expect(result.hasWarning, isFalse);
       expect(scheduler.scheduledPlanIds, [result.value]);
       expect(scheduler.scheduledCustomerNames, ['远山公司']);
+      final plan = await db.planDao.findById(result.value);
+      expect(plan?.opportunityId, isNotNull);
     });
   });
 

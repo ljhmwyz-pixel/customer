@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import 'customers.dart';
+import 'opportunities.dart';
 
 /// 跟进计划表。待办与提醒的载体。
 ///
@@ -15,6 +16,13 @@ class FollowPlans extends Table {
 
   IntColumn get customerId =>
       integer().references(Customers, #id, onDelete: KeyAction.cascade)();
+
+  /// v2 项目归属。为兼容原表结构保持可空，迁移会为全部旧记录回填。
+  IntColumn get opportunityId => integer().nullable().references(
+    Opportunities,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
 
   /// 事项标题，如「催合同」。
   TextColumn get title => text().withLength(min: 1, max: 100)();

@@ -756,6 +756,2038 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
   }
 }
 
+class $OpportunitiesTable extends Opportunities
+    with TableInfo<$OpportunitiesTable, OpportunityRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $OpportunitiesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _customerIdMeta = const VerificationMeta(
+    'customerId',
+  );
+  @override
+  late final GeneratedColumn<int> customerId = GeneratedColumn<int>(
+    'customer_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES customers (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 100,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _productCategoryMeta = const VerificationMeta(
+    'productCategory',
+  );
+  @override
+  late final GeneratedColumn<String> productCategory = GeneratedColumn<String>(
+    'product_category',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _productModelMeta = const VerificationMeta(
+    'productModel',
+  );
+  @override
+  late final GeneratedColumn<String> productModel = GeneratedColumn<String>(
+    'product_model',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _equipmentBrandMeta = const VerificationMeta(
+    'equipmentBrand',
+  );
+  @override
+  late final GeneratedColumn<String> equipmentBrand = GeneratedColumn<String>(
+    'equipment_brand',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _equipmentModelMeta = const VerificationMeta(
+    'equipmentModel',
+  );
+  @override
+  late final GeneratedColumn<String> equipmentModel = GeneratedColumn<String>(
+    'equipment_model',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _estimatedAnnualVolumeMeta =
+      const VerificationMeta('estimatedAnnualVolume');
+  @override
+  late final GeneratedColumn<int> estimatedAnnualVolume = GeneratedColumn<int>(
+    'estimated_annual_volume',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _forecastAmountMinorMeta =
+      const VerificationMeta('forecastAmountMinor');
+  @override
+  late final GeneratedColumn<int> forecastAmountMinor = GeneratedColumn<int>(
+    'forecast_amount_minor',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _currencyMeta = const VerificationMeta(
+    'currency',
+  );
+  @override
+  late final GeneratedColumn<String> currency = GeneratedColumn<String>(
+    'currency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('USD'),
+  );
+  static const VerificationMeta _probabilityPercentMeta =
+      const VerificationMeta('probabilityPercent');
+  @override
+  late final GeneratedColumn<int> probabilityPercent = GeneratedColumn<int>(
+    'probability_percent',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _expectedCloseAtMeta = const VerificationMeta(
+    'expectedCloseAt',
+  );
+  @override
+  late final GeneratedColumn<int> expectedCloseAt = GeneratedColumn<int>(
+    'expected_close_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _currentSupplierMeta = const VerificationMeta(
+    'currentSupplier',
+  );
+  @override
+  late final GeneratedColumn<String> currentSupplier = GeneratedColumn<String>(
+    'current_supplier',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _currentPurchaseBrandMeta =
+      const VerificationMeta('currentPurchaseBrand');
+  @override
+  late final GeneratedColumn<String> currentPurchaseBrand =
+      GeneratedColumn<String>(
+        'current_purchase_brand',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _currentPurchasePriceMinorMeta =
+      const VerificationMeta('currentPurchasePriceMinor');
+  @override
+  late final GeneratedColumn<int> currentPurchasePriceMinor =
+      GeneratedColumn<int>(
+        'current_purchase_price_minor',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _supplierStabilityMeta = const VerificationMeta(
+    'supplierStability',
+  );
+  @override
+  late final GeneratedColumn<String> supplierStability =
+      GeneratedColumn<String>(
+        'supplier_stability',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _supplierProblemMeta = const VerificationMeta(
+    'supplierProblem',
+  );
+  @override
+  late final GeneratedColumn<String> supplierProblem = GeneratedColumn<String>(
+    'supplier_problem',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _changeWillingnessMeta = const VerificationMeta(
+    'changeWillingness',
+  );
+  @override
+  late final GeneratedColumn<String> changeWillingness =
+      GeneratedColumn<String>(
+        'change_willingness',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _substitutionDifficultyMeta =
+      const VerificationMeta('substitutionDifficulty');
+  @override
+  late final GeneratedColumn<String> substitutionDifficulty =
+      GeneratedColumn<String>(
+        'substitution_difficulty',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _latestQuoteMinorMeta = const VerificationMeta(
+    'latestQuoteMinor',
+  );
+  @override
+  late final GeneratedColumn<int> latestQuoteMinor = GeneratedColumn<int>(
+    'latest_quote_minor',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _targetPriceMinorMeta = const VerificationMeta(
+    'targetPriceMinor',
+  );
+  @override
+  late final GeneratedColumn<int> targetPriceMinor = GeneratedColumn<int>(
+    'target_price_minor',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _entryPointMeta = const VerificationMeta(
+    'entryPoint',
+  );
+  @override
+  late final GeneratedColumn<String> entryPoint = GeneratedColumn<String>(
+    'entry_point',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _investmentAdviceMeta = const VerificationMeta(
+    'investmentAdvice',
+  );
+  @override
+  late final GeneratedColumn<String> investmentAdvice = GeneratedColumn<String>(
+    'investment_advice',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _needsSampleMeta = const VerificationMeta(
+    'needsSample',
+  );
+  @override
+  late final GeneratedColumn<bool> needsSample = GeneratedColumn<bool>(
+    'needs_sample',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("needs_sample" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _needsRegistrationMeta = const VerificationMeta(
+    'needsRegistration',
+  );
+  @override
+  late final GeneratedColumn<bool> needsRegistration = GeneratedColumn<bool>(
+    'needs_registration',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("needs_registration" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _needsAuthorizationMeta =
+      const VerificationMeta('needsAuthorization');
+  @override
+  late final GeneratedColumn<bool> needsAuthorization = GeneratedColumn<bool>(
+    'needs_authorization',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("needs_authorization" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _stageMeta = const VerificationMeta('stage');
+  @override
+  late final GeneratedColumn<String> stage = GeneratedColumn<String>(
+    'stage',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('new_lead'),
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('active'),
+  );
+  static const VerificationMeta _latestFeedbackMeta = const VerificationMeta(
+    'latestFeedback',
+  );
+  @override
+  late final GeneratedColumn<String> latestFeedback = GeneratedColumn<String>(
+    'latest_feedback',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _currentObstacleMeta = const VerificationMeta(
+    'currentObstacle',
+  );
+  @override
+  late final GeneratedColumn<String> currentObstacle = GeneratedColumn<String>(
+    'current_obstacle',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nextActionMeta = const VerificationMeta(
+    'nextAction',
+  );
+  @override
+  late final GeneratedColumn<String> nextAction = GeneratedColumn<String>(
+    'next_action',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nextFollowAtMeta = const VerificationMeta(
+    'nextFollowAt',
+  );
+  @override
+  late final GeneratedColumn<int> nextFollowAt = GeneratedColumn<int>(
+    'next_follow_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isLegacyDefaultMeta = const VerificationMeta(
+    'isLegacyDefault',
+  );
+  @override
+  late final GeneratedColumn<bool> isLegacyDefault = GeneratedColumn<bool>(
+    'is_legacy_default',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_legacy_default" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    customerId,
+    name,
+    productCategory,
+    productModel,
+    equipmentBrand,
+    equipmentModel,
+    estimatedAnnualVolume,
+    forecastAmountMinor,
+    currency,
+    probabilityPercent,
+    expectedCloseAt,
+    currentSupplier,
+    currentPurchaseBrand,
+    currentPurchasePriceMinor,
+    supplierStability,
+    supplierProblem,
+    changeWillingness,
+    substitutionDifficulty,
+    latestQuoteMinor,
+    targetPriceMinor,
+    entryPoint,
+    investmentAdvice,
+    needsSample,
+    needsRegistration,
+    needsAuthorization,
+    stage,
+    status,
+    latestFeedback,
+    currentObstacle,
+    nextAction,
+    nextFollowAt,
+    isLegacyDefault,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'opportunities';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<OpportunityRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('customer_id')) {
+      context.handle(
+        _customerIdMeta,
+        customerId.isAcceptableOrUnknown(data['customer_id']!, _customerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_customerIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('product_category')) {
+      context.handle(
+        _productCategoryMeta,
+        productCategory.isAcceptableOrUnknown(
+          data['product_category']!,
+          _productCategoryMeta,
+        ),
+      );
+    }
+    if (data.containsKey('product_model')) {
+      context.handle(
+        _productModelMeta,
+        productModel.isAcceptableOrUnknown(
+          data['product_model']!,
+          _productModelMeta,
+        ),
+      );
+    }
+    if (data.containsKey('equipment_brand')) {
+      context.handle(
+        _equipmentBrandMeta,
+        equipmentBrand.isAcceptableOrUnknown(
+          data['equipment_brand']!,
+          _equipmentBrandMeta,
+        ),
+      );
+    }
+    if (data.containsKey('equipment_model')) {
+      context.handle(
+        _equipmentModelMeta,
+        equipmentModel.isAcceptableOrUnknown(
+          data['equipment_model']!,
+          _equipmentModelMeta,
+        ),
+      );
+    }
+    if (data.containsKey('estimated_annual_volume')) {
+      context.handle(
+        _estimatedAnnualVolumeMeta,
+        estimatedAnnualVolume.isAcceptableOrUnknown(
+          data['estimated_annual_volume']!,
+          _estimatedAnnualVolumeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('forecast_amount_minor')) {
+      context.handle(
+        _forecastAmountMinorMeta,
+        forecastAmountMinor.isAcceptableOrUnknown(
+          data['forecast_amount_minor']!,
+          _forecastAmountMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('currency')) {
+      context.handle(
+        _currencyMeta,
+        currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta),
+      );
+    }
+    if (data.containsKey('probability_percent')) {
+      context.handle(
+        _probabilityPercentMeta,
+        probabilityPercent.isAcceptableOrUnknown(
+          data['probability_percent']!,
+          _probabilityPercentMeta,
+        ),
+      );
+    }
+    if (data.containsKey('expected_close_at')) {
+      context.handle(
+        _expectedCloseAtMeta,
+        expectedCloseAt.isAcceptableOrUnknown(
+          data['expected_close_at']!,
+          _expectedCloseAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('current_supplier')) {
+      context.handle(
+        _currentSupplierMeta,
+        currentSupplier.isAcceptableOrUnknown(
+          data['current_supplier']!,
+          _currentSupplierMeta,
+        ),
+      );
+    }
+    if (data.containsKey('current_purchase_brand')) {
+      context.handle(
+        _currentPurchaseBrandMeta,
+        currentPurchaseBrand.isAcceptableOrUnknown(
+          data['current_purchase_brand']!,
+          _currentPurchaseBrandMeta,
+        ),
+      );
+    }
+    if (data.containsKey('current_purchase_price_minor')) {
+      context.handle(
+        _currentPurchasePriceMinorMeta,
+        currentPurchasePriceMinor.isAcceptableOrUnknown(
+          data['current_purchase_price_minor']!,
+          _currentPurchasePriceMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('supplier_stability')) {
+      context.handle(
+        _supplierStabilityMeta,
+        supplierStability.isAcceptableOrUnknown(
+          data['supplier_stability']!,
+          _supplierStabilityMeta,
+        ),
+      );
+    }
+    if (data.containsKey('supplier_problem')) {
+      context.handle(
+        _supplierProblemMeta,
+        supplierProblem.isAcceptableOrUnknown(
+          data['supplier_problem']!,
+          _supplierProblemMeta,
+        ),
+      );
+    }
+    if (data.containsKey('change_willingness')) {
+      context.handle(
+        _changeWillingnessMeta,
+        changeWillingness.isAcceptableOrUnknown(
+          data['change_willingness']!,
+          _changeWillingnessMeta,
+        ),
+      );
+    }
+    if (data.containsKey('substitution_difficulty')) {
+      context.handle(
+        _substitutionDifficultyMeta,
+        substitutionDifficulty.isAcceptableOrUnknown(
+          data['substitution_difficulty']!,
+          _substitutionDifficultyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('latest_quote_minor')) {
+      context.handle(
+        _latestQuoteMinorMeta,
+        latestQuoteMinor.isAcceptableOrUnknown(
+          data['latest_quote_minor']!,
+          _latestQuoteMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('target_price_minor')) {
+      context.handle(
+        _targetPriceMinorMeta,
+        targetPriceMinor.isAcceptableOrUnknown(
+          data['target_price_minor']!,
+          _targetPriceMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('entry_point')) {
+      context.handle(
+        _entryPointMeta,
+        entryPoint.isAcceptableOrUnknown(data['entry_point']!, _entryPointMeta),
+      );
+    }
+    if (data.containsKey('investment_advice')) {
+      context.handle(
+        _investmentAdviceMeta,
+        investmentAdvice.isAcceptableOrUnknown(
+          data['investment_advice']!,
+          _investmentAdviceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('needs_sample')) {
+      context.handle(
+        _needsSampleMeta,
+        needsSample.isAcceptableOrUnknown(
+          data['needs_sample']!,
+          _needsSampleMeta,
+        ),
+      );
+    }
+    if (data.containsKey('needs_registration')) {
+      context.handle(
+        _needsRegistrationMeta,
+        needsRegistration.isAcceptableOrUnknown(
+          data['needs_registration']!,
+          _needsRegistrationMeta,
+        ),
+      );
+    }
+    if (data.containsKey('needs_authorization')) {
+      context.handle(
+        _needsAuthorizationMeta,
+        needsAuthorization.isAcceptableOrUnknown(
+          data['needs_authorization']!,
+          _needsAuthorizationMeta,
+        ),
+      );
+    }
+    if (data.containsKey('stage')) {
+      context.handle(
+        _stageMeta,
+        stage.isAcceptableOrUnknown(data['stage']!, _stageMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('latest_feedback')) {
+      context.handle(
+        _latestFeedbackMeta,
+        latestFeedback.isAcceptableOrUnknown(
+          data['latest_feedback']!,
+          _latestFeedbackMeta,
+        ),
+      );
+    }
+    if (data.containsKey('current_obstacle')) {
+      context.handle(
+        _currentObstacleMeta,
+        currentObstacle.isAcceptableOrUnknown(
+          data['current_obstacle']!,
+          _currentObstacleMeta,
+        ),
+      );
+    }
+    if (data.containsKey('next_action')) {
+      context.handle(
+        _nextActionMeta,
+        nextAction.isAcceptableOrUnknown(data['next_action']!, _nextActionMeta),
+      );
+    }
+    if (data.containsKey('next_follow_at')) {
+      context.handle(
+        _nextFollowAtMeta,
+        nextFollowAt.isAcceptableOrUnknown(
+          data['next_follow_at']!,
+          _nextFollowAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_legacy_default')) {
+      context.handle(
+        _isLegacyDefaultMeta,
+        isLegacyDefault.isAcceptableOrUnknown(
+          data['is_legacy_default']!,
+          _isLegacyDefaultMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  OpportunityRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return OpportunityRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      customerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}customer_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      productCategory: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}product_category'],
+      ),
+      productModel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}product_model'],
+      ),
+      equipmentBrand: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}equipment_brand'],
+      ),
+      equipmentModel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}equipment_model'],
+      ),
+      estimatedAnnualVolume: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}estimated_annual_volume'],
+      ),
+      forecastAmountMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}forecast_amount_minor'],
+      ),
+      currency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency'],
+      )!,
+      probabilityPercent: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}probability_percent'],
+      ),
+      expectedCloseAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}expected_close_at'],
+      ),
+      currentSupplier: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}current_supplier'],
+      ),
+      currentPurchaseBrand: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}current_purchase_brand'],
+      ),
+      currentPurchasePriceMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}current_purchase_price_minor'],
+      ),
+      supplierStability: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}supplier_stability'],
+      ),
+      supplierProblem: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}supplier_problem'],
+      ),
+      changeWillingness: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}change_willingness'],
+      ),
+      substitutionDifficulty: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}substitution_difficulty'],
+      ),
+      latestQuoteMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}latest_quote_minor'],
+      ),
+      targetPriceMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}target_price_minor'],
+      ),
+      entryPoint: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entry_point'],
+      ),
+      investmentAdvice: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}investment_advice'],
+      ),
+      needsSample: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}needs_sample'],
+      )!,
+      needsRegistration: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}needs_registration'],
+      )!,
+      needsAuthorization: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}needs_authorization'],
+      )!,
+      stage: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}stage'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      latestFeedback: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}latest_feedback'],
+      ),
+      currentObstacle: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}current_obstacle'],
+      ),
+      nextAction: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}next_action'],
+      ),
+      nextFollowAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}next_follow_at'],
+      ),
+      isLegacyDefault: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_legacy_default'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $OpportunitiesTable createAlias(String alias) {
+    return $OpportunitiesTable(attachedDatabase, alias);
+  }
+}
+
+class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
+  final int id;
+  final int customerId;
+  final String name;
+  final String? productCategory;
+  final String? productModel;
+  final String? equipmentBrand;
+  final String? equipmentModel;
+  final int? estimatedAnnualVolume;
+
+  /// 预计项目金额，单位为 [currency] 的最小货币单位。
+  final int? forecastAmountMinor;
+  final String currency;
+  final int? probabilityPercent;
+  final int? expectedCloseAt;
+  final String? currentSupplier;
+  final String? currentPurchaseBrand;
+  final int? currentPurchasePriceMinor;
+  final String? supplierStability;
+  final String? supplierProblem;
+  final String? changeWillingness;
+  final String? substitutionDifficulty;
+  final int? latestQuoteMinor;
+  final int? targetPriceMinor;
+  final String? entryPoint;
+  final String? investmentAdvice;
+  final bool needsSample;
+  final bool needsRegistration;
+  final bool needsAuthorization;
+
+  /// 存 OpportunityStage.dbValue。
+  final String stage;
+
+  /// 存 OpportunityStatus.dbValue。
+  final String status;
+  final String? latestFeedback;
+  final String? currentObstacle;
+  final String? nextAction;
+  final int? nextFollowAt;
+
+  /// v1 升级时为每个客户创建的历史承接项目。
+  final bool isLegacyDefault;
+  final int createdAt;
+  final int updatedAt;
+  const OpportunityRow({
+    required this.id,
+    required this.customerId,
+    required this.name,
+    this.productCategory,
+    this.productModel,
+    this.equipmentBrand,
+    this.equipmentModel,
+    this.estimatedAnnualVolume,
+    this.forecastAmountMinor,
+    required this.currency,
+    this.probabilityPercent,
+    this.expectedCloseAt,
+    this.currentSupplier,
+    this.currentPurchaseBrand,
+    this.currentPurchasePriceMinor,
+    this.supplierStability,
+    this.supplierProblem,
+    this.changeWillingness,
+    this.substitutionDifficulty,
+    this.latestQuoteMinor,
+    this.targetPriceMinor,
+    this.entryPoint,
+    this.investmentAdvice,
+    required this.needsSample,
+    required this.needsRegistration,
+    required this.needsAuthorization,
+    required this.stage,
+    required this.status,
+    this.latestFeedback,
+    this.currentObstacle,
+    this.nextAction,
+    this.nextFollowAt,
+    required this.isLegacyDefault,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['customer_id'] = Variable<int>(customerId);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || productCategory != null) {
+      map['product_category'] = Variable<String>(productCategory);
+    }
+    if (!nullToAbsent || productModel != null) {
+      map['product_model'] = Variable<String>(productModel);
+    }
+    if (!nullToAbsent || equipmentBrand != null) {
+      map['equipment_brand'] = Variable<String>(equipmentBrand);
+    }
+    if (!nullToAbsent || equipmentModel != null) {
+      map['equipment_model'] = Variable<String>(equipmentModel);
+    }
+    if (!nullToAbsent || estimatedAnnualVolume != null) {
+      map['estimated_annual_volume'] = Variable<int>(estimatedAnnualVolume);
+    }
+    if (!nullToAbsent || forecastAmountMinor != null) {
+      map['forecast_amount_minor'] = Variable<int>(forecastAmountMinor);
+    }
+    map['currency'] = Variable<String>(currency);
+    if (!nullToAbsent || probabilityPercent != null) {
+      map['probability_percent'] = Variable<int>(probabilityPercent);
+    }
+    if (!nullToAbsent || expectedCloseAt != null) {
+      map['expected_close_at'] = Variable<int>(expectedCloseAt);
+    }
+    if (!nullToAbsent || currentSupplier != null) {
+      map['current_supplier'] = Variable<String>(currentSupplier);
+    }
+    if (!nullToAbsent || currentPurchaseBrand != null) {
+      map['current_purchase_brand'] = Variable<String>(currentPurchaseBrand);
+    }
+    if (!nullToAbsent || currentPurchasePriceMinor != null) {
+      map['current_purchase_price_minor'] = Variable<int>(
+        currentPurchasePriceMinor,
+      );
+    }
+    if (!nullToAbsent || supplierStability != null) {
+      map['supplier_stability'] = Variable<String>(supplierStability);
+    }
+    if (!nullToAbsent || supplierProblem != null) {
+      map['supplier_problem'] = Variable<String>(supplierProblem);
+    }
+    if (!nullToAbsent || changeWillingness != null) {
+      map['change_willingness'] = Variable<String>(changeWillingness);
+    }
+    if (!nullToAbsent || substitutionDifficulty != null) {
+      map['substitution_difficulty'] = Variable<String>(substitutionDifficulty);
+    }
+    if (!nullToAbsent || latestQuoteMinor != null) {
+      map['latest_quote_minor'] = Variable<int>(latestQuoteMinor);
+    }
+    if (!nullToAbsent || targetPriceMinor != null) {
+      map['target_price_minor'] = Variable<int>(targetPriceMinor);
+    }
+    if (!nullToAbsent || entryPoint != null) {
+      map['entry_point'] = Variable<String>(entryPoint);
+    }
+    if (!nullToAbsent || investmentAdvice != null) {
+      map['investment_advice'] = Variable<String>(investmentAdvice);
+    }
+    map['needs_sample'] = Variable<bool>(needsSample);
+    map['needs_registration'] = Variable<bool>(needsRegistration);
+    map['needs_authorization'] = Variable<bool>(needsAuthorization);
+    map['stage'] = Variable<String>(stage);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || latestFeedback != null) {
+      map['latest_feedback'] = Variable<String>(latestFeedback);
+    }
+    if (!nullToAbsent || currentObstacle != null) {
+      map['current_obstacle'] = Variable<String>(currentObstacle);
+    }
+    if (!nullToAbsent || nextAction != null) {
+      map['next_action'] = Variable<String>(nextAction);
+    }
+    if (!nullToAbsent || nextFollowAt != null) {
+      map['next_follow_at'] = Variable<int>(nextFollowAt);
+    }
+    map['is_legacy_default'] = Variable<bool>(isLegacyDefault);
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  OpportunitiesCompanion toCompanion(bool nullToAbsent) {
+    return OpportunitiesCompanion(
+      id: Value(id),
+      customerId: Value(customerId),
+      name: Value(name),
+      productCategory: productCategory == null && nullToAbsent
+          ? const Value.absent()
+          : Value(productCategory),
+      productModel: productModel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(productModel),
+      equipmentBrand: equipmentBrand == null && nullToAbsent
+          ? const Value.absent()
+          : Value(equipmentBrand),
+      equipmentModel: equipmentModel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(equipmentModel),
+      estimatedAnnualVolume: estimatedAnnualVolume == null && nullToAbsent
+          ? const Value.absent()
+          : Value(estimatedAnnualVolume),
+      forecastAmountMinor: forecastAmountMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(forecastAmountMinor),
+      currency: Value(currency),
+      probabilityPercent: probabilityPercent == null && nullToAbsent
+          ? const Value.absent()
+          : Value(probabilityPercent),
+      expectedCloseAt: expectedCloseAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(expectedCloseAt),
+      currentSupplier: currentSupplier == null && nullToAbsent
+          ? const Value.absent()
+          : Value(currentSupplier),
+      currentPurchaseBrand: currentPurchaseBrand == null && nullToAbsent
+          ? const Value.absent()
+          : Value(currentPurchaseBrand),
+      currentPurchasePriceMinor:
+          currentPurchasePriceMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(currentPurchasePriceMinor),
+      supplierStability: supplierStability == null && nullToAbsent
+          ? const Value.absent()
+          : Value(supplierStability),
+      supplierProblem: supplierProblem == null && nullToAbsent
+          ? const Value.absent()
+          : Value(supplierProblem),
+      changeWillingness: changeWillingness == null && nullToAbsent
+          ? const Value.absent()
+          : Value(changeWillingness),
+      substitutionDifficulty: substitutionDifficulty == null && nullToAbsent
+          ? const Value.absent()
+          : Value(substitutionDifficulty),
+      latestQuoteMinor: latestQuoteMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(latestQuoteMinor),
+      targetPriceMinor: targetPriceMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetPriceMinor),
+      entryPoint: entryPoint == null && nullToAbsent
+          ? const Value.absent()
+          : Value(entryPoint),
+      investmentAdvice: investmentAdvice == null && nullToAbsent
+          ? const Value.absent()
+          : Value(investmentAdvice),
+      needsSample: Value(needsSample),
+      needsRegistration: Value(needsRegistration),
+      needsAuthorization: Value(needsAuthorization),
+      stage: Value(stage),
+      status: Value(status),
+      latestFeedback: latestFeedback == null && nullToAbsent
+          ? const Value.absent()
+          : Value(latestFeedback),
+      currentObstacle: currentObstacle == null && nullToAbsent
+          ? const Value.absent()
+          : Value(currentObstacle),
+      nextAction: nextAction == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextAction),
+      nextFollowAt: nextFollowAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextFollowAt),
+      isLegacyDefault: Value(isLegacyDefault),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory OpportunityRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return OpportunityRow(
+      id: serializer.fromJson<int>(json['id']),
+      customerId: serializer.fromJson<int>(json['customerId']),
+      name: serializer.fromJson<String>(json['name']),
+      productCategory: serializer.fromJson<String?>(json['productCategory']),
+      productModel: serializer.fromJson<String?>(json['productModel']),
+      equipmentBrand: serializer.fromJson<String?>(json['equipmentBrand']),
+      equipmentModel: serializer.fromJson<String?>(json['equipmentModel']),
+      estimatedAnnualVolume: serializer.fromJson<int?>(
+        json['estimatedAnnualVolume'],
+      ),
+      forecastAmountMinor: serializer.fromJson<int?>(
+        json['forecastAmountMinor'],
+      ),
+      currency: serializer.fromJson<String>(json['currency']),
+      probabilityPercent: serializer.fromJson<int?>(json['probabilityPercent']),
+      expectedCloseAt: serializer.fromJson<int?>(json['expectedCloseAt']),
+      currentSupplier: serializer.fromJson<String?>(json['currentSupplier']),
+      currentPurchaseBrand: serializer.fromJson<String?>(
+        json['currentPurchaseBrand'],
+      ),
+      currentPurchasePriceMinor: serializer.fromJson<int?>(
+        json['currentPurchasePriceMinor'],
+      ),
+      supplierStability: serializer.fromJson<String?>(
+        json['supplierStability'],
+      ),
+      supplierProblem: serializer.fromJson<String?>(json['supplierProblem']),
+      changeWillingness: serializer.fromJson<String?>(
+        json['changeWillingness'],
+      ),
+      substitutionDifficulty: serializer.fromJson<String?>(
+        json['substitutionDifficulty'],
+      ),
+      latestQuoteMinor: serializer.fromJson<int?>(json['latestQuoteMinor']),
+      targetPriceMinor: serializer.fromJson<int?>(json['targetPriceMinor']),
+      entryPoint: serializer.fromJson<String?>(json['entryPoint']),
+      investmentAdvice: serializer.fromJson<String?>(json['investmentAdvice']),
+      needsSample: serializer.fromJson<bool>(json['needsSample']),
+      needsRegistration: serializer.fromJson<bool>(json['needsRegistration']),
+      needsAuthorization: serializer.fromJson<bool>(json['needsAuthorization']),
+      stage: serializer.fromJson<String>(json['stage']),
+      status: serializer.fromJson<String>(json['status']),
+      latestFeedback: serializer.fromJson<String?>(json['latestFeedback']),
+      currentObstacle: serializer.fromJson<String?>(json['currentObstacle']),
+      nextAction: serializer.fromJson<String?>(json['nextAction']),
+      nextFollowAt: serializer.fromJson<int?>(json['nextFollowAt']),
+      isLegacyDefault: serializer.fromJson<bool>(json['isLegacyDefault']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'customerId': serializer.toJson<int>(customerId),
+      'name': serializer.toJson<String>(name),
+      'productCategory': serializer.toJson<String?>(productCategory),
+      'productModel': serializer.toJson<String?>(productModel),
+      'equipmentBrand': serializer.toJson<String?>(equipmentBrand),
+      'equipmentModel': serializer.toJson<String?>(equipmentModel),
+      'estimatedAnnualVolume': serializer.toJson<int?>(estimatedAnnualVolume),
+      'forecastAmountMinor': serializer.toJson<int?>(forecastAmountMinor),
+      'currency': serializer.toJson<String>(currency),
+      'probabilityPercent': serializer.toJson<int?>(probabilityPercent),
+      'expectedCloseAt': serializer.toJson<int?>(expectedCloseAt),
+      'currentSupplier': serializer.toJson<String?>(currentSupplier),
+      'currentPurchaseBrand': serializer.toJson<String?>(currentPurchaseBrand),
+      'currentPurchasePriceMinor': serializer.toJson<int?>(
+        currentPurchasePriceMinor,
+      ),
+      'supplierStability': serializer.toJson<String?>(supplierStability),
+      'supplierProblem': serializer.toJson<String?>(supplierProblem),
+      'changeWillingness': serializer.toJson<String?>(changeWillingness),
+      'substitutionDifficulty': serializer.toJson<String?>(
+        substitutionDifficulty,
+      ),
+      'latestQuoteMinor': serializer.toJson<int?>(latestQuoteMinor),
+      'targetPriceMinor': serializer.toJson<int?>(targetPriceMinor),
+      'entryPoint': serializer.toJson<String?>(entryPoint),
+      'investmentAdvice': serializer.toJson<String?>(investmentAdvice),
+      'needsSample': serializer.toJson<bool>(needsSample),
+      'needsRegistration': serializer.toJson<bool>(needsRegistration),
+      'needsAuthorization': serializer.toJson<bool>(needsAuthorization),
+      'stage': serializer.toJson<String>(stage),
+      'status': serializer.toJson<String>(status),
+      'latestFeedback': serializer.toJson<String?>(latestFeedback),
+      'currentObstacle': serializer.toJson<String?>(currentObstacle),
+      'nextAction': serializer.toJson<String?>(nextAction),
+      'nextFollowAt': serializer.toJson<int?>(nextFollowAt),
+      'isLegacyDefault': serializer.toJson<bool>(isLegacyDefault),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  OpportunityRow copyWith({
+    int? id,
+    int? customerId,
+    String? name,
+    Value<String?> productCategory = const Value.absent(),
+    Value<String?> productModel = const Value.absent(),
+    Value<String?> equipmentBrand = const Value.absent(),
+    Value<String?> equipmentModel = const Value.absent(),
+    Value<int?> estimatedAnnualVolume = const Value.absent(),
+    Value<int?> forecastAmountMinor = const Value.absent(),
+    String? currency,
+    Value<int?> probabilityPercent = const Value.absent(),
+    Value<int?> expectedCloseAt = const Value.absent(),
+    Value<String?> currentSupplier = const Value.absent(),
+    Value<String?> currentPurchaseBrand = const Value.absent(),
+    Value<int?> currentPurchasePriceMinor = const Value.absent(),
+    Value<String?> supplierStability = const Value.absent(),
+    Value<String?> supplierProblem = const Value.absent(),
+    Value<String?> changeWillingness = const Value.absent(),
+    Value<String?> substitutionDifficulty = const Value.absent(),
+    Value<int?> latestQuoteMinor = const Value.absent(),
+    Value<int?> targetPriceMinor = const Value.absent(),
+    Value<String?> entryPoint = const Value.absent(),
+    Value<String?> investmentAdvice = const Value.absent(),
+    bool? needsSample,
+    bool? needsRegistration,
+    bool? needsAuthorization,
+    String? stage,
+    String? status,
+    Value<String?> latestFeedback = const Value.absent(),
+    Value<String?> currentObstacle = const Value.absent(),
+    Value<String?> nextAction = const Value.absent(),
+    Value<int?> nextFollowAt = const Value.absent(),
+    bool? isLegacyDefault,
+    int? createdAt,
+    int? updatedAt,
+  }) => OpportunityRow(
+    id: id ?? this.id,
+    customerId: customerId ?? this.customerId,
+    name: name ?? this.name,
+    productCategory: productCategory.present
+        ? productCategory.value
+        : this.productCategory,
+    productModel: productModel.present ? productModel.value : this.productModel,
+    equipmentBrand: equipmentBrand.present
+        ? equipmentBrand.value
+        : this.equipmentBrand,
+    equipmentModel: equipmentModel.present
+        ? equipmentModel.value
+        : this.equipmentModel,
+    estimatedAnnualVolume: estimatedAnnualVolume.present
+        ? estimatedAnnualVolume.value
+        : this.estimatedAnnualVolume,
+    forecastAmountMinor: forecastAmountMinor.present
+        ? forecastAmountMinor.value
+        : this.forecastAmountMinor,
+    currency: currency ?? this.currency,
+    probabilityPercent: probabilityPercent.present
+        ? probabilityPercent.value
+        : this.probabilityPercent,
+    expectedCloseAt: expectedCloseAt.present
+        ? expectedCloseAt.value
+        : this.expectedCloseAt,
+    currentSupplier: currentSupplier.present
+        ? currentSupplier.value
+        : this.currentSupplier,
+    currentPurchaseBrand: currentPurchaseBrand.present
+        ? currentPurchaseBrand.value
+        : this.currentPurchaseBrand,
+    currentPurchasePriceMinor: currentPurchasePriceMinor.present
+        ? currentPurchasePriceMinor.value
+        : this.currentPurchasePriceMinor,
+    supplierStability: supplierStability.present
+        ? supplierStability.value
+        : this.supplierStability,
+    supplierProblem: supplierProblem.present
+        ? supplierProblem.value
+        : this.supplierProblem,
+    changeWillingness: changeWillingness.present
+        ? changeWillingness.value
+        : this.changeWillingness,
+    substitutionDifficulty: substitutionDifficulty.present
+        ? substitutionDifficulty.value
+        : this.substitutionDifficulty,
+    latestQuoteMinor: latestQuoteMinor.present
+        ? latestQuoteMinor.value
+        : this.latestQuoteMinor,
+    targetPriceMinor: targetPriceMinor.present
+        ? targetPriceMinor.value
+        : this.targetPriceMinor,
+    entryPoint: entryPoint.present ? entryPoint.value : this.entryPoint,
+    investmentAdvice: investmentAdvice.present
+        ? investmentAdvice.value
+        : this.investmentAdvice,
+    needsSample: needsSample ?? this.needsSample,
+    needsRegistration: needsRegistration ?? this.needsRegistration,
+    needsAuthorization: needsAuthorization ?? this.needsAuthorization,
+    stage: stage ?? this.stage,
+    status: status ?? this.status,
+    latestFeedback: latestFeedback.present
+        ? latestFeedback.value
+        : this.latestFeedback,
+    currentObstacle: currentObstacle.present
+        ? currentObstacle.value
+        : this.currentObstacle,
+    nextAction: nextAction.present ? nextAction.value : this.nextAction,
+    nextFollowAt: nextFollowAt.present ? nextFollowAt.value : this.nextFollowAt,
+    isLegacyDefault: isLegacyDefault ?? this.isLegacyDefault,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  OpportunityRow copyWithCompanion(OpportunitiesCompanion data) {
+    return OpportunityRow(
+      id: data.id.present ? data.id.value : this.id,
+      customerId: data.customerId.present
+          ? data.customerId.value
+          : this.customerId,
+      name: data.name.present ? data.name.value : this.name,
+      productCategory: data.productCategory.present
+          ? data.productCategory.value
+          : this.productCategory,
+      productModel: data.productModel.present
+          ? data.productModel.value
+          : this.productModel,
+      equipmentBrand: data.equipmentBrand.present
+          ? data.equipmentBrand.value
+          : this.equipmentBrand,
+      equipmentModel: data.equipmentModel.present
+          ? data.equipmentModel.value
+          : this.equipmentModel,
+      estimatedAnnualVolume: data.estimatedAnnualVolume.present
+          ? data.estimatedAnnualVolume.value
+          : this.estimatedAnnualVolume,
+      forecastAmountMinor: data.forecastAmountMinor.present
+          ? data.forecastAmountMinor.value
+          : this.forecastAmountMinor,
+      currency: data.currency.present ? data.currency.value : this.currency,
+      probabilityPercent: data.probabilityPercent.present
+          ? data.probabilityPercent.value
+          : this.probabilityPercent,
+      expectedCloseAt: data.expectedCloseAt.present
+          ? data.expectedCloseAt.value
+          : this.expectedCloseAt,
+      currentSupplier: data.currentSupplier.present
+          ? data.currentSupplier.value
+          : this.currentSupplier,
+      currentPurchaseBrand: data.currentPurchaseBrand.present
+          ? data.currentPurchaseBrand.value
+          : this.currentPurchaseBrand,
+      currentPurchasePriceMinor: data.currentPurchasePriceMinor.present
+          ? data.currentPurchasePriceMinor.value
+          : this.currentPurchasePriceMinor,
+      supplierStability: data.supplierStability.present
+          ? data.supplierStability.value
+          : this.supplierStability,
+      supplierProblem: data.supplierProblem.present
+          ? data.supplierProblem.value
+          : this.supplierProblem,
+      changeWillingness: data.changeWillingness.present
+          ? data.changeWillingness.value
+          : this.changeWillingness,
+      substitutionDifficulty: data.substitutionDifficulty.present
+          ? data.substitutionDifficulty.value
+          : this.substitutionDifficulty,
+      latestQuoteMinor: data.latestQuoteMinor.present
+          ? data.latestQuoteMinor.value
+          : this.latestQuoteMinor,
+      targetPriceMinor: data.targetPriceMinor.present
+          ? data.targetPriceMinor.value
+          : this.targetPriceMinor,
+      entryPoint: data.entryPoint.present
+          ? data.entryPoint.value
+          : this.entryPoint,
+      investmentAdvice: data.investmentAdvice.present
+          ? data.investmentAdvice.value
+          : this.investmentAdvice,
+      needsSample: data.needsSample.present
+          ? data.needsSample.value
+          : this.needsSample,
+      needsRegistration: data.needsRegistration.present
+          ? data.needsRegistration.value
+          : this.needsRegistration,
+      needsAuthorization: data.needsAuthorization.present
+          ? data.needsAuthorization.value
+          : this.needsAuthorization,
+      stage: data.stage.present ? data.stage.value : this.stage,
+      status: data.status.present ? data.status.value : this.status,
+      latestFeedback: data.latestFeedback.present
+          ? data.latestFeedback.value
+          : this.latestFeedback,
+      currentObstacle: data.currentObstacle.present
+          ? data.currentObstacle.value
+          : this.currentObstacle,
+      nextAction: data.nextAction.present
+          ? data.nextAction.value
+          : this.nextAction,
+      nextFollowAt: data.nextFollowAt.present
+          ? data.nextFollowAt.value
+          : this.nextFollowAt,
+      isLegacyDefault: data.isLegacyDefault.present
+          ? data.isLegacyDefault.value
+          : this.isLegacyDefault,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OpportunityRow(')
+          ..write('id: $id, ')
+          ..write('customerId: $customerId, ')
+          ..write('name: $name, ')
+          ..write('productCategory: $productCategory, ')
+          ..write('productModel: $productModel, ')
+          ..write('equipmentBrand: $equipmentBrand, ')
+          ..write('equipmentModel: $equipmentModel, ')
+          ..write('estimatedAnnualVolume: $estimatedAnnualVolume, ')
+          ..write('forecastAmountMinor: $forecastAmountMinor, ')
+          ..write('currency: $currency, ')
+          ..write('probabilityPercent: $probabilityPercent, ')
+          ..write('expectedCloseAt: $expectedCloseAt, ')
+          ..write('currentSupplier: $currentSupplier, ')
+          ..write('currentPurchaseBrand: $currentPurchaseBrand, ')
+          ..write('currentPurchasePriceMinor: $currentPurchasePriceMinor, ')
+          ..write('supplierStability: $supplierStability, ')
+          ..write('supplierProblem: $supplierProblem, ')
+          ..write('changeWillingness: $changeWillingness, ')
+          ..write('substitutionDifficulty: $substitutionDifficulty, ')
+          ..write('latestQuoteMinor: $latestQuoteMinor, ')
+          ..write('targetPriceMinor: $targetPriceMinor, ')
+          ..write('entryPoint: $entryPoint, ')
+          ..write('investmentAdvice: $investmentAdvice, ')
+          ..write('needsSample: $needsSample, ')
+          ..write('needsRegistration: $needsRegistration, ')
+          ..write('needsAuthorization: $needsAuthorization, ')
+          ..write('stage: $stage, ')
+          ..write('status: $status, ')
+          ..write('latestFeedback: $latestFeedback, ')
+          ..write('currentObstacle: $currentObstacle, ')
+          ..write('nextAction: $nextAction, ')
+          ..write('nextFollowAt: $nextFollowAt, ')
+          ..write('isLegacyDefault: $isLegacyDefault, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    customerId,
+    name,
+    productCategory,
+    productModel,
+    equipmentBrand,
+    equipmentModel,
+    estimatedAnnualVolume,
+    forecastAmountMinor,
+    currency,
+    probabilityPercent,
+    expectedCloseAt,
+    currentSupplier,
+    currentPurchaseBrand,
+    currentPurchasePriceMinor,
+    supplierStability,
+    supplierProblem,
+    changeWillingness,
+    substitutionDifficulty,
+    latestQuoteMinor,
+    targetPriceMinor,
+    entryPoint,
+    investmentAdvice,
+    needsSample,
+    needsRegistration,
+    needsAuthorization,
+    stage,
+    status,
+    latestFeedback,
+    currentObstacle,
+    nextAction,
+    nextFollowAt,
+    isLegacyDefault,
+    createdAt,
+    updatedAt,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is OpportunityRow &&
+          other.id == this.id &&
+          other.customerId == this.customerId &&
+          other.name == this.name &&
+          other.productCategory == this.productCategory &&
+          other.productModel == this.productModel &&
+          other.equipmentBrand == this.equipmentBrand &&
+          other.equipmentModel == this.equipmentModel &&
+          other.estimatedAnnualVolume == this.estimatedAnnualVolume &&
+          other.forecastAmountMinor == this.forecastAmountMinor &&
+          other.currency == this.currency &&
+          other.probabilityPercent == this.probabilityPercent &&
+          other.expectedCloseAt == this.expectedCloseAt &&
+          other.currentSupplier == this.currentSupplier &&
+          other.currentPurchaseBrand == this.currentPurchaseBrand &&
+          other.currentPurchasePriceMinor == this.currentPurchasePriceMinor &&
+          other.supplierStability == this.supplierStability &&
+          other.supplierProblem == this.supplierProblem &&
+          other.changeWillingness == this.changeWillingness &&
+          other.substitutionDifficulty == this.substitutionDifficulty &&
+          other.latestQuoteMinor == this.latestQuoteMinor &&
+          other.targetPriceMinor == this.targetPriceMinor &&
+          other.entryPoint == this.entryPoint &&
+          other.investmentAdvice == this.investmentAdvice &&
+          other.needsSample == this.needsSample &&
+          other.needsRegistration == this.needsRegistration &&
+          other.needsAuthorization == this.needsAuthorization &&
+          other.stage == this.stage &&
+          other.status == this.status &&
+          other.latestFeedback == this.latestFeedback &&
+          other.currentObstacle == this.currentObstacle &&
+          other.nextAction == this.nextAction &&
+          other.nextFollowAt == this.nextFollowAt &&
+          other.isLegacyDefault == this.isLegacyDefault &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class OpportunitiesCompanion extends UpdateCompanion<OpportunityRow> {
+  final Value<int> id;
+  final Value<int> customerId;
+  final Value<String> name;
+  final Value<String?> productCategory;
+  final Value<String?> productModel;
+  final Value<String?> equipmentBrand;
+  final Value<String?> equipmentModel;
+  final Value<int?> estimatedAnnualVolume;
+  final Value<int?> forecastAmountMinor;
+  final Value<String> currency;
+  final Value<int?> probabilityPercent;
+  final Value<int?> expectedCloseAt;
+  final Value<String?> currentSupplier;
+  final Value<String?> currentPurchaseBrand;
+  final Value<int?> currentPurchasePriceMinor;
+  final Value<String?> supplierStability;
+  final Value<String?> supplierProblem;
+  final Value<String?> changeWillingness;
+  final Value<String?> substitutionDifficulty;
+  final Value<int?> latestQuoteMinor;
+  final Value<int?> targetPriceMinor;
+  final Value<String?> entryPoint;
+  final Value<String?> investmentAdvice;
+  final Value<bool> needsSample;
+  final Value<bool> needsRegistration;
+  final Value<bool> needsAuthorization;
+  final Value<String> stage;
+  final Value<String> status;
+  final Value<String?> latestFeedback;
+  final Value<String?> currentObstacle;
+  final Value<String?> nextAction;
+  final Value<int?> nextFollowAt;
+  final Value<bool> isLegacyDefault;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  const OpportunitiesCompanion({
+    this.id = const Value.absent(),
+    this.customerId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.productCategory = const Value.absent(),
+    this.productModel = const Value.absent(),
+    this.equipmentBrand = const Value.absent(),
+    this.equipmentModel = const Value.absent(),
+    this.estimatedAnnualVolume = const Value.absent(),
+    this.forecastAmountMinor = const Value.absent(),
+    this.currency = const Value.absent(),
+    this.probabilityPercent = const Value.absent(),
+    this.expectedCloseAt = const Value.absent(),
+    this.currentSupplier = const Value.absent(),
+    this.currentPurchaseBrand = const Value.absent(),
+    this.currentPurchasePriceMinor = const Value.absent(),
+    this.supplierStability = const Value.absent(),
+    this.supplierProblem = const Value.absent(),
+    this.changeWillingness = const Value.absent(),
+    this.substitutionDifficulty = const Value.absent(),
+    this.latestQuoteMinor = const Value.absent(),
+    this.targetPriceMinor = const Value.absent(),
+    this.entryPoint = const Value.absent(),
+    this.investmentAdvice = const Value.absent(),
+    this.needsSample = const Value.absent(),
+    this.needsRegistration = const Value.absent(),
+    this.needsAuthorization = const Value.absent(),
+    this.stage = const Value.absent(),
+    this.status = const Value.absent(),
+    this.latestFeedback = const Value.absent(),
+    this.currentObstacle = const Value.absent(),
+    this.nextAction = const Value.absent(),
+    this.nextFollowAt = const Value.absent(),
+    this.isLegacyDefault = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  OpportunitiesCompanion.insert({
+    this.id = const Value.absent(),
+    required int customerId,
+    required String name,
+    this.productCategory = const Value.absent(),
+    this.productModel = const Value.absent(),
+    this.equipmentBrand = const Value.absent(),
+    this.equipmentModel = const Value.absent(),
+    this.estimatedAnnualVolume = const Value.absent(),
+    this.forecastAmountMinor = const Value.absent(),
+    this.currency = const Value.absent(),
+    this.probabilityPercent = const Value.absent(),
+    this.expectedCloseAt = const Value.absent(),
+    this.currentSupplier = const Value.absent(),
+    this.currentPurchaseBrand = const Value.absent(),
+    this.currentPurchasePriceMinor = const Value.absent(),
+    this.supplierStability = const Value.absent(),
+    this.supplierProblem = const Value.absent(),
+    this.changeWillingness = const Value.absent(),
+    this.substitutionDifficulty = const Value.absent(),
+    this.latestQuoteMinor = const Value.absent(),
+    this.targetPriceMinor = const Value.absent(),
+    this.entryPoint = const Value.absent(),
+    this.investmentAdvice = const Value.absent(),
+    this.needsSample = const Value.absent(),
+    this.needsRegistration = const Value.absent(),
+    this.needsAuthorization = const Value.absent(),
+    this.stage = const Value.absent(),
+    this.status = const Value.absent(),
+    this.latestFeedback = const Value.absent(),
+    this.currentObstacle = const Value.absent(),
+    this.nextAction = const Value.absent(),
+    this.nextFollowAt = const Value.absent(),
+    this.isLegacyDefault = const Value.absent(),
+    required int createdAt,
+    required int updatedAt,
+  }) : customerId = Value(customerId),
+       name = Value(name),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<OpportunityRow> custom({
+    Expression<int>? id,
+    Expression<int>? customerId,
+    Expression<String>? name,
+    Expression<String>? productCategory,
+    Expression<String>? productModel,
+    Expression<String>? equipmentBrand,
+    Expression<String>? equipmentModel,
+    Expression<int>? estimatedAnnualVolume,
+    Expression<int>? forecastAmountMinor,
+    Expression<String>? currency,
+    Expression<int>? probabilityPercent,
+    Expression<int>? expectedCloseAt,
+    Expression<String>? currentSupplier,
+    Expression<String>? currentPurchaseBrand,
+    Expression<int>? currentPurchasePriceMinor,
+    Expression<String>? supplierStability,
+    Expression<String>? supplierProblem,
+    Expression<String>? changeWillingness,
+    Expression<String>? substitutionDifficulty,
+    Expression<int>? latestQuoteMinor,
+    Expression<int>? targetPriceMinor,
+    Expression<String>? entryPoint,
+    Expression<String>? investmentAdvice,
+    Expression<bool>? needsSample,
+    Expression<bool>? needsRegistration,
+    Expression<bool>? needsAuthorization,
+    Expression<String>? stage,
+    Expression<String>? status,
+    Expression<String>? latestFeedback,
+    Expression<String>? currentObstacle,
+    Expression<String>? nextAction,
+    Expression<int>? nextFollowAt,
+    Expression<bool>? isLegacyDefault,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (customerId != null) 'customer_id': customerId,
+      if (name != null) 'name': name,
+      if (productCategory != null) 'product_category': productCategory,
+      if (productModel != null) 'product_model': productModel,
+      if (equipmentBrand != null) 'equipment_brand': equipmentBrand,
+      if (equipmentModel != null) 'equipment_model': equipmentModel,
+      if (estimatedAnnualVolume != null)
+        'estimated_annual_volume': estimatedAnnualVolume,
+      if (forecastAmountMinor != null)
+        'forecast_amount_minor': forecastAmountMinor,
+      if (currency != null) 'currency': currency,
+      if (probabilityPercent != null) 'probability_percent': probabilityPercent,
+      if (expectedCloseAt != null) 'expected_close_at': expectedCloseAt,
+      if (currentSupplier != null) 'current_supplier': currentSupplier,
+      if (currentPurchaseBrand != null)
+        'current_purchase_brand': currentPurchaseBrand,
+      if (currentPurchasePriceMinor != null)
+        'current_purchase_price_minor': currentPurchasePriceMinor,
+      if (supplierStability != null) 'supplier_stability': supplierStability,
+      if (supplierProblem != null) 'supplier_problem': supplierProblem,
+      if (changeWillingness != null) 'change_willingness': changeWillingness,
+      if (substitutionDifficulty != null)
+        'substitution_difficulty': substitutionDifficulty,
+      if (latestQuoteMinor != null) 'latest_quote_minor': latestQuoteMinor,
+      if (targetPriceMinor != null) 'target_price_minor': targetPriceMinor,
+      if (entryPoint != null) 'entry_point': entryPoint,
+      if (investmentAdvice != null) 'investment_advice': investmentAdvice,
+      if (needsSample != null) 'needs_sample': needsSample,
+      if (needsRegistration != null) 'needs_registration': needsRegistration,
+      if (needsAuthorization != null) 'needs_authorization': needsAuthorization,
+      if (stage != null) 'stage': stage,
+      if (status != null) 'status': status,
+      if (latestFeedback != null) 'latest_feedback': latestFeedback,
+      if (currentObstacle != null) 'current_obstacle': currentObstacle,
+      if (nextAction != null) 'next_action': nextAction,
+      if (nextFollowAt != null) 'next_follow_at': nextFollowAt,
+      if (isLegacyDefault != null) 'is_legacy_default': isLegacyDefault,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  OpportunitiesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? customerId,
+    Value<String>? name,
+    Value<String?>? productCategory,
+    Value<String?>? productModel,
+    Value<String?>? equipmentBrand,
+    Value<String?>? equipmentModel,
+    Value<int?>? estimatedAnnualVolume,
+    Value<int?>? forecastAmountMinor,
+    Value<String>? currency,
+    Value<int?>? probabilityPercent,
+    Value<int?>? expectedCloseAt,
+    Value<String?>? currentSupplier,
+    Value<String?>? currentPurchaseBrand,
+    Value<int?>? currentPurchasePriceMinor,
+    Value<String?>? supplierStability,
+    Value<String?>? supplierProblem,
+    Value<String?>? changeWillingness,
+    Value<String?>? substitutionDifficulty,
+    Value<int?>? latestQuoteMinor,
+    Value<int?>? targetPriceMinor,
+    Value<String?>? entryPoint,
+    Value<String?>? investmentAdvice,
+    Value<bool>? needsSample,
+    Value<bool>? needsRegistration,
+    Value<bool>? needsAuthorization,
+    Value<String>? stage,
+    Value<String>? status,
+    Value<String?>? latestFeedback,
+    Value<String?>? currentObstacle,
+    Value<String?>? nextAction,
+    Value<int?>? nextFollowAt,
+    Value<bool>? isLegacyDefault,
+    Value<int>? createdAt,
+    Value<int>? updatedAt,
+  }) {
+    return OpportunitiesCompanion(
+      id: id ?? this.id,
+      customerId: customerId ?? this.customerId,
+      name: name ?? this.name,
+      productCategory: productCategory ?? this.productCategory,
+      productModel: productModel ?? this.productModel,
+      equipmentBrand: equipmentBrand ?? this.equipmentBrand,
+      equipmentModel: equipmentModel ?? this.equipmentModel,
+      estimatedAnnualVolume:
+          estimatedAnnualVolume ?? this.estimatedAnnualVolume,
+      forecastAmountMinor: forecastAmountMinor ?? this.forecastAmountMinor,
+      currency: currency ?? this.currency,
+      probabilityPercent: probabilityPercent ?? this.probabilityPercent,
+      expectedCloseAt: expectedCloseAt ?? this.expectedCloseAt,
+      currentSupplier: currentSupplier ?? this.currentSupplier,
+      currentPurchaseBrand: currentPurchaseBrand ?? this.currentPurchaseBrand,
+      currentPurchasePriceMinor:
+          currentPurchasePriceMinor ?? this.currentPurchasePriceMinor,
+      supplierStability: supplierStability ?? this.supplierStability,
+      supplierProblem: supplierProblem ?? this.supplierProblem,
+      changeWillingness: changeWillingness ?? this.changeWillingness,
+      substitutionDifficulty:
+          substitutionDifficulty ?? this.substitutionDifficulty,
+      latestQuoteMinor: latestQuoteMinor ?? this.latestQuoteMinor,
+      targetPriceMinor: targetPriceMinor ?? this.targetPriceMinor,
+      entryPoint: entryPoint ?? this.entryPoint,
+      investmentAdvice: investmentAdvice ?? this.investmentAdvice,
+      needsSample: needsSample ?? this.needsSample,
+      needsRegistration: needsRegistration ?? this.needsRegistration,
+      needsAuthorization: needsAuthorization ?? this.needsAuthorization,
+      stage: stage ?? this.stage,
+      status: status ?? this.status,
+      latestFeedback: latestFeedback ?? this.latestFeedback,
+      currentObstacle: currentObstacle ?? this.currentObstacle,
+      nextAction: nextAction ?? this.nextAction,
+      nextFollowAt: nextFollowAt ?? this.nextFollowAt,
+      isLegacyDefault: isLegacyDefault ?? this.isLegacyDefault,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (customerId.present) {
+      map['customer_id'] = Variable<int>(customerId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (productCategory.present) {
+      map['product_category'] = Variable<String>(productCategory.value);
+    }
+    if (productModel.present) {
+      map['product_model'] = Variable<String>(productModel.value);
+    }
+    if (equipmentBrand.present) {
+      map['equipment_brand'] = Variable<String>(equipmentBrand.value);
+    }
+    if (equipmentModel.present) {
+      map['equipment_model'] = Variable<String>(equipmentModel.value);
+    }
+    if (estimatedAnnualVolume.present) {
+      map['estimated_annual_volume'] = Variable<int>(
+        estimatedAnnualVolume.value,
+      );
+    }
+    if (forecastAmountMinor.present) {
+      map['forecast_amount_minor'] = Variable<int>(forecastAmountMinor.value);
+    }
+    if (currency.present) {
+      map['currency'] = Variable<String>(currency.value);
+    }
+    if (probabilityPercent.present) {
+      map['probability_percent'] = Variable<int>(probabilityPercent.value);
+    }
+    if (expectedCloseAt.present) {
+      map['expected_close_at'] = Variable<int>(expectedCloseAt.value);
+    }
+    if (currentSupplier.present) {
+      map['current_supplier'] = Variable<String>(currentSupplier.value);
+    }
+    if (currentPurchaseBrand.present) {
+      map['current_purchase_brand'] = Variable<String>(
+        currentPurchaseBrand.value,
+      );
+    }
+    if (currentPurchasePriceMinor.present) {
+      map['current_purchase_price_minor'] = Variable<int>(
+        currentPurchasePriceMinor.value,
+      );
+    }
+    if (supplierStability.present) {
+      map['supplier_stability'] = Variable<String>(supplierStability.value);
+    }
+    if (supplierProblem.present) {
+      map['supplier_problem'] = Variable<String>(supplierProblem.value);
+    }
+    if (changeWillingness.present) {
+      map['change_willingness'] = Variable<String>(changeWillingness.value);
+    }
+    if (substitutionDifficulty.present) {
+      map['substitution_difficulty'] = Variable<String>(
+        substitutionDifficulty.value,
+      );
+    }
+    if (latestQuoteMinor.present) {
+      map['latest_quote_minor'] = Variable<int>(latestQuoteMinor.value);
+    }
+    if (targetPriceMinor.present) {
+      map['target_price_minor'] = Variable<int>(targetPriceMinor.value);
+    }
+    if (entryPoint.present) {
+      map['entry_point'] = Variable<String>(entryPoint.value);
+    }
+    if (investmentAdvice.present) {
+      map['investment_advice'] = Variable<String>(investmentAdvice.value);
+    }
+    if (needsSample.present) {
+      map['needs_sample'] = Variable<bool>(needsSample.value);
+    }
+    if (needsRegistration.present) {
+      map['needs_registration'] = Variable<bool>(needsRegistration.value);
+    }
+    if (needsAuthorization.present) {
+      map['needs_authorization'] = Variable<bool>(needsAuthorization.value);
+    }
+    if (stage.present) {
+      map['stage'] = Variable<String>(stage.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (latestFeedback.present) {
+      map['latest_feedback'] = Variable<String>(latestFeedback.value);
+    }
+    if (currentObstacle.present) {
+      map['current_obstacle'] = Variable<String>(currentObstacle.value);
+    }
+    if (nextAction.present) {
+      map['next_action'] = Variable<String>(nextAction.value);
+    }
+    if (nextFollowAt.present) {
+      map['next_follow_at'] = Variable<int>(nextFollowAt.value);
+    }
+    if (isLegacyDefault.present) {
+      map['is_legacy_default'] = Variable<bool>(isLegacyDefault.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OpportunitiesCompanion(')
+          ..write('id: $id, ')
+          ..write('customerId: $customerId, ')
+          ..write('name: $name, ')
+          ..write('productCategory: $productCategory, ')
+          ..write('productModel: $productModel, ')
+          ..write('equipmentBrand: $equipmentBrand, ')
+          ..write('equipmentModel: $equipmentModel, ')
+          ..write('estimatedAnnualVolume: $estimatedAnnualVolume, ')
+          ..write('forecastAmountMinor: $forecastAmountMinor, ')
+          ..write('currency: $currency, ')
+          ..write('probabilityPercent: $probabilityPercent, ')
+          ..write('expectedCloseAt: $expectedCloseAt, ')
+          ..write('currentSupplier: $currentSupplier, ')
+          ..write('currentPurchaseBrand: $currentPurchaseBrand, ')
+          ..write('currentPurchasePriceMinor: $currentPurchasePriceMinor, ')
+          ..write('supplierStability: $supplierStability, ')
+          ..write('supplierProblem: $supplierProblem, ')
+          ..write('changeWillingness: $changeWillingness, ')
+          ..write('substitutionDifficulty: $substitutionDifficulty, ')
+          ..write('latestQuoteMinor: $latestQuoteMinor, ')
+          ..write('targetPriceMinor: $targetPriceMinor, ')
+          ..write('entryPoint: $entryPoint, ')
+          ..write('investmentAdvice: $investmentAdvice, ')
+          ..write('needsSample: $needsSample, ')
+          ..write('needsRegistration: $needsRegistration, ')
+          ..write('needsAuthorization: $needsAuthorization, ')
+          ..write('stage: $stage, ')
+          ..write('status: $status, ')
+          ..write('latestFeedback: $latestFeedback, ')
+          ..write('currentObstacle: $currentObstacle, ')
+          ..write('nextAction: $nextAction, ')
+          ..write('nextFollowAt: $nextFollowAt, ')
+          ..write('isLegacyDefault: $isLegacyDefault, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ContactsTable extends Contacts
     with TableInfo<$ContactsTable, ContactRow> {
   @override
@@ -1306,6 +3338,20 @@ class $FollowupsTable extends Followups
       'REFERENCES customers (id) ON DELETE CASCADE',
     ),
   );
+  static const VerificationMeta _opportunityIdMeta = const VerificationMeta(
+    'opportunityId',
+  );
+  @override
+  late final GeneratedColumn<int> opportunityId = GeneratedColumn<int>(
+    'opportunity_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES opportunities (id) ON DELETE SET NULL',
+    ),
+  );
   static const VerificationMeta _occurredAtMeta = const VerificationMeta(
     'occurredAt',
   );
@@ -1374,6 +3420,7 @@ class $FollowupsTable extends Followups
   List<GeneratedColumn> get $columns => [
     id,
     customerId,
+    opportunityId,
     occurredAt,
     method,
     content,
@@ -1403,6 +3450,15 @@ class $FollowupsTable extends Followups
       );
     } else if (isInserting) {
       context.missing(_customerIdMeta);
+    }
+    if (data.containsKey('opportunity_id')) {
+      context.handle(
+        _opportunityIdMeta,
+        opportunityId.isAcceptableOrUnknown(
+          data['opportunity_id']!,
+          _opportunityIdMeta,
+        ),
+      );
     }
     if (data.containsKey('occurred_at')) {
       context.handle(
@@ -1467,6 +3523,10 @@ class $FollowupsTable extends Followups
         DriftSqlType.int,
         data['${effectivePrefix}customer_id'],
       )!,
+      opportunityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}opportunity_id'],
+      ),
       occurredAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}occurred_at'],
@@ -1504,6 +3564,9 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
   final int id;
   final int customerId;
 
+  /// v2 项目归属。为兼容原表结构保持可空，迁移会为全部旧记录回填。
+  final int? opportunityId;
+
   /// 发生时间，UTC 毫秒。可以补录过去的跟进，所以不用 createdAt 代替。
   final int occurredAt;
 
@@ -1520,6 +3583,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
   const FollowupRow({
     required this.id,
     required this.customerId,
+    this.opportunityId,
     required this.occurredAt,
     required this.method,
     required this.content,
@@ -1532,6 +3596,9 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['customer_id'] = Variable<int>(customerId);
+    if (!nullToAbsent || opportunityId != null) {
+      map['opportunity_id'] = Variable<int>(opportunityId);
+    }
     map['occurred_at'] = Variable<int>(occurredAt);
     map['method'] = Variable<String>(method);
     map['content'] = Variable<String>(content);
@@ -1547,6 +3614,9 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     return FollowupsCompanion(
       id: Value(id),
       customerId: Value(customerId),
+      opportunityId: opportunityId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(opportunityId),
       occurredAt: Value(occurredAt),
       method: Value(method),
       content: Value(content),
@@ -1566,6 +3636,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     return FollowupRow(
       id: serializer.fromJson<int>(json['id']),
       customerId: serializer.fromJson<int>(json['customerId']),
+      opportunityId: serializer.fromJson<int?>(json['opportunityId']),
       occurredAt: serializer.fromJson<int>(json['occurredAt']),
       method: serializer.fromJson<String>(json['method']),
       content: serializer.fromJson<String>(json['content']),
@@ -1580,6 +3651,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'customerId': serializer.toJson<int>(customerId),
+      'opportunityId': serializer.toJson<int?>(opportunityId),
       'occurredAt': serializer.toJson<int>(occurredAt),
       'method': serializer.toJson<String>(method),
       'content': serializer.toJson<String>(content),
@@ -1592,6 +3664,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
   FollowupRow copyWith({
     int? id,
     int? customerId,
+    Value<int?> opportunityId = const Value.absent(),
     int? occurredAt,
     String? method,
     String? content,
@@ -1601,6 +3674,9 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
   }) => FollowupRow(
     id: id ?? this.id,
     customerId: customerId ?? this.customerId,
+    opportunityId: opportunityId.present
+        ? opportunityId.value
+        : this.opportunityId,
     occurredAt: occurredAt ?? this.occurredAt,
     method: method ?? this.method,
     content: content ?? this.content,
@@ -1614,6 +3690,9 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
       customerId: data.customerId.present
           ? data.customerId.value
           : this.customerId,
+      opportunityId: data.opportunityId.present
+          ? data.opportunityId.value
+          : this.opportunityId,
       occurredAt: data.occurredAt.present
           ? data.occurredAt.value
           : this.occurredAt,
@@ -1632,6 +3711,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     return (StringBuffer('FollowupRow(')
           ..write('id: $id, ')
           ..write('customerId: $customerId, ')
+          ..write('opportunityId: $opportunityId, ')
           ..write('occurredAt: $occurredAt, ')
           ..write('method: $method, ')
           ..write('content: $content, ')
@@ -1646,6 +3726,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
   int get hashCode => Object.hash(
     id,
     customerId,
+    opportunityId,
     occurredAt,
     method,
     content,
@@ -1659,6 +3740,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
       (other is FollowupRow &&
           other.id == this.id &&
           other.customerId == this.customerId &&
+          other.opportunityId == this.opportunityId &&
           other.occurredAt == this.occurredAt &&
           other.method == this.method &&
           other.content == this.content &&
@@ -1670,6 +3752,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
 class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
   final Value<int> id;
   final Value<int> customerId;
+  final Value<int?> opportunityId;
   final Value<int> occurredAt;
   final Value<String> method;
   final Value<String> content;
@@ -1679,6 +3762,7 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
   const FollowupsCompanion({
     this.id = const Value.absent(),
     this.customerId = const Value.absent(),
+    this.opportunityId = const Value.absent(),
     this.occurredAt = const Value.absent(),
     this.method = const Value.absent(),
     this.content = const Value.absent(),
@@ -1689,6 +3773,7 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
   FollowupsCompanion.insert({
     this.id = const Value.absent(),
     required int customerId,
+    this.opportunityId = const Value.absent(),
     required int occurredAt,
     required String method,
     required String content,
@@ -1704,6 +3789,7 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
   static Insertable<FollowupRow> custom({
     Expression<int>? id,
     Expression<int>? customerId,
+    Expression<int>? opportunityId,
     Expression<int>? occurredAt,
     Expression<String>? method,
     Expression<String>? content,
@@ -1714,6 +3800,7 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (customerId != null) 'customer_id': customerId,
+      if (opportunityId != null) 'opportunity_id': opportunityId,
       if (occurredAt != null) 'occurred_at': occurredAt,
       if (method != null) 'method': method,
       if (content != null) 'content': content,
@@ -1726,6 +3813,7 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
   FollowupsCompanion copyWith({
     Value<int>? id,
     Value<int>? customerId,
+    Value<int?>? opportunityId,
     Value<int>? occurredAt,
     Value<String>? method,
     Value<String>? content,
@@ -1736,6 +3824,7 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     return FollowupsCompanion(
       id: id ?? this.id,
       customerId: customerId ?? this.customerId,
+      opportunityId: opportunityId ?? this.opportunityId,
       occurredAt: occurredAt ?? this.occurredAt,
       method: method ?? this.method,
       content: content ?? this.content,
@@ -1753,6 +3842,9 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     }
     if (customerId.present) {
       map['customer_id'] = Variable<int>(customerId.value);
+    }
+    if (opportunityId.present) {
+      map['opportunity_id'] = Variable<int>(opportunityId.value);
     }
     if (occurredAt.present) {
       map['occurred_at'] = Variable<int>(occurredAt.value);
@@ -1780,6 +3872,7 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     return (StringBuffer('FollowupsCompanion(')
           ..write('id: $id, ')
           ..write('customerId: $customerId, ')
+          ..write('opportunityId: $opportunityId, ')
           ..write('occurredAt: $occurredAt, ')
           ..write('method: $method, ')
           ..write('content: $content, ')
@@ -1822,6 +3915,20 @@ class $FollowPlansTable extends FollowPlans
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES customers (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _opportunityIdMeta = const VerificationMeta(
+    'opportunityId',
+  );
+  @override
+  late final GeneratedColumn<int> opportunityId = GeneratedColumn<int>(
+    'opportunity_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES opportunities (id) ON DELETE SET NULL',
     ),
   );
   static const VerificationMeta _titleMeta = const VerificationMeta('title');
@@ -1904,6 +4011,7 @@ class $FollowPlansTable extends FollowPlans
   List<GeneratedColumn> get $columns => [
     id,
     customerId,
+    opportunityId,
     title,
     planAt,
     status,
@@ -1934,6 +4042,15 @@ class $FollowPlansTable extends FollowPlans
       );
     } else if (isInserting) {
       context.missing(_customerIdMeta);
+    }
+    if (data.containsKey('opportunity_id')) {
+      context.handle(
+        _opportunityIdMeta,
+        opportunityId.isAcceptableOrUnknown(
+          data['opportunity_id']!,
+          _opportunityIdMeta,
+        ),
+      );
     }
     if (data.containsKey('title')) {
       context.handle(
@@ -2005,6 +4122,10 @@ class $FollowPlansTable extends FollowPlans
         DriftSqlType.int,
         data['${effectivePrefix}customer_id'],
       )!,
+      opportunityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}opportunity_id'],
+      ),
       title: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}title'],
@@ -2046,6 +4167,9 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
   final int id;
   final int customerId;
 
+  /// v2 项目归属。为兼容原表结构保持可空，迁移会为全部旧记录回填。
+  final int? opportunityId;
+
   /// 事项标题，如「催合同」。
   final String title;
 
@@ -2066,6 +4190,7 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
   const FollowPlanRow({
     required this.id,
     required this.customerId,
+    this.opportunityId,
     required this.title,
     required this.planAt,
     required this.status,
@@ -2079,6 +4204,9 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['customer_id'] = Variable<int>(customerId);
+    if (!nullToAbsent || opportunityId != null) {
+      map['opportunity_id'] = Variable<int>(opportunityId);
+    }
     map['title'] = Variable<String>(title);
     map['plan_at'] = Variable<int>(planAt);
     map['status'] = Variable<String>(status);
@@ -2097,6 +4225,9 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
     return FollowPlansCompanion(
       id: Value(id),
       customerId: Value(customerId),
+      opportunityId: opportunityId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(opportunityId),
       title: Value(title),
       planAt: Value(planAt),
       status: Value(status),
@@ -2119,6 +4250,7 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
     return FollowPlanRow(
       id: serializer.fromJson<int>(json['id']),
       customerId: serializer.fromJson<int>(json['customerId']),
+      opportunityId: serializer.fromJson<int?>(json['opportunityId']),
       title: serializer.fromJson<String>(json['title']),
       planAt: serializer.fromJson<int>(json['planAt']),
       status: serializer.fromJson<String>(json['status']),
@@ -2134,6 +4266,7 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'customerId': serializer.toJson<int>(customerId),
+      'opportunityId': serializer.toJson<int?>(opportunityId),
       'title': serializer.toJson<String>(title),
       'planAt': serializer.toJson<int>(planAt),
       'status': serializer.toJson<String>(status),
@@ -2147,6 +4280,7 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
   FollowPlanRow copyWith({
     int? id,
     int? customerId,
+    Value<int?> opportunityId = const Value.absent(),
     String? title,
     int? planAt,
     String? status,
@@ -2157,6 +4291,9 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
   }) => FollowPlanRow(
     id: id ?? this.id,
     customerId: customerId ?? this.customerId,
+    opportunityId: opportunityId.present
+        ? opportunityId.value
+        : this.opportunityId,
     title: title ?? this.title,
     planAt: planAt ?? this.planAt,
     status: status ?? this.status,
@@ -2171,6 +4308,9 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
       customerId: data.customerId.present
           ? data.customerId.value
           : this.customerId,
+      opportunityId: data.opportunityId.present
+          ? data.opportunityId.value
+          : this.opportunityId,
       title: data.title.present ? data.title.value : this.title,
       planAt: data.planAt.present ? data.planAt.value : this.planAt,
       status: data.status.present ? data.status.value : this.status,
@@ -2190,6 +4330,7 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
     return (StringBuffer('FollowPlanRow(')
           ..write('id: $id, ')
           ..write('customerId: $customerId, ')
+          ..write('opportunityId: $opportunityId, ')
           ..write('title: $title, ')
           ..write('planAt: $planAt, ')
           ..write('status: $status, ')
@@ -2205,6 +4346,7 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
   int get hashCode => Object.hash(
     id,
     customerId,
+    opportunityId,
     title,
     planAt,
     status,
@@ -2219,6 +4361,7 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
       (other is FollowPlanRow &&
           other.id == this.id &&
           other.customerId == this.customerId &&
+          other.opportunityId == this.opportunityId &&
           other.title == this.title &&
           other.planAt == this.planAt &&
           other.status == this.status &&
@@ -2231,6 +4374,7 @@ class FollowPlanRow extends DataClass implements Insertable<FollowPlanRow> {
 class FollowPlansCompanion extends UpdateCompanion<FollowPlanRow> {
   final Value<int> id;
   final Value<int> customerId;
+  final Value<int?> opportunityId;
   final Value<String> title;
   final Value<int> planAt;
   final Value<String> status;
@@ -2241,6 +4385,7 @@ class FollowPlansCompanion extends UpdateCompanion<FollowPlanRow> {
   const FollowPlansCompanion({
     this.id = const Value.absent(),
     this.customerId = const Value.absent(),
+    this.opportunityId = const Value.absent(),
     this.title = const Value.absent(),
     this.planAt = const Value.absent(),
     this.status = const Value.absent(),
@@ -2252,6 +4397,7 @@ class FollowPlansCompanion extends UpdateCompanion<FollowPlanRow> {
   FollowPlansCompanion.insert({
     this.id = const Value.absent(),
     required int customerId,
+    this.opportunityId = const Value.absent(),
     required String title,
     required int planAt,
     this.status = const Value.absent(),
@@ -2267,6 +4413,7 @@ class FollowPlansCompanion extends UpdateCompanion<FollowPlanRow> {
   static Insertable<FollowPlanRow> custom({
     Expression<int>? id,
     Expression<int>? customerId,
+    Expression<int>? opportunityId,
     Expression<String>? title,
     Expression<int>? planAt,
     Expression<String>? status,
@@ -2278,6 +4425,7 @@ class FollowPlansCompanion extends UpdateCompanion<FollowPlanRow> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (customerId != null) 'customer_id': customerId,
+      if (opportunityId != null) 'opportunity_id': opportunityId,
       if (title != null) 'title': title,
       if (planAt != null) 'plan_at': planAt,
       if (status != null) 'status': status,
@@ -2291,6 +4439,7 @@ class FollowPlansCompanion extends UpdateCompanion<FollowPlanRow> {
   FollowPlansCompanion copyWith({
     Value<int>? id,
     Value<int>? customerId,
+    Value<int?>? opportunityId,
     Value<String>? title,
     Value<int>? planAt,
     Value<String>? status,
@@ -2302,6 +4451,7 @@ class FollowPlansCompanion extends UpdateCompanion<FollowPlanRow> {
     return FollowPlansCompanion(
       id: id ?? this.id,
       customerId: customerId ?? this.customerId,
+      opportunityId: opportunityId ?? this.opportunityId,
       title: title ?? this.title,
       planAt: planAt ?? this.planAt,
       status: status ?? this.status,
@@ -2320,6 +4470,9 @@ class FollowPlansCompanion extends UpdateCompanion<FollowPlanRow> {
     }
     if (customerId.present) {
       map['customer_id'] = Variable<int>(customerId.value);
+    }
+    if (opportunityId.present) {
+      map['opportunity_id'] = Variable<int>(opportunityId.value);
     }
     if (title.present) {
       map['title'] = Variable<String>(title.value);
@@ -2350,6 +4503,7 @@ class FollowPlansCompanion extends UpdateCompanion<FollowPlanRow> {
     return (StringBuffer('FollowPlansCompanion(')
           ..write('id: $id, ')
           ..write('customerId: $customerId, ')
+          ..write('opportunityId: $opportunityId, ')
           ..write('title: $title, ')
           ..write('planAt: $planAt, ')
           ..write('status: $status, ')
@@ -2392,6 +4546,20 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderRow> {
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES customers (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _opportunityIdMeta = const VerificationMeta(
+    'opportunityId',
+  );
+  @override
+  late final GeneratedColumn<int> opportunityId = GeneratedColumn<int>(
+    'opportunity_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES opportunities (id) ON DELETE SET NULL',
     ),
   );
   static const VerificationMeta _orderNoMeta = const VerificationMeta(
@@ -2479,6 +4647,7 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderRow> {
   List<GeneratedColumn> get $columns => [
     id,
     customerId,
+    opportunityId,
     orderNo,
     orderedAt,
     amountCents,
@@ -2509,6 +4678,15 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderRow> {
       );
     } else if (isInserting) {
       context.missing(_customerIdMeta);
+    }
+    if (data.containsKey('opportunity_id')) {
+      context.handle(
+        _opportunityIdMeta,
+        opportunityId.isAcceptableOrUnknown(
+          data['opportunity_id']!,
+          _opportunityIdMeta,
+        ),
+      );
     }
     if (data.containsKey('order_no')) {
       context.handle(
@@ -2585,6 +4763,10 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderRow> {
         DriftSqlType.int,
         data['${effectivePrefix}customer_id'],
       )!,
+      opportunityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}opportunity_id'],
+      ),
       orderNo: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}order_no'],
@@ -2626,6 +4808,9 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
   final int id;
   final int customerId;
 
+  /// v2 项目归属。为兼容原表结构保持可空，迁移会为全部旧记录回填。
+  final int? opportunityId;
+
   /// 订单编号。唯一，可由系统按日期序号自动生成。
   final String orderNo;
 
@@ -2648,6 +4833,7 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
   const OrderRow({
     required this.id,
     required this.customerId,
+    this.opportunityId,
     required this.orderNo,
     required this.orderedAt,
     required this.amountCents,
@@ -2661,6 +4847,9 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['customer_id'] = Variable<int>(customerId);
+    if (!nullToAbsent || opportunityId != null) {
+      map['opportunity_id'] = Variable<int>(opportunityId);
+    }
     map['order_no'] = Variable<String>(orderNo);
     map['ordered_at'] = Variable<int>(orderedAt);
     map['amount_cents'] = Variable<int>(amountCents);
@@ -2677,6 +4866,9 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
     return OrdersCompanion(
       id: Value(id),
       customerId: Value(customerId),
+      opportunityId: opportunityId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(opportunityId),
       orderNo: Value(orderNo),
       orderedAt: Value(orderedAt),
       amountCents: Value(amountCents),
@@ -2697,6 +4889,7 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
     return OrderRow(
       id: serializer.fromJson<int>(json['id']),
       customerId: serializer.fromJson<int>(json['customerId']),
+      opportunityId: serializer.fromJson<int?>(json['opportunityId']),
       orderNo: serializer.fromJson<String>(json['orderNo']),
       orderedAt: serializer.fromJson<int>(json['orderedAt']),
       amountCents: serializer.fromJson<int>(json['amountCents']),
@@ -2712,6 +4905,7 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'customerId': serializer.toJson<int>(customerId),
+      'opportunityId': serializer.toJson<int?>(opportunityId),
       'orderNo': serializer.toJson<String>(orderNo),
       'orderedAt': serializer.toJson<int>(orderedAt),
       'amountCents': serializer.toJson<int>(amountCents),
@@ -2725,6 +4919,7 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
   OrderRow copyWith({
     int? id,
     int? customerId,
+    Value<int?> opportunityId = const Value.absent(),
     String? orderNo,
     int? orderedAt,
     int? amountCents,
@@ -2735,6 +4930,9 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
   }) => OrderRow(
     id: id ?? this.id,
     customerId: customerId ?? this.customerId,
+    opportunityId: opportunityId.present
+        ? opportunityId.value
+        : this.opportunityId,
     orderNo: orderNo ?? this.orderNo,
     orderedAt: orderedAt ?? this.orderedAt,
     amountCents: amountCents ?? this.amountCents,
@@ -2749,6 +4947,9 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
       customerId: data.customerId.present
           ? data.customerId.value
           : this.customerId,
+      opportunityId: data.opportunityId.present
+          ? data.opportunityId.value
+          : this.opportunityId,
       orderNo: data.orderNo.present ? data.orderNo.value : this.orderNo,
       orderedAt: data.orderedAt.present ? data.orderedAt.value : this.orderedAt,
       amountCents: data.amountCents.present
@@ -2768,6 +4969,7 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
     return (StringBuffer('OrderRow(')
           ..write('id: $id, ')
           ..write('customerId: $customerId, ')
+          ..write('opportunityId: $opportunityId, ')
           ..write('orderNo: $orderNo, ')
           ..write('orderedAt: $orderedAt, ')
           ..write('amountCents: $amountCents, ')
@@ -2783,6 +4985,7 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
   int get hashCode => Object.hash(
     id,
     customerId,
+    opportunityId,
     orderNo,
     orderedAt,
     amountCents,
@@ -2797,6 +5000,7 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
       (other is OrderRow &&
           other.id == this.id &&
           other.customerId == this.customerId &&
+          other.opportunityId == this.opportunityId &&
           other.orderNo == this.orderNo &&
           other.orderedAt == this.orderedAt &&
           other.amountCents == this.amountCents &&
@@ -2809,6 +5013,7 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
 class OrdersCompanion extends UpdateCompanion<OrderRow> {
   final Value<int> id;
   final Value<int> customerId;
+  final Value<int?> opportunityId;
   final Value<String> orderNo;
   final Value<int> orderedAt;
   final Value<int> amountCents;
@@ -2819,6 +5024,7 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
   const OrdersCompanion({
     this.id = const Value.absent(),
     this.customerId = const Value.absent(),
+    this.opportunityId = const Value.absent(),
     this.orderNo = const Value.absent(),
     this.orderedAt = const Value.absent(),
     this.amountCents = const Value.absent(),
@@ -2830,6 +5036,7 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
   OrdersCompanion.insert({
     this.id = const Value.absent(),
     required int customerId,
+    this.opportunityId = const Value.absent(),
     required String orderNo,
     required int orderedAt,
     required int amountCents,
@@ -2846,6 +5053,7 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
   static Insertable<OrderRow> custom({
     Expression<int>? id,
     Expression<int>? customerId,
+    Expression<int>? opportunityId,
     Expression<String>? orderNo,
     Expression<int>? orderedAt,
     Expression<int>? amountCents,
@@ -2857,6 +5065,7 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (customerId != null) 'customer_id': customerId,
+      if (opportunityId != null) 'opportunity_id': opportunityId,
       if (orderNo != null) 'order_no': orderNo,
       if (orderedAt != null) 'ordered_at': orderedAt,
       if (amountCents != null) 'amount_cents': amountCents,
@@ -2870,6 +5079,7 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
   OrdersCompanion copyWith({
     Value<int>? id,
     Value<int>? customerId,
+    Value<int?>? opportunityId,
     Value<String>? orderNo,
     Value<int>? orderedAt,
     Value<int>? amountCents,
@@ -2881,6 +5091,7 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
     return OrdersCompanion(
       id: id ?? this.id,
       customerId: customerId ?? this.customerId,
+      opportunityId: opportunityId ?? this.opportunityId,
       orderNo: orderNo ?? this.orderNo,
       orderedAt: orderedAt ?? this.orderedAt,
       amountCents: amountCents ?? this.amountCents,
@@ -2899,6 +5110,9 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
     }
     if (customerId.present) {
       map['customer_id'] = Variable<int>(customerId.value);
+    }
+    if (opportunityId.present) {
+      map['opportunity_id'] = Variable<int>(opportunityId.value);
     }
     if (orderNo.present) {
       map['order_no'] = Variable<String>(orderNo.value);
@@ -2929,6 +5143,7 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
     return (StringBuffer('OrdersCompanion(')
           ..write('id: $id, ')
           ..write('customerId: $customerId, ')
+          ..write('opportunityId: $opportunityId, ')
           ..write('orderNo: $orderNo, ')
           ..write('orderedAt: $orderedAt, ')
           ..write('amountCents: $amountCents, ')
@@ -4091,6 +6306,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $CustomersTable customers = $CustomersTable(this);
+  late final $OpportunitiesTable opportunities = $OpportunitiesTable(this);
   late final $ContactsTable contacts = $ContactsTable(this);
   late final $FollowupsTable followups = $FollowupsTable(this);
   late final $FollowPlansTable followPlans = $FollowPlansTable(this);
@@ -4103,6 +6319,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final FollowupDao followupDao = FollowupDao(this as AppDatabase);
   late final PlanDao planDao = PlanDao(this as AppDatabase);
   late final OrderDao orderDao = OrderDao(this as AppDatabase);
+  late final OpportunityDao opportunityDao = OpportunityDao(
+    this as AppDatabase,
+  );
   late final AttachmentDao attachmentDao = AttachmentDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -4110,6 +6329,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     customers,
+    opportunities,
     contacts,
     followups,
     followPlans,
@@ -4120,6 +6340,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'customers',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('opportunities', kind: UpdateKind.delete)],
+    ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
         'customers',
@@ -4136,6 +6363,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
+        'opportunities',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('followups', kind: UpdateKind.update)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
         'customers',
         limitUpdateKind: UpdateKind.delete,
       ),
@@ -4143,10 +6377,24 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
+        'opportunities',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('follow_plans', kind: UpdateKind.update)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
         'customers',
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('orders', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'opportunities',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('orders', kind: UpdateKind.update)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
@@ -4215,6 +6463,24 @@ typedef $$CustomersTableUpdateCompanionBuilder =
 final class $$CustomersTableReferences
     extends BaseReferences<_$AppDatabase, $CustomersTable, CustomerRow> {
   $$CustomersTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$OpportunitiesTable, List<OpportunityRow>>
+  _opportunitiesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.opportunities,
+    aliasName: 'customers__id__opportunities__customer_id',
+  );
+
+  $$OpportunitiesTableProcessedTableManager get opportunitiesRefs {
+    final manager = $$OpportunitiesTableTableManager(
+      $_db,
+      $_db.opportunities,
+    ).filter((f) => f.customerId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_opportunitiesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 
   static MultiTypedResultKey<$ContactsTable, List<ContactRow>>
   _contactsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
@@ -4381,6 +6647,31 @@ class $$CustomersTableFilterComposer
     column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  Expression<bool> opportunitiesRefs(
+    Expression<bool> Function($$OpportunitiesTableFilterComposer f) f,
+  ) {
+    final $$OpportunitiesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.customerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableFilterComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 
   Expression<bool> contactsRefs(
     Expression<bool> Function($$ContactsTableFilterComposer f) f,
@@ -4633,6 +6924,31 @@ class $$CustomersTableAnnotationComposer
   GeneratedColumn<int> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
+  Expression<T> opportunitiesRefs<T extends Object>(
+    Expression<T> Function($$OpportunitiesTableAnnotationComposer a) f,
+  ) {
+    final $$OpportunitiesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.customerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<T> contactsRefs<T extends Object>(
     Expression<T> Function($$ContactsTableAnnotationComposer a) f,
   ) {
@@ -4773,6 +7089,7 @@ class $$CustomersTableTableManager
           (CustomerRow, $$CustomersTableReferences),
           CustomerRow,
           PrefetchHooks Function({
+            bool opportunitiesRefs,
             bool contactsRefs,
             bool followupsRefs,
             bool followPlansRefs,
@@ -4861,6 +7178,7 @@ class $$CustomersTableTableManager
               .toList(),
           prefetchHooksCallback:
               ({
+                opportunitiesRefs = false,
                 contactsRefs = false,
                 followupsRefs = false,
                 followPlansRefs = false,
@@ -4870,6 +7188,7 @@ class $$CustomersTableTableManager
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
+                    if (opportunitiesRefs) db.opportunities,
                     if (contactsRefs) db.contacts,
                     if (followupsRefs) db.followups,
                     if (followPlansRefs) db.followPlans,
@@ -4879,6 +7198,27 @@ class $$CustomersTableTableManager
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
                     return [
+                      if (opportunitiesRefs)
+                        await $_getPrefetchedData<
+                          CustomerRow,
+                          $CustomersTable,
+                          OpportunityRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$CustomersTableReferences
+                              ._opportunitiesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$CustomersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).opportunitiesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.customerId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                       if (contactsRefs)
                         await $_getPrefetchedData<
                           CustomerRow,
@@ -5005,11 +7345,1242 @@ typedef $$CustomersTableProcessedTableManager =
       (CustomerRow, $$CustomersTableReferences),
       CustomerRow,
       PrefetchHooks Function({
+        bool opportunitiesRefs,
         bool contactsRefs,
         bool followupsRefs,
         bool followPlansRefs,
         bool ordersRefs,
         bool customerTagsRefs,
+      })
+    >;
+typedef $$OpportunitiesTableCreateCompanionBuilder =
+    OpportunitiesCompanion Function({
+      Value<int> id,
+      required int customerId,
+      required String name,
+      Value<String?> productCategory,
+      Value<String?> productModel,
+      Value<String?> equipmentBrand,
+      Value<String?> equipmentModel,
+      Value<int?> estimatedAnnualVolume,
+      Value<int?> forecastAmountMinor,
+      Value<String> currency,
+      Value<int?> probabilityPercent,
+      Value<int?> expectedCloseAt,
+      Value<String?> currentSupplier,
+      Value<String?> currentPurchaseBrand,
+      Value<int?> currentPurchasePriceMinor,
+      Value<String?> supplierStability,
+      Value<String?> supplierProblem,
+      Value<String?> changeWillingness,
+      Value<String?> substitutionDifficulty,
+      Value<int?> latestQuoteMinor,
+      Value<int?> targetPriceMinor,
+      Value<String?> entryPoint,
+      Value<String?> investmentAdvice,
+      Value<bool> needsSample,
+      Value<bool> needsRegistration,
+      Value<bool> needsAuthorization,
+      Value<String> stage,
+      Value<String> status,
+      Value<String?> latestFeedback,
+      Value<String?> currentObstacle,
+      Value<String?> nextAction,
+      Value<int?> nextFollowAt,
+      Value<bool> isLegacyDefault,
+      required int createdAt,
+      required int updatedAt,
+    });
+typedef $$OpportunitiesTableUpdateCompanionBuilder =
+    OpportunitiesCompanion Function({
+      Value<int> id,
+      Value<int> customerId,
+      Value<String> name,
+      Value<String?> productCategory,
+      Value<String?> productModel,
+      Value<String?> equipmentBrand,
+      Value<String?> equipmentModel,
+      Value<int?> estimatedAnnualVolume,
+      Value<int?> forecastAmountMinor,
+      Value<String> currency,
+      Value<int?> probabilityPercent,
+      Value<int?> expectedCloseAt,
+      Value<String?> currentSupplier,
+      Value<String?> currentPurchaseBrand,
+      Value<int?> currentPurchasePriceMinor,
+      Value<String?> supplierStability,
+      Value<String?> supplierProblem,
+      Value<String?> changeWillingness,
+      Value<String?> substitutionDifficulty,
+      Value<int?> latestQuoteMinor,
+      Value<int?> targetPriceMinor,
+      Value<String?> entryPoint,
+      Value<String?> investmentAdvice,
+      Value<bool> needsSample,
+      Value<bool> needsRegistration,
+      Value<bool> needsAuthorization,
+      Value<String> stage,
+      Value<String> status,
+      Value<String?> latestFeedback,
+      Value<String?> currentObstacle,
+      Value<String?> nextAction,
+      Value<int?> nextFollowAt,
+      Value<bool> isLegacyDefault,
+      Value<int> createdAt,
+      Value<int> updatedAt,
+    });
+
+final class $$OpportunitiesTableReferences
+    extends BaseReferences<_$AppDatabase, $OpportunitiesTable, OpportunityRow> {
+  $$OpportunitiesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $CustomersTable _customerIdTable(_$AppDatabase db) =>
+      db.customers.createAlias('opportunities__customer_id__customers__id');
+
+  $$CustomersTableProcessedTableManager get customerId {
+    final $_column = $_itemColumn<int>('customer_id')!;
+
+    final manager = $$CustomersTableTableManager(
+      $_db,
+      $_db.customers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_customerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$FollowupsTable, List<FollowupRow>>
+  _followupsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.followups,
+    aliasName: 'opportunities__id__followups__opportunity_id',
+  );
+
+  $$FollowupsTableProcessedTableManager get followupsRefs {
+    final manager = $$FollowupsTableTableManager(
+      $_db,
+      $_db.followups,
+    ).filter((f) => f.opportunityId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_followupsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$FollowPlansTable, List<FollowPlanRow>>
+  _followPlansRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.followPlans,
+    aliasName: 'opportunities__id__follow_plans__opportunity_id',
+  );
+
+  $$FollowPlansTableProcessedTableManager get followPlansRefs {
+    final manager = $$FollowPlansTableTableManager(
+      $_db,
+      $_db.followPlans,
+    ).filter((f) => f.opportunityId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_followPlansRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$OrdersTable, List<OrderRow>> _ordersRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.orders,
+    aliasName: 'opportunities__id__orders__opportunity_id',
+  );
+
+  $$OrdersTableProcessedTableManager get ordersRefs {
+    final manager = $$OrdersTableTableManager(
+      $_db,
+      $_db.orders,
+    ).filter((f) => f.opportunityId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_ordersRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$OpportunitiesTableFilterComposer
+    extends Composer<_$AppDatabase, $OpportunitiesTable> {
+  $$OpportunitiesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get productCategory => $composableBuilder(
+    column: $table.productCategory,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get productModel => $composableBuilder(
+    column: $table.productModel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get equipmentBrand => $composableBuilder(
+    column: $table.equipmentBrand,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get equipmentModel => $composableBuilder(
+    column: $table.equipmentModel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get estimatedAnnualVolume => $composableBuilder(
+    column: $table.estimatedAnnualVolume,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get forecastAmountMinor => $composableBuilder(
+    column: $table.forecastAmountMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get probabilityPercent => $composableBuilder(
+    column: $table.probabilityPercent,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get expectedCloseAt => $composableBuilder(
+    column: $table.expectedCloseAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currentSupplier => $composableBuilder(
+    column: $table.currentSupplier,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currentPurchaseBrand => $composableBuilder(
+    column: $table.currentPurchaseBrand,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get currentPurchasePriceMinor => $composableBuilder(
+    column: $table.currentPurchasePriceMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get supplierStability => $composableBuilder(
+    column: $table.supplierStability,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get supplierProblem => $composableBuilder(
+    column: $table.supplierProblem,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get changeWillingness => $composableBuilder(
+    column: $table.changeWillingness,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get substitutionDifficulty => $composableBuilder(
+    column: $table.substitutionDifficulty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get latestQuoteMinor => $composableBuilder(
+    column: $table.latestQuoteMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get targetPriceMinor => $composableBuilder(
+    column: $table.targetPriceMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entryPoint => $composableBuilder(
+    column: $table.entryPoint,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get investmentAdvice => $composableBuilder(
+    column: $table.investmentAdvice,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get needsSample => $composableBuilder(
+    column: $table.needsSample,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get needsRegistration => $composableBuilder(
+    column: $table.needsRegistration,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get needsAuthorization => $composableBuilder(
+    column: $table.needsAuthorization,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get stage => $composableBuilder(
+    column: $table.stage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get latestFeedback => $composableBuilder(
+    column: $table.latestFeedback,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currentObstacle => $composableBuilder(
+    column: $table.currentObstacle,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nextAction => $composableBuilder(
+    column: $table.nextAction,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get nextFollowAt => $composableBuilder(
+    column: $table.nextFollowAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isLegacyDefault => $composableBuilder(
+    column: $table.isLegacyDefault,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$CustomersTableFilterComposer get customerId {
+    final $$CustomersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.customerId,
+      referencedTable: $db.customers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CustomersTableFilterComposer(
+            $db: $db,
+            $table: $db.customers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> followupsRefs(
+    Expression<bool> Function($$FollowupsTableFilterComposer f) f,
+  ) {
+    final $$FollowupsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.followups,
+      getReferencedColumn: (t) => t.opportunityId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FollowupsTableFilterComposer(
+            $db: $db,
+            $table: $db.followups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> followPlansRefs(
+    Expression<bool> Function($$FollowPlansTableFilterComposer f) f,
+  ) {
+    final $$FollowPlansTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.followPlans,
+      getReferencedColumn: (t) => t.opportunityId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FollowPlansTableFilterComposer(
+            $db: $db,
+            $table: $db.followPlans,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> ordersRefs(
+    Expression<bool> Function($$OrdersTableFilterComposer f) f,
+  ) {
+    final $$OrdersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.orders,
+      getReferencedColumn: (t) => t.opportunityId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrdersTableFilterComposer(
+            $db: $db,
+            $table: $db.orders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$OpportunitiesTableOrderingComposer
+    extends Composer<_$AppDatabase, $OpportunitiesTable> {
+  $$OpportunitiesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get productCategory => $composableBuilder(
+    column: $table.productCategory,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get productModel => $composableBuilder(
+    column: $table.productModel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get equipmentBrand => $composableBuilder(
+    column: $table.equipmentBrand,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get equipmentModel => $composableBuilder(
+    column: $table.equipmentModel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get estimatedAnnualVolume => $composableBuilder(
+    column: $table.estimatedAnnualVolume,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get forecastAmountMinor => $composableBuilder(
+    column: $table.forecastAmountMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get probabilityPercent => $composableBuilder(
+    column: $table.probabilityPercent,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get expectedCloseAt => $composableBuilder(
+    column: $table.expectedCloseAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currentSupplier => $composableBuilder(
+    column: $table.currentSupplier,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currentPurchaseBrand => $composableBuilder(
+    column: $table.currentPurchaseBrand,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get currentPurchasePriceMinor => $composableBuilder(
+    column: $table.currentPurchasePriceMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get supplierStability => $composableBuilder(
+    column: $table.supplierStability,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get supplierProblem => $composableBuilder(
+    column: $table.supplierProblem,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get changeWillingness => $composableBuilder(
+    column: $table.changeWillingness,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get substitutionDifficulty => $composableBuilder(
+    column: $table.substitutionDifficulty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get latestQuoteMinor => $composableBuilder(
+    column: $table.latestQuoteMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get targetPriceMinor => $composableBuilder(
+    column: $table.targetPriceMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entryPoint => $composableBuilder(
+    column: $table.entryPoint,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get investmentAdvice => $composableBuilder(
+    column: $table.investmentAdvice,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get needsSample => $composableBuilder(
+    column: $table.needsSample,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get needsRegistration => $composableBuilder(
+    column: $table.needsRegistration,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get needsAuthorization => $composableBuilder(
+    column: $table.needsAuthorization,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get stage => $composableBuilder(
+    column: $table.stage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get latestFeedback => $composableBuilder(
+    column: $table.latestFeedback,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currentObstacle => $composableBuilder(
+    column: $table.currentObstacle,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nextAction => $composableBuilder(
+    column: $table.nextAction,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get nextFollowAt => $composableBuilder(
+    column: $table.nextFollowAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isLegacyDefault => $composableBuilder(
+    column: $table.isLegacyDefault,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$CustomersTableOrderingComposer get customerId {
+    final $$CustomersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.customerId,
+      referencedTable: $db.customers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CustomersTableOrderingComposer(
+            $db: $db,
+            $table: $db.customers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$OpportunitiesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $OpportunitiesTable> {
+  $$OpportunitiesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get productCategory => $composableBuilder(
+    column: $table.productCategory,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get productModel => $composableBuilder(
+    column: $table.productModel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get equipmentBrand => $composableBuilder(
+    column: $table.equipmentBrand,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get equipmentModel => $composableBuilder(
+    column: $table.equipmentModel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get estimatedAnnualVolume => $composableBuilder(
+    column: $table.estimatedAnnualVolume,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get forecastAmountMinor => $composableBuilder(
+    column: $table.forecastAmountMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => column);
+
+  GeneratedColumn<int> get probabilityPercent => $composableBuilder(
+    column: $table.probabilityPercent,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get expectedCloseAt => $composableBuilder(
+    column: $table.expectedCloseAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get currentSupplier => $composableBuilder(
+    column: $table.currentSupplier,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get currentPurchaseBrand => $composableBuilder(
+    column: $table.currentPurchaseBrand,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get currentPurchasePriceMinor => $composableBuilder(
+    column: $table.currentPurchasePriceMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get supplierStability => $composableBuilder(
+    column: $table.supplierStability,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get supplierProblem => $composableBuilder(
+    column: $table.supplierProblem,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get changeWillingness => $composableBuilder(
+    column: $table.changeWillingness,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get substitutionDifficulty => $composableBuilder(
+    column: $table.substitutionDifficulty,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get latestQuoteMinor => $composableBuilder(
+    column: $table.latestQuoteMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get targetPriceMinor => $composableBuilder(
+    column: $table.targetPriceMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get entryPoint => $composableBuilder(
+    column: $table.entryPoint,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get investmentAdvice => $composableBuilder(
+    column: $table.investmentAdvice,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get needsSample => $composableBuilder(
+    column: $table.needsSample,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get needsRegistration => $composableBuilder(
+    column: $table.needsRegistration,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get needsAuthorization => $composableBuilder(
+    column: $table.needsAuthorization,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get stage =>
+      $composableBuilder(column: $table.stage, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get latestFeedback => $composableBuilder(
+    column: $table.latestFeedback,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get currentObstacle => $composableBuilder(
+    column: $table.currentObstacle,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get nextAction => $composableBuilder(
+    column: $table.nextAction,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get nextFollowAt => $composableBuilder(
+    column: $table.nextFollowAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isLegacyDefault => $composableBuilder(
+    column: $table.isLegacyDefault,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$CustomersTableAnnotationComposer get customerId {
+    final $$CustomersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.customerId,
+      referencedTable: $db.customers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CustomersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.customers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> followupsRefs<T extends Object>(
+    Expression<T> Function($$FollowupsTableAnnotationComposer a) f,
+  ) {
+    final $$FollowupsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.followups,
+      getReferencedColumn: (t) => t.opportunityId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FollowupsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.followups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> followPlansRefs<T extends Object>(
+    Expression<T> Function($$FollowPlansTableAnnotationComposer a) f,
+  ) {
+    final $$FollowPlansTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.followPlans,
+      getReferencedColumn: (t) => t.opportunityId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FollowPlansTableAnnotationComposer(
+            $db: $db,
+            $table: $db.followPlans,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> ordersRefs<T extends Object>(
+    Expression<T> Function($$OrdersTableAnnotationComposer a) f,
+  ) {
+    final $$OrdersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.orders,
+      getReferencedColumn: (t) => t.opportunityId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrdersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.orders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$OpportunitiesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $OpportunitiesTable,
+          OpportunityRow,
+          $$OpportunitiesTableFilterComposer,
+          $$OpportunitiesTableOrderingComposer,
+          $$OpportunitiesTableAnnotationComposer,
+          $$OpportunitiesTableCreateCompanionBuilder,
+          $$OpportunitiesTableUpdateCompanionBuilder,
+          (OpportunityRow, $$OpportunitiesTableReferences),
+          OpportunityRow,
+          PrefetchHooks Function({
+            bool customerId,
+            bool followupsRefs,
+            bool followPlansRefs,
+            bool ordersRefs,
+          })
+        > {
+  $$OpportunitiesTableTableManager(_$AppDatabase db, $OpportunitiesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$OpportunitiesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$OpportunitiesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$OpportunitiesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> customerId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> productCategory = const Value.absent(),
+                Value<String?> productModel = const Value.absent(),
+                Value<String?> equipmentBrand = const Value.absent(),
+                Value<String?> equipmentModel = const Value.absent(),
+                Value<int?> estimatedAnnualVolume = const Value.absent(),
+                Value<int?> forecastAmountMinor = const Value.absent(),
+                Value<String> currency = const Value.absent(),
+                Value<int?> probabilityPercent = const Value.absent(),
+                Value<int?> expectedCloseAt = const Value.absent(),
+                Value<String?> currentSupplier = const Value.absent(),
+                Value<String?> currentPurchaseBrand = const Value.absent(),
+                Value<int?> currentPurchasePriceMinor = const Value.absent(),
+                Value<String?> supplierStability = const Value.absent(),
+                Value<String?> supplierProblem = const Value.absent(),
+                Value<String?> changeWillingness = const Value.absent(),
+                Value<String?> substitutionDifficulty = const Value.absent(),
+                Value<int?> latestQuoteMinor = const Value.absent(),
+                Value<int?> targetPriceMinor = const Value.absent(),
+                Value<String?> entryPoint = const Value.absent(),
+                Value<String?> investmentAdvice = const Value.absent(),
+                Value<bool> needsSample = const Value.absent(),
+                Value<bool> needsRegistration = const Value.absent(),
+                Value<bool> needsAuthorization = const Value.absent(),
+                Value<String> stage = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> latestFeedback = const Value.absent(),
+                Value<String?> currentObstacle = const Value.absent(),
+                Value<String?> nextAction = const Value.absent(),
+                Value<int?> nextFollowAt = const Value.absent(),
+                Value<bool> isLegacyDefault = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+              }) => OpportunitiesCompanion(
+                id: id,
+                customerId: customerId,
+                name: name,
+                productCategory: productCategory,
+                productModel: productModel,
+                equipmentBrand: equipmentBrand,
+                equipmentModel: equipmentModel,
+                estimatedAnnualVolume: estimatedAnnualVolume,
+                forecastAmountMinor: forecastAmountMinor,
+                currency: currency,
+                probabilityPercent: probabilityPercent,
+                expectedCloseAt: expectedCloseAt,
+                currentSupplier: currentSupplier,
+                currentPurchaseBrand: currentPurchaseBrand,
+                currentPurchasePriceMinor: currentPurchasePriceMinor,
+                supplierStability: supplierStability,
+                supplierProblem: supplierProblem,
+                changeWillingness: changeWillingness,
+                substitutionDifficulty: substitutionDifficulty,
+                latestQuoteMinor: latestQuoteMinor,
+                targetPriceMinor: targetPriceMinor,
+                entryPoint: entryPoint,
+                investmentAdvice: investmentAdvice,
+                needsSample: needsSample,
+                needsRegistration: needsRegistration,
+                needsAuthorization: needsAuthorization,
+                stage: stage,
+                status: status,
+                latestFeedback: latestFeedback,
+                currentObstacle: currentObstacle,
+                nextAction: nextAction,
+                nextFollowAt: nextFollowAt,
+                isLegacyDefault: isLegacyDefault,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int customerId,
+                required String name,
+                Value<String?> productCategory = const Value.absent(),
+                Value<String?> productModel = const Value.absent(),
+                Value<String?> equipmentBrand = const Value.absent(),
+                Value<String?> equipmentModel = const Value.absent(),
+                Value<int?> estimatedAnnualVolume = const Value.absent(),
+                Value<int?> forecastAmountMinor = const Value.absent(),
+                Value<String> currency = const Value.absent(),
+                Value<int?> probabilityPercent = const Value.absent(),
+                Value<int?> expectedCloseAt = const Value.absent(),
+                Value<String?> currentSupplier = const Value.absent(),
+                Value<String?> currentPurchaseBrand = const Value.absent(),
+                Value<int?> currentPurchasePriceMinor = const Value.absent(),
+                Value<String?> supplierStability = const Value.absent(),
+                Value<String?> supplierProblem = const Value.absent(),
+                Value<String?> changeWillingness = const Value.absent(),
+                Value<String?> substitutionDifficulty = const Value.absent(),
+                Value<int?> latestQuoteMinor = const Value.absent(),
+                Value<int?> targetPriceMinor = const Value.absent(),
+                Value<String?> entryPoint = const Value.absent(),
+                Value<String?> investmentAdvice = const Value.absent(),
+                Value<bool> needsSample = const Value.absent(),
+                Value<bool> needsRegistration = const Value.absent(),
+                Value<bool> needsAuthorization = const Value.absent(),
+                Value<String> stage = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> latestFeedback = const Value.absent(),
+                Value<String?> currentObstacle = const Value.absent(),
+                Value<String?> nextAction = const Value.absent(),
+                Value<int?> nextFollowAt = const Value.absent(),
+                Value<bool> isLegacyDefault = const Value.absent(),
+                required int createdAt,
+                required int updatedAt,
+              }) => OpportunitiesCompanion.insert(
+                id: id,
+                customerId: customerId,
+                name: name,
+                productCategory: productCategory,
+                productModel: productModel,
+                equipmentBrand: equipmentBrand,
+                equipmentModel: equipmentModel,
+                estimatedAnnualVolume: estimatedAnnualVolume,
+                forecastAmountMinor: forecastAmountMinor,
+                currency: currency,
+                probabilityPercent: probabilityPercent,
+                expectedCloseAt: expectedCloseAt,
+                currentSupplier: currentSupplier,
+                currentPurchaseBrand: currentPurchaseBrand,
+                currentPurchasePriceMinor: currentPurchasePriceMinor,
+                supplierStability: supplierStability,
+                supplierProblem: supplierProblem,
+                changeWillingness: changeWillingness,
+                substitutionDifficulty: substitutionDifficulty,
+                latestQuoteMinor: latestQuoteMinor,
+                targetPriceMinor: targetPriceMinor,
+                entryPoint: entryPoint,
+                investmentAdvice: investmentAdvice,
+                needsSample: needsSample,
+                needsRegistration: needsRegistration,
+                needsAuthorization: needsAuthorization,
+                stage: stage,
+                status: status,
+                latestFeedback: latestFeedback,
+                currentObstacle: currentObstacle,
+                nextAction: nextAction,
+                nextFollowAt: nextFollowAt,
+                isLegacyDefault: isLegacyDefault,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$OpportunitiesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({
+                customerId = false,
+                followupsRefs = false,
+                followPlansRefs = false,
+                ordersRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (followupsRefs) db.followups,
+                    if (followPlansRefs) db.followPlans,
+                    if (ordersRefs) db.orders,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (customerId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.customerId,
+                                    referencedTable:
+                                        $$OpportunitiesTableReferences
+                                            ._customerIdTable(db),
+                                    referencedColumn:
+                                        $$OpportunitiesTableReferences
+                                            ._customerIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (followupsRefs)
+                        await $_getPrefetchedData<
+                          OpportunityRow,
+                          $OpportunitiesTable,
+                          FollowupRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OpportunitiesTableReferences
+                              ._followupsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OpportunitiesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).followupsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.opportunityId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (followPlansRefs)
+                        await $_getPrefetchedData<
+                          OpportunityRow,
+                          $OpportunitiesTable,
+                          FollowPlanRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OpportunitiesTableReferences
+                              ._followPlansRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OpportunitiesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).followPlansRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.opportunityId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (ordersRefs)
+                        await $_getPrefetchedData<
+                          OpportunityRow,
+                          $OpportunitiesTable,
+                          OrderRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OpportunitiesTableReferences
+                              ._ordersRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OpportunitiesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).ordersRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.opportunityId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$OpportunitiesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $OpportunitiesTable,
+      OpportunityRow,
+      $$OpportunitiesTableFilterComposer,
+      $$OpportunitiesTableOrderingComposer,
+      $$OpportunitiesTableAnnotationComposer,
+      $$OpportunitiesTableCreateCompanionBuilder,
+      $$OpportunitiesTableUpdateCompanionBuilder,
+      (OpportunityRow, $$OpportunitiesTableReferences),
+      OpportunityRow,
+      PrefetchHooks Function({
+        bool customerId,
+        bool followupsRefs,
+        bool followPlansRefs,
+        bool ordersRefs,
       })
     >;
 typedef $$ContactsTableCreateCompanionBuilder =
@@ -5386,6 +8957,7 @@ typedef $$FollowupsTableCreateCompanionBuilder =
     FollowupsCompanion Function({
       Value<int> id,
       required int customerId,
+      Value<int?> opportunityId,
       required int occurredAt,
       required String method,
       required String content,
@@ -5397,6 +8969,7 @@ typedef $$FollowupsTableUpdateCompanionBuilder =
     FollowupsCompanion Function({
       Value<int> id,
       Value<int> customerId,
+      Value<int?> opportunityId,
       Value<int> occurredAt,
       Value<String> method,
       Value<String> content,
@@ -5420,6 +8993,24 @@ final class $$FollowupsTableReferences
       $_db.customers,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_customerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $OpportunitiesTable _opportunityIdTable(_$AppDatabase db) => db
+      .opportunities
+      .createAlias('followups__opportunity_id__opportunities__id');
+
+  $$OpportunitiesTableProcessedTableManager? get opportunityId {
+    final $_column = $_itemColumn<int>('opportunity_id');
+    if ($_column == null) return null;
+    final manager = $$OpportunitiesTableTableManager(
+      $_db,
+      $_db.opportunities,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_opportunityIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
@@ -5503,6 +9094,29 @@ class $$FollowupsTableFilterComposer
           }) => $$CustomersTableFilterComposer(
             $db: $db,
             $table: $db.customers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$OpportunitiesTableFilterComposer get opportunityId {
+    final $$OpportunitiesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableFilterComposer(
+            $db: $db,
+            $table: $db.opportunities,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -5604,6 +9218,29 @@ class $$FollowupsTableOrderingComposer
     );
     return composer;
   }
+
+  $$OpportunitiesTableOrderingComposer get opportunityId {
+    final $$OpportunitiesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableOrderingComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$FollowupsTableAnnotationComposer
@@ -5663,6 +9300,29 @@ class $$FollowupsTableAnnotationComposer
     return composer;
   }
 
+  $$OpportunitiesTableAnnotationComposer get opportunityId {
+    final $$OpportunitiesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
   Expression<T> attachmentsRefs<T extends Object>(
     Expression<T> Function($$AttachmentsTableAnnotationComposer a) f,
   ) {
@@ -5702,7 +9362,11 @@ class $$FollowupsTableTableManager
           $$FollowupsTableUpdateCompanionBuilder,
           (FollowupRow, $$FollowupsTableReferences),
           FollowupRow,
-          PrefetchHooks Function({bool customerId, bool attachmentsRefs})
+          PrefetchHooks Function({
+            bool customerId,
+            bool opportunityId,
+            bool attachmentsRefs,
+          })
         > {
   $$FollowupsTableTableManager(_$AppDatabase db, $FollowupsTable table)
     : super(
@@ -5719,6 +9383,7 @@ class $$FollowupsTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<int> customerId = const Value.absent(),
+                Value<int?> opportunityId = const Value.absent(),
                 Value<int> occurredAt = const Value.absent(),
                 Value<String> method = const Value.absent(),
                 Value<String> content = const Value.absent(),
@@ -5728,6 +9393,7 @@ class $$FollowupsTableTableManager
               }) => FollowupsCompanion(
                 id: id,
                 customerId: customerId,
+                opportunityId: opportunityId,
                 occurredAt: occurredAt,
                 method: method,
                 content: content,
@@ -5739,6 +9405,7 @@ class $$FollowupsTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 required int customerId,
+                Value<int?> opportunityId = const Value.absent(),
                 required int occurredAt,
                 required String method,
                 required String content,
@@ -5748,6 +9415,7 @@ class $$FollowupsTableTableManager
               }) => FollowupsCompanion.insert(
                 id: id,
                 customerId: customerId,
+                opportunityId: opportunityId,
                 occurredAt: occurredAt,
                 method: method,
                 content: content,
@@ -5764,7 +9432,11 @@ class $$FollowupsTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({customerId = false, attachmentsRefs = false}) {
+              ({
+                customerId = false,
+                opportunityId = false,
+                attachmentsRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
@@ -5795,6 +9467,19 @@ class $$FollowupsTableTableManager
                                         ._customerIdTable(db),
                                     referencedColumn: $$FollowupsTableReferences
                                         ._customerIdTable(db)
+                                        .id,
+                                  )
+                                  as T;
+                        }
+                        if (opportunityId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.opportunityId,
+                                    referencedTable: $$FollowupsTableReferences
+                                        ._opportunityIdTable(db),
+                                    referencedColumn: $$FollowupsTableReferences
+                                        ._opportunityIdTable(db)
                                         .id,
                                   )
                                   as T;
@@ -5845,12 +9530,17 @@ typedef $$FollowupsTableProcessedTableManager =
       $$FollowupsTableUpdateCompanionBuilder,
       (FollowupRow, $$FollowupsTableReferences),
       FollowupRow,
-      PrefetchHooks Function({bool customerId, bool attachmentsRefs})
+      PrefetchHooks Function({
+        bool customerId,
+        bool opportunityId,
+        bool attachmentsRefs,
+      })
     >;
 typedef $$FollowPlansTableCreateCompanionBuilder =
     FollowPlansCompanion Function({
       Value<int> id,
       required int customerId,
+      Value<int?> opportunityId,
       required String title,
       required int planAt,
       Value<String> status,
@@ -5863,6 +9553,7 @@ typedef $$FollowPlansTableUpdateCompanionBuilder =
     FollowPlansCompanion Function({
       Value<int> id,
       Value<int> customerId,
+      Value<int?> opportunityId,
       Value<String> title,
       Value<int> planAt,
       Value<String> status,
@@ -5887,6 +9578,24 @@ final class $$FollowPlansTableReferences
       $_db.customers,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_customerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $OpportunitiesTable _opportunityIdTable(_$AppDatabase db) => db
+      .opportunities
+      .createAlias('follow_plans__opportunity_id__opportunities__id');
+
+  $$OpportunitiesTableProcessedTableManager? get opportunityId {
+    final $_column = $_itemColumn<int>('opportunity_id');
+    if ($_column == null) return null;
+    final manager = $$OpportunitiesTableTableManager(
+      $_db,
+      $_db.opportunities,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_opportunityIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
@@ -5957,6 +9666,29 @@ class $$FollowPlansTableFilterComposer
           }) => $$CustomersTableFilterComposer(
             $db: $db,
             $table: $db.customers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$OpportunitiesTableFilterComposer get opportunityId {
+    final $$OpportunitiesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableFilterComposer(
+            $db: $db,
+            $table: $db.opportunities,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -6038,6 +9770,29 @@ class $$FollowPlansTableOrderingComposer
     );
     return composer;
   }
+
+  $$OpportunitiesTableOrderingComposer get opportunityId {
+    final $$OpportunitiesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableOrderingComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$FollowPlansTableAnnotationComposer
@@ -6099,6 +9854,29 @@ class $$FollowPlansTableAnnotationComposer
     );
     return composer;
   }
+
+  $$OpportunitiesTableAnnotationComposer get opportunityId {
+    final $$OpportunitiesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$FollowPlansTableTableManager
@@ -6114,7 +9892,7 @@ class $$FollowPlansTableTableManager
           $$FollowPlansTableUpdateCompanionBuilder,
           (FollowPlanRow, $$FollowPlansTableReferences),
           FollowPlanRow,
-          PrefetchHooks Function({bool customerId})
+          PrefetchHooks Function({bool customerId, bool opportunityId})
         > {
   $$FollowPlansTableTableManager(_$AppDatabase db, $FollowPlansTable table)
     : super(
@@ -6131,6 +9909,7 @@ class $$FollowPlansTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<int> customerId = const Value.absent(),
+                Value<int?> opportunityId = const Value.absent(),
                 Value<String> title = const Value.absent(),
                 Value<int> planAt = const Value.absent(),
                 Value<String> status = const Value.absent(),
@@ -6141,6 +9920,7 @@ class $$FollowPlansTableTableManager
               }) => FollowPlansCompanion(
                 id: id,
                 customerId: customerId,
+                opportunityId: opportunityId,
                 title: title,
                 planAt: planAt,
                 status: status,
@@ -6153,6 +9933,7 @@ class $$FollowPlansTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 required int customerId,
+                Value<int?> opportunityId = const Value.absent(),
                 required String title,
                 required int planAt,
                 Value<String> status = const Value.absent(),
@@ -6163,6 +9944,7 @@ class $$FollowPlansTableTableManager
               }) => FollowPlansCompanion.insert(
                 id: id,
                 customerId: customerId,
+                opportunityId: opportunityId,
                 title: title,
                 planAt: planAt,
                 status: status,
@@ -6179,7 +9961,7 @@ class $$FollowPlansTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({customerId = false}) {
+          prefetchHooksCallback: ({customerId = false, opportunityId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -6212,6 +9994,19 @@ class $$FollowPlansTableTableManager
                               )
                               as T;
                     }
+                    if (opportunityId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.opportunityId,
+                                referencedTable: $$FollowPlansTableReferences
+                                    ._opportunityIdTable(db),
+                                referencedColumn: $$FollowPlansTableReferences
+                                    ._opportunityIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
 
                     return state;
                   },
@@ -6236,12 +10031,13 @@ typedef $$FollowPlansTableProcessedTableManager =
       $$FollowPlansTableUpdateCompanionBuilder,
       (FollowPlanRow, $$FollowPlansTableReferences),
       FollowPlanRow,
-      PrefetchHooks Function({bool customerId})
+      PrefetchHooks Function({bool customerId, bool opportunityId})
     >;
 typedef $$OrdersTableCreateCompanionBuilder =
     OrdersCompanion Function({
       Value<int> id,
       required int customerId,
+      Value<int?> opportunityId,
       required String orderNo,
       required int orderedAt,
       required int amountCents,
@@ -6254,6 +10050,7 @@ typedef $$OrdersTableUpdateCompanionBuilder =
     OrdersCompanion Function({
       Value<int> id,
       Value<int> customerId,
+      Value<int?> opportunityId,
       Value<String> orderNo,
       Value<int> orderedAt,
       Value<int> amountCents,
@@ -6278,6 +10075,23 @@ final class $$OrdersTableReferences
       $_db.customers,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_customerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $OpportunitiesTable _opportunityIdTable(_$AppDatabase db) =>
+      db.opportunities.createAlias('orders__opportunity_id__opportunities__id');
+
+  $$OpportunitiesTableProcessedTableManager? get opportunityId {
+    final $_column = $_itemColumn<int>('opportunity_id');
+    if ($_column == null) return null;
+    final manager = $$OpportunitiesTableTableManager(
+      $_db,
+      $_db.opportunities,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_opportunityIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
@@ -6366,6 +10180,29 @@ class $$OrdersTableFilterComposer
           }) => $$CustomersTableFilterComposer(
             $db: $db,
             $table: $db.customers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$OpportunitiesTableFilterComposer get opportunityId {
+    final $$OpportunitiesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableFilterComposer(
+            $db: $db,
+            $table: $db.opportunities,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -6472,6 +10309,29 @@ class $$OrdersTableOrderingComposer
     );
     return composer;
   }
+
+  $$OpportunitiesTableOrderingComposer get opportunityId {
+    final $$OpportunitiesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableOrderingComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$OrdersTableAnnotationComposer
@@ -6534,6 +10394,29 @@ class $$OrdersTableAnnotationComposer
     return composer;
   }
 
+  $$OpportunitiesTableAnnotationComposer get opportunityId {
+    final $$OpportunitiesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
   Expression<T> attachmentsRefs<T extends Object>(
     Expression<T> Function($$AttachmentsTableAnnotationComposer a) f,
   ) {
@@ -6573,7 +10456,11 @@ class $$OrdersTableTableManager
           $$OrdersTableUpdateCompanionBuilder,
           (OrderRow, $$OrdersTableReferences),
           OrderRow,
-          PrefetchHooks Function({bool customerId, bool attachmentsRefs})
+          PrefetchHooks Function({
+            bool customerId,
+            bool opportunityId,
+            bool attachmentsRefs,
+          })
         > {
   $$OrdersTableTableManager(_$AppDatabase db, $OrdersTable table)
     : super(
@@ -6590,6 +10477,7 @@ class $$OrdersTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<int> customerId = const Value.absent(),
+                Value<int?> opportunityId = const Value.absent(),
                 Value<String> orderNo = const Value.absent(),
                 Value<int> orderedAt = const Value.absent(),
                 Value<int> amountCents = const Value.absent(),
@@ -6600,6 +10488,7 @@ class $$OrdersTableTableManager
               }) => OrdersCompanion(
                 id: id,
                 customerId: customerId,
+                opportunityId: opportunityId,
                 orderNo: orderNo,
                 orderedAt: orderedAt,
                 amountCents: amountCents,
@@ -6612,6 +10501,7 @@ class $$OrdersTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 required int customerId,
+                Value<int?> opportunityId = const Value.absent(),
                 required String orderNo,
                 required int orderedAt,
                 required int amountCents,
@@ -6622,6 +10512,7 @@ class $$OrdersTableTableManager
               }) => OrdersCompanion.insert(
                 id: id,
                 customerId: customerId,
+                opportunityId: opportunityId,
                 orderNo: orderNo,
                 orderedAt: orderedAt,
                 amountCents: amountCents,
@@ -6637,7 +10528,11 @@ class $$OrdersTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({customerId = false, attachmentsRefs = false}) {
+              ({
+                customerId = false,
+                opportunityId = false,
+                attachmentsRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
@@ -6668,6 +10563,19 @@ class $$OrdersTableTableManager
                                         ._customerIdTable(db),
                                     referencedColumn: $$OrdersTableReferences
                                         ._customerIdTable(db)
+                                        .id,
+                                  )
+                                  as T;
+                        }
+                        if (opportunityId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.opportunityId,
+                                    referencedTable: $$OrdersTableReferences
+                                        ._opportunityIdTable(db),
+                                    referencedColumn: $$OrdersTableReferences
+                                        ._opportunityIdTable(db)
                                         .id,
                                   )
                                   as T;
@@ -6718,7 +10626,11 @@ typedef $$OrdersTableProcessedTableManager =
       $$OrdersTableUpdateCompanionBuilder,
       (OrderRow, $$OrdersTableReferences),
       OrderRow,
-      PrefetchHooks Function({bool customerId, bool attachmentsRefs})
+      PrefetchHooks Function({
+        bool customerId,
+        bool opportunityId,
+        bool attachmentsRefs,
+      })
     >;
 typedef $$TagsTableCreateCompanionBuilder =
     TagsCompanion Function({
@@ -7836,6 +11748,8 @@ class $AppDatabaseManager {
   $AppDatabaseManager(this._db);
   $$CustomersTableTableManager get customers =>
       $$CustomersTableTableManager(_db, _db.customers);
+  $$OpportunitiesTableTableManager get opportunities =>
+      $$OpportunitiesTableTableManager(_db, _db.opportunities);
   $$ContactsTableTableManager get contacts =>
       $$ContactsTableTableManager(_db, _db.contacts);
   $$FollowupsTableTableManager get followups =>

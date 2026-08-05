@@ -11,6 +11,7 @@ import 'daos/contact_dao.dart';
 import 'daos/customer_dao.dart';
 import 'daos/followup_dao.dart';
 import 'daos/order_dao.dart';
+import 'daos/opportunity_dao.dart';
 import 'daos/plan_dao.dart';
 import 'tables/attachments.dart';
 import 'tables/contacts.dart';
@@ -18,6 +19,7 @@ import 'tables/customers.dart';
 import 'tables/follow_plans.dart';
 import 'tables/followups.dart';
 import 'tables/orders.dart';
+import 'tables/opportunities.dart';
 import 'tables/tags.dart';
 
 part 'database.g.dart';
@@ -25,6 +27,7 @@ part 'database.g.dart';
 @DriftDatabase(
   tables: [
     Customers,
+    Opportunities,
     Contacts,
     Followups,
     FollowPlans,
@@ -39,6 +42,7 @@ part 'database.g.dart';
     FollowupDao,
     PlanDao,
     OrderDao,
+    OpportunityDao,
     AttachmentDao,
   ],
 )
@@ -52,7 +56,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -61,9 +65,9 @@ class AppDatabase extends _$AppDatabase {
       await _createIndexes();
     },
     onUpgrade: (m, from, to) async {
-      // v1 是首个版本，目前没有升级路径。
-      // 后续加表或加字段时在这里按 from/to 分支处理，
-      // 并在 test/data/migration_test.dart 补对应的迁移测试。
+      if (from < 2) {
+        await _migrateV1ToV2(m);
+      }
     },
     beforeOpen: (details) async {
       // SQLite 默认不开外键约束，不执行这句的话级联删除会静默失效，
@@ -92,8 +96,28 @@ class AppDatabase extends _$AppDatabase {
       'ON customers(last_follow_at)',
     );
     await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_opportunities_customer '
+      'ON opportunities(customer_id, updated_at DESC)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_opportunities_stage '
+      'ON opportunities(stage)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_opportunities_next_follow '
+      'ON opportunities(next_follow_at)',
+    );
+    await customStatement(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_opportunities_legacy_default '
+      'ON opportunities(customer_id) WHERE is_legacy_default = 1',
+    );
+    await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_followups_customer '
       'ON followups(customer_id, occurred_at DESC)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_followups_opportunity '
+      'ON followups(opportunity_id, occurred_at DESC)',
     );
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_plans_plan_at '
@@ -104,8 +128,16 @@ class AppDatabase extends _$AppDatabase {
       'ON follow_plans(customer_id, status)',
     );
     await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_plans_opportunity_status '
+      'ON follow_plans(opportunity_id, status)',
+    );
+    await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_orders_customer '
       'ON orders(customer_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_orders_opportunity '
+      'ON orders(opportunity_id)',
     );
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_attachments_followup '
@@ -115,6 +147,64 @@ class AppDatabase extends _$AppDatabase {
       'CREATE INDEX IF NOT EXISTS idx_attachments_order '
       'ON attachments(order_id)',
     );
+  }
+
+  /// 把 v1 的客户中心模型升级为 v2 的“客户 + 项目”模型。
+  ///
+  /// SQLite 允许给旧表增加可空外键列，因此无需重建跟进、计划和订单表，
+  /// 也不会触碰依赖它们的附件外键。所有旧业务记录随后回填到每个客户唯一的
+  /// “历史项目”，保证升级后没有失去项目归属的数据。
+  Future<void> _migrateV1ToV2(Migrator m) async {
+    await m.createTable(opportunities);
+    await m.addColumn(followups, followups.opportunityId);
+    await m.addColumn(followPlans, followPlans.opportunityId);
+    await m.addColumn(orders, orders.opportunityId);
+
+    await customStatement('''
+      INSERT INTO opportunities (
+        customer_id,
+        name,
+        stage,
+        status,
+        is_legacy_default,
+        created_at,
+        updated_at
+      )
+      SELECT
+        id,
+        '历史项目',
+        CASE stage
+          WHEN 'contacted' THEN 'contact_established'
+          WHEN 'intent' THEN 'needs_confirmed'
+          WHEN 'deal' THEN 'won'
+          WHEN 'lost' THEN 'lost'
+          ELSE 'new_lead'
+        END,
+        CASE stage
+          WHEN 'deal' THEN 'won'
+          WHEN 'lost' THEN 'closed'
+          ELSE 'active'
+        END,
+        1,
+        created_at,
+        updated_at
+      FROM customers
+    ''');
+
+    for (final tableName in ['followups', 'follow_plans', 'orders']) {
+      await customStatement('''
+        UPDATE $tableName
+        SET opportunity_id = (
+          SELECT opportunity.id
+          FROM opportunities opportunity
+          WHERE opportunity.customer_id = $tableName.customer_id
+            AND opportunity.is_legacy_default = 1
+        )
+        WHERE opportunity_id IS NULL
+      ''');
+    }
+
+    await _createIndexes();
   }
 }
 

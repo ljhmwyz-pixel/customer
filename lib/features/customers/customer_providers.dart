@@ -159,6 +159,10 @@ class CustomerService {
         stage: normalized.stage,
         grade: normalized.grade,
       );
+      await _db.opportunityDao.ensureLegacyDefaultForCustomer(
+        id,
+        legacyStage: normalized.stage,
+      );
       await _syncTags(id, normalized.tagNames);
       return id;
     });
@@ -180,6 +184,7 @@ class CustomerService {
         stage: normalized.stage,
         grade: normalized.grade,
       );
+      await _db.opportunityDao.syncLegacyStageForCustomer(id, normalized.stage);
       await _syncTags(id, normalized.tagNames);
     });
   }
@@ -217,8 +222,14 @@ class CustomerService {
   Future<WriteResult<int>> createPlan(int customerId, PlanDraft draft) async {
     final customer = await _requireCustomer(customerId);
     final normalized = _normalizePlan(draft);
+    final opportunityId = await _db.opportunityDao
+        .ensureLegacyDefaultForCustomer(
+          customerId,
+          legacyStage: CustomerStage.fromDb(customer.stage),
+        );
     final planId = await _db.planDao.insertPlan(
       customerId: customerId,
+      opportunityId: opportunityId,
       title: normalized.title,
       planAt: normalized.planAt,
     );
@@ -239,12 +250,18 @@ class CustomerService {
     final nextPlan = draft.nextPlan == null
         ? null
         : _normalizePlan(draft.nextPlan!);
+    final opportunityId = await _db.opportunityDao
+        .ensureLegacyDefaultForCustomer(
+          customerId,
+          legacyStage: CustomerStage.fromDb(customer.stage),
+        );
 
     late int followupId;
     int? planId;
     await _db.transaction(() async {
       followupId = await _db.followupDao.insertAndTouchCustomer(
         customerId: customerId,
+        opportunityId: opportunityId,
         occurredAt: draft.occurredAt,
         method: draft.method,
         content: content,
@@ -253,6 +270,7 @@ class CustomerService {
       if (nextPlan != null) {
         planId = await _db.planDao.insertPlan(
           customerId: customerId,
+          opportunityId: opportunityId,
           title: nextPlan.title,
           planAt: nextPlan.planAt,
         );

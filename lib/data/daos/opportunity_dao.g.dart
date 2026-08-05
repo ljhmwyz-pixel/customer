@@ -1,22 +1,19 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'plan_dao.dart';
+part of 'opportunity_dao.dart';
 
 // ignore_for_file: type=lint
-mixin _$PlanDaoMixin on DatabaseAccessor<AppDatabase> {
+mixin _$OpportunityDaoMixin on DatabaseAccessor<AppDatabase> {
   $CustomersTable get customers => attachedDatabase.customers;
   $OpportunitiesTable get opportunities => attachedDatabase.opportunities;
-  $FollowPlansTable get followPlans => attachedDatabase.followPlans;
-  PlanDaoManager get managers => PlanDaoManager(this);
+  OpportunityDaoManager get managers => OpportunityDaoManager(this);
 }
 
-class PlanDaoManager {
-  final _$PlanDaoMixin _db;
-  PlanDaoManager(this._db);
+class OpportunityDaoManager {
+  final _$OpportunityDaoMixin _db;
+  OpportunityDaoManager(this._db);
   $$CustomersTableTableManager get customers =>
       $$CustomersTableTableManager(_db.attachedDatabase, _db.customers);
   $$OpportunitiesTableTableManager get opportunities =>
       $$OpportunitiesTableTableManager(_db.attachedDatabase, _db.opportunities);
-  $$FollowPlansTableTableManager get followPlans =>
-      $$FollowPlansTableTableManager(_db.attachedDatabase, _db.followPlans);
 }

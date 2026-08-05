@@ -27,6 +27,11 @@ void main() {
       expect(order?.amountCents, 12345);
       expect(order?.description, '首次采购');
       expect(order?.status, OrderStatus.pending.dbValue);
+      expect(order?.opportunityId, isNotNull);
+      expect(
+        order?.opportunityId,
+        (await db.opportunityDao.findLegacyDefaultOfCustomer(customerId))?.id,
+      );
 
       await service.updateOrder(
         customerId,

@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import 'customers.dart';
+import 'opportunities.dart';
 
 /// 跟进记录表。已经发生的事，只增不改。
 ///
@@ -11,6 +12,13 @@ class Followups extends Table {
 
   IntColumn get customerId =>
       integer().references(Customers, #id, onDelete: KeyAction.cascade)();
+
+  /// v2 项目归属。为兼容原表结构保持可空，迁移会为全部旧记录回填。
+  IntColumn get opportunityId => integer().nullable().references(
+    Opportunities,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
 
   /// 发生时间，UTC 毫秒。可以补录过去的跟进，所以不用 createdAt 代替。
   IntColumn get occurredAt => integer()();

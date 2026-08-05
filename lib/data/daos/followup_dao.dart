@@ -22,6 +22,7 @@ class FollowupDao extends DatabaseAccessor<AppDatabase>
   /// 补录一条上个月的记录不应该把「最后跟进时间」往前拨。
   Future<int> insertAndTouchCustomer({
     required int customerId,
+    int? opportunityId,
     required DateTime occurredAt,
     required FollowMethod method,
     required String content,
@@ -35,6 +36,7 @@ class FollowupDao extends DatabaseAccessor<AppDatabase>
       final id = await into(followups).insert(
         FollowupsCompanion.insert(
           customerId: customerId,
+          opportunityId: Value(opportunityId),
           occurredAt: occurredMs,
           method: method.dbValue,
           content: content,

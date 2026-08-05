@@ -586,7 +586,7 @@ void main() {
   });
 
   group('listByUrgency 排序细节', () {
-    test('无计划客户按分级 A>B>C 排序', () async {
+    test('无计划客户按分级 A>B>C>D 排序', () async {
       final now = DateTime(2026, 8, 4, 12);
       await db.customerDao.insertCustomer(
         name: 'C级',
@@ -603,9 +603,14 @@ void main() {
         grade: CustomerGrade.b,
         now: now,
       );
+      await db.customerDao.insertCustomer(
+        name: 'D级',
+        grade: CustomerGrade.d,
+        now: now,
+      );
 
       final rows = await db.customerDao.listByUrgency(now: now);
-      expect(rows.map((e) => e.customer.name), ['A级', 'B级', 'C级']);
+      expect(rows.map((e) => e.customer.name), ['A级', 'B级', 'C级', 'D级']);
     });
 
     test('逾期 > 今日 > 未来 > 无计划', () async {

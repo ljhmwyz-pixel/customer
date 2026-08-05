@@ -13,6 +13,7 @@ class OrderDao extends DatabaseAccessor<AppDatabase> with _$OrderDaoMixin {
 
   Future<int> insertOrder({
     required int customerId,
+    int? opportunityId,
     required String orderNo,
     required DateTime orderedAt,
     required int amountCents,
@@ -24,6 +25,7 @@ class OrderDao extends DatabaseAccessor<AppDatabase> with _$OrderDaoMixin {
     return into(orders).insert(
       OrdersCompanion.insert(
         customerId: customerId,
+        opportunityId: Value(opportunityId),
         orderNo: orderNo,
         orderedAt: orderedAt.toUtc().millisecondsSinceEpoch,
         amountCents: amountCents,

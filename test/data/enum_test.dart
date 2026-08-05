@@ -22,6 +22,47 @@ void main() {
     }
     expect(CustomerGrade.a.weight, greaterThan(CustomerGrade.b.weight));
     expect(CustomerGrade.b.weight, greaterThan(CustomerGrade.c.weight));
+    expect(CustomerGrade.c.weight, greaterThan(CustomerGrade.d.weight));
+  });
+
+  test('OpportunityStage 覆盖 13 个外贸阶段并正确映射旧客户阶段', () {
+    expect(OpportunityStage.values, hasLength(13));
+    for (final value in OpportunityStage.values) {
+      expect(OpportunityStage.fromDb(value.dbValue), value);
+      expect(value.label, isNotEmpty);
+    }
+
+    expect(
+      OpportunityStage.fromLegacyCustomerStage(CustomerStage.potential),
+      OpportunityStage.newLead,
+    );
+    expect(
+      OpportunityStage.fromLegacyCustomerStage(CustomerStage.contacted),
+      OpportunityStage.contactEstablished,
+    );
+    expect(
+      OpportunityStage.fromLegacyCustomerStage(CustomerStage.intent),
+      OpportunityStage.needsConfirmed,
+    );
+    expect(
+      OpportunityStage.fromLegacyCustomerStage(CustomerStage.deal),
+      OpportunityStage.won,
+    );
+    expect(
+      OpportunityStage.fromLegacyCustomerStage(CustomerStage.lost),
+      OpportunityStage.lost,
+    );
+  });
+
+  test('OpportunityStatus 往返一致且关闭态不再高频跟进', () {
+    for (final value in OpportunityStatus.values) {
+      expect(OpportunityStatus.fromDb(value.dbValue), value);
+    }
+    expect(OpportunityStatus.active.isClosed, isFalse);
+    expect(OpportunityStatus.lowFrequency.isClosed, isFalse);
+    expect(OpportunityStatus.paused.isClosed, isTrue);
+    expect(OpportunityStatus.won.isClosed, isTrue);
+    expect(OpportunityStatus.closed.isClosed, isTrue);
   });
 
   test('FollowMethod 往返一致', () {
@@ -85,7 +126,15 @@ void main() {
       throwsA(isA<InvalidEnumValueException>()),
     );
     expect(
-      () => CustomerGrade.fromDb('d'),
+      () => CustomerGrade.fromDb('e'),
+      throwsA(isA<InvalidEnumValueException>()),
+    );
+    expect(
+      () => OpportunityStage.fromDb('quote'),
+      throwsA(isA<InvalidEnumValueException>()),
+    );
+    expect(
+      () => OpportunityStatus.fromDb('open'),
       throwsA(isA<InvalidEnumValueException>()),
     );
     expect(
@@ -123,6 +172,14 @@ void main() {
     checkUnique(
       'CustomerGrade',
       CustomerGrade.values.map((e) => e.dbValue).toList(),
+    );
+    checkUnique(
+      'OpportunityStage',
+      OpportunityStage.values.map((e) => e.dbValue).toList(),
+    );
+    checkUnique(
+      'OpportunityStatus',
+      OpportunityStatus.values.map((e) => e.dbValue).toList(),
     );
     checkUnique(
       'FollowMethod',
