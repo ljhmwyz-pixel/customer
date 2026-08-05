@@ -296,3 +296,198 @@ enum OrderStatus {
         (this == pending || this == shipped || this == paid);
   }
 }
+
+enum RegistrationDocumentStatus {
+  pending('pending', '待准备'),
+  incomplete('incomplete', '资料不完整'),
+  complete('complete', '资料完整');
+
+  const RegistrationDocumentStatus(this.dbValue, this.label);
+  final String dbValue;
+  final String label;
+
+  static RegistrationDocumentStatus fromDb(String value) => values.firstWhere(
+    (status) => status.dbValue == value,
+    orElse: () =>
+        throw InvalidEnumValueException('RegistrationDocumentStatus', value),
+  );
+}
+
+enum RegistrationStatus {
+  preparing('preparing', '准备中'),
+  submitted('submitted', '已提交'),
+  inProgress('inProgress', '进行中'),
+  completed('completed', '已完成'),
+  blocked('blocked', '受阻'),
+  cancelled('cancelled', '已取消');
+
+  const RegistrationStatus(this.dbValue, this.label);
+  final String dbValue;
+  final String label;
+
+  static RegistrationStatus fromDb(String value) => values.firstWhere(
+    (status) => status.dbValue == value,
+    orElse: () => throw InvalidEnumValueException('RegistrationStatus', value),
+  );
+}
+
+enum TenderDocumentStatus {
+  incomplete('incomplete', '资料不完整'),
+  complete('complete', '资料完整');
+
+  const TenderDocumentStatus(this.dbValue, this.label);
+  final String dbValue;
+  final String label;
+
+  static TenderDocumentStatus fromDb(String value) => values.firstWhere(
+    (status) => status.dbValue == value,
+    orElse: () =>
+        throw InvalidEnumValueException('TenderDocumentStatus', value),
+  );
+}
+
+enum TenderQualificationStatus {
+  pending('pending', '待确认'),
+  qualified('qualified', '符合'),
+  disqualified('disqualified', '不符合');
+
+  const TenderQualificationStatus(this.dbValue, this.label);
+  final String dbValue;
+  final String label;
+
+  static TenderQualificationStatus fromDb(String value) => values.firstWhere(
+    (status) => status.dbValue == value,
+    orElse: () =>
+        throw InvalidEnumValueException('TenderQualificationStatus', value),
+  );
+}
+
+enum TenderVerificationStatus {
+  pending('pending', '待确认'),
+  confirmed('confirmed', '已确认'),
+  failed('failed', '未通过');
+
+  const TenderVerificationStatus(this.dbValue, this.label);
+  final String dbValue;
+  final String label;
+
+  static TenderVerificationStatus fromDb(String value) => values.firstWhere(
+    (status) => status.dbValue == value,
+    orElse: () =>
+        throw InvalidEnumValueException('TenderVerificationStatus', value),
+  );
+}
+
+enum TenderRiskLevel {
+  low('low', '低'),
+  medium('medium', '中'),
+  mediumHigh('mediumHigh', '中高'),
+  high('high', '高');
+
+  const TenderRiskLevel(this.dbValue, this.label);
+  final String dbValue;
+  final String label;
+
+  static TenderRiskLevel fromDb(String value) => values.firstWhere(
+    (level) => level.dbValue == value,
+    orElse: () => throw InvalidEnumValueException('TenderRiskLevel', value),
+  );
+}
+
+enum TenderAuthorizationType {
+  nonExclusiveProject('nonExclusiveProject', '非独家项目授权'),
+  regional('regional', '区域授权'),
+  none('none', '暂不授权');
+
+  const TenderAuthorizationType(this.dbValue, this.label);
+  final String dbValue;
+  final String label;
+
+  static TenderAuthorizationType fromDb(String value) => values.firstWhere(
+    (type) => type.dbValue == value,
+    orElse: () =>
+        throw InvalidEnumValueException('TenderAuthorizationType', value),
+  );
+}
+
+enum TenderStatus {
+  preparing('preparing', '准备中'),
+  open('open', '投标中'),
+  won('won', '中标'),
+  lost('lost', '未中标'),
+  closed('closed', '已关闭'),
+  abandoned('abandoned', '已放弃'),
+  disqualified('disqualified', '资格不符');
+
+  const TenderStatus(this.dbValue, this.label);
+  final String dbValue;
+  final String label;
+
+  static TenderStatus fromDb(String value) => values.firstWhere(
+    (status) => status.dbValue == value,
+    orElse: () => throw InvalidEnumValueException('TenderStatus', value),
+  );
+}
+
+enum PaymentStatus {
+  pending('pending', '待收款'),
+  partial('partial', '部分收款'),
+  paid('paid', '已收款'),
+  cancelled('cancelled', '已取消');
+
+  const PaymentStatus(this.dbValue, this.label);
+  final String dbValue;
+  final String label;
+
+  static PaymentStatus fromDb(String value) => values.firstWhere(
+    (status) => status.dbValue == value,
+    orElse: () => throw InvalidEnumValueException('PaymentStatus', value),
+  );
+}
+
+enum ProductionStatus {
+  pending('pending', '待生产'),
+  inProgress('inProgress', '生产中'),
+  completed('completed', '已完成'),
+  cancelled('cancelled', '已取消');
+
+  const ProductionStatus(this.dbValue, this.label);
+  final String dbValue;
+  final String label;
+
+  static ProductionStatus fromDb(String value) => values.firstWhere(
+    (status) => status.dbValue == value,
+    orElse: () => throw InvalidEnumValueException('ProductionStatus', value),
+  );
+}
+
+enum ShippingStatus {
+  pending('pending', '待发货'),
+  shipped('shipped', '已发货'),
+  delivered('delivered', '已送达'),
+  cancelled('cancelled', '已取消');
+
+  const ShippingStatus(this.dbValue, this.label);
+  final String dbValue;
+  final String label;
+
+  static ShippingStatus fromDb(String value) => values.firstWhere(
+    (status) => status.dbValue == value,
+    orElse: () => throw InvalidEnumValueException('ShippingStatus', value),
+  );
+}
+
+enum OrderResult {
+  inProgress('inProgress', '进行中'),
+  completed('completed', '已完成'),
+  cancelled('cancelled', '已取消');
+
+  const OrderResult(this.dbValue, this.label);
+  final String dbValue;
+  final String label;
+
+  static OrderResult fromDb(String value) => values.firstWhere(
+    (result) => result.dbValue == value,
+    orElse: () => throw InvalidEnumValueException('OrderResult', value),
+  );
+}

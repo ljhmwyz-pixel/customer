@@ -36,7 +36,37 @@ class Orders extends Table {
   /// 状态，存 OrderStatus.dbValue。
   TextColumn get status => text().withDefault(const Constant('pending'))();
 
+  /// PI/PO 单号。与内部订单编号分开保存。
+  TextColumn get piPoNo => text().nullable()();
+
+  TextColumn get currency => text().withDefault(const Constant('CNY'))();
+
+  TextColumn get paymentStatus =>
+      text().withDefault(const Constant('pending'))();
+
+  TextColumn get productionStatus =>
+      text().withDefault(const Constant('pending'))();
+
+  TextColumn get shippingStatus =>
+      text().withDefault(const Constant('pending'))();
+
+  IntColumn get estimatedArrivalAt => integer().nullable()();
+
+  TextColumn get orderResult =>
+      text().withDefault(const Constant('inProgress'))();
+
+  IntColumn get estimatedRepurchaseAt => integer().nullable()();
+
   IntColumn get createdAt => integer()();
 
   IntColumn get updatedAt => integer()();
+
+  @override
+  List<String> get customConstraints => [
+    'CHECK (amount_cents >= 0)',
+    "CHECK (payment_status IN ('pending', 'partial', 'paid', 'cancelled'))",
+    "CHECK (production_status IN ('pending', 'inProgress', 'completed', 'cancelled'))",
+    "CHECK (shipping_status IN ('pending', 'shipped', 'delivered', 'cancelled'))",
+    "CHECK (order_result IN ('inProgress', 'completed', 'cancelled'))",
+  ];
 }

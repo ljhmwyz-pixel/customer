@@ -5497,6 +5497,95 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderRow> {
     requiredDuringInsert: false,
     defaultValue: const Constant('pending'),
   );
+  static const VerificationMeta _piPoNoMeta = const VerificationMeta('piPoNo');
+  @override
+  late final GeneratedColumn<String> piPoNo = GeneratedColumn<String>(
+    'pi_po_no',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _currencyMeta = const VerificationMeta(
+    'currency',
+  );
+  @override
+  late final GeneratedColumn<String> currency = GeneratedColumn<String>(
+    'currency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('CNY'),
+  );
+  static const VerificationMeta _paymentStatusMeta = const VerificationMeta(
+    'paymentStatus',
+  );
+  @override
+  late final GeneratedColumn<String> paymentStatus = GeneratedColumn<String>(
+    'payment_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _productionStatusMeta = const VerificationMeta(
+    'productionStatus',
+  );
+  @override
+  late final GeneratedColumn<String> productionStatus = GeneratedColumn<String>(
+    'production_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _shippingStatusMeta = const VerificationMeta(
+    'shippingStatus',
+  );
+  @override
+  late final GeneratedColumn<String> shippingStatus = GeneratedColumn<String>(
+    'shipping_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _estimatedArrivalAtMeta =
+      const VerificationMeta('estimatedArrivalAt');
+  @override
+  late final GeneratedColumn<int> estimatedArrivalAt = GeneratedColumn<int>(
+    'estimated_arrival_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _orderResultMeta = const VerificationMeta(
+    'orderResult',
+  );
+  @override
+  late final GeneratedColumn<String> orderResult = GeneratedColumn<String>(
+    'order_result',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('inProgress'),
+  );
+  static const VerificationMeta _estimatedRepurchaseAtMeta =
+      const VerificationMeta('estimatedRepurchaseAt');
+  @override
+  late final GeneratedColumn<int> estimatedRepurchaseAt = GeneratedColumn<int>(
+    'estimated_repurchase_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -5529,6 +5618,14 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderRow> {
     amountCents,
     description,
     status,
+    piPoNo,
+    currency,
+    paymentStatus,
+    productionStatus,
+    shippingStatus,
+    estimatedArrivalAt,
+    orderResult,
+    estimatedRepurchaseAt,
     createdAt,
     updatedAt,
   ];
@@ -5606,6 +5703,72 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderRow> {
         status.isAcceptableOrUnknown(data['status']!, _statusMeta),
       );
     }
+    if (data.containsKey('pi_po_no')) {
+      context.handle(
+        _piPoNoMeta,
+        piPoNo.isAcceptableOrUnknown(data['pi_po_no']!, _piPoNoMeta),
+      );
+    }
+    if (data.containsKey('currency')) {
+      context.handle(
+        _currencyMeta,
+        currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta),
+      );
+    }
+    if (data.containsKey('payment_status')) {
+      context.handle(
+        _paymentStatusMeta,
+        paymentStatus.isAcceptableOrUnknown(
+          data['payment_status']!,
+          _paymentStatusMeta,
+        ),
+      );
+    }
+    if (data.containsKey('production_status')) {
+      context.handle(
+        _productionStatusMeta,
+        productionStatus.isAcceptableOrUnknown(
+          data['production_status']!,
+          _productionStatusMeta,
+        ),
+      );
+    }
+    if (data.containsKey('shipping_status')) {
+      context.handle(
+        _shippingStatusMeta,
+        shippingStatus.isAcceptableOrUnknown(
+          data['shipping_status']!,
+          _shippingStatusMeta,
+        ),
+      );
+    }
+    if (data.containsKey('estimated_arrival_at')) {
+      context.handle(
+        _estimatedArrivalAtMeta,
+        estimatedArrivalAt.isAcceptableOrUnknown(
+          data['estimated_arrival_at']!,
+          _estimatedArrivalAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('order_result')) {
+      context.handle(
+        _orderResultMeta,
+        orderResult.isAcceptableOrUnknown(
+          data['order_result']!,
+          _orderResultMeta,
+        ),
+      );
+    }
+    if (data.containsKey('estimated_repurchase_at')) {
+      context.handle(
+        _estimatedRepurchaseAtMeta,
+        estimatedRepurchaseAt.isAcceptableOrUnknown(
+          data['estimated_repurchase_at']!,
+          _estimatedRepurchaseAtMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -5663,6 +5826,38 @@ class $OrdersTable extends Orders with TableInfo<$OrdersTable, OrderRow> {
         DriftSqlType.string,
         data['${effectivePrefix}status'],
       )!,
+      piPoNo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pi_po_no'],
+      ),
+      currency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency'],
+      )!,
+      paymentStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payment_status'],
+      )!,
+      productionStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}production_status'],
+      )!,
+      shippingStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}shipping_status'],
+      )!,
+      estimatedArrivalAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}estimated_arrival_at'],
+      ),
+      orderResult: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}order_result'],
+      )!,
+      estimatedRepurchaseAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}estimated_repurchase_at'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
@@ -5704,6 +5899,16 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
 
   /// 状态，存 OrderStatus.dbValue。
   final String status;
+
+  /// PI/PO 单号。与内部订单编号分开保存。
+  final String? piPoNo;
+  final String currency;
+  final String paymentStatus;
+  final String productionStatus;
+  final String shippingStatus;
+  final int? estimatedArrivalAt;
+  final String orderResult;
+  final int? estimatedRepurchaseAt;
   final int createdAt;
   final int updatedAt;
   const OrderRow({
@@ -5715,6 +5920,14 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
     required this.amountCents,
     this.description,
     required this.status,
+    this.piPoNo,
+    required this.currency,
+    required this.paymentStatus,
+    required this.productionStatus,
+    required this.shippingStatus,
+    this.estimatedArrivalAt,
+    required this.orderResult,
+    this.estimatedRepurchaseAt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -5733,6 +5946,20 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
       map['description'] = Variable<String>(description);
     }
     map['status'] = Variable<String>(status);
+    if (!nullToAbsent || piPoNo != null) {
+      map['pi_po_no'] = Variable<String>(piPoNo);
+    }
+    map['currency'] = Variable<String>(currency);
+    map['payment_status'] = Variable<String>(paymentStatus);
+    map['production_status'] = Variable<String>(productionStatus);
+    map['shipping_status'] = Variable<String>(shippingStatus);
+    if (!nullToAbsent || estimatedArrivalAt != null) {
+      map['estimated_arrival_at'] = Variable<int>(estimatedArrivalAt);
+    }
+    map['order_result'] = Variable<String>(orderResult);
+    if (!nullToAbsent || estimatedRepurchaseAt != null) {
+      map['estimated_repurchase_at'] = Variable<int>(estimatedRepurchaseAt);
+    }
     map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
     return map;
@@ -5752,6 +5979,20 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
           ? const Value.absent()
           : Value(description),
       status: Value(status),
+      piPoNo: piPoNo == null && nullToAbsent
+          ? const Value.absent()
+          : Value(piPoNo),
+      currency: Value(currency),
+      paymentStatus: Value(paymentStatus),
+      productionStatus: Value(productionStatus),
+      shippingStatus: Value(shippingStatus),
+      estimatedArrivalAt: estimatedArrivalAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(estimatedArrivalAt),
+      orderResult: Value(orderResult),
+      estimatedRepurchaseAt: estimatedRepurchaseAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(estimatedRepurchaseAt),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -5771,6 +6012,16 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
       amountCents: serializer.fromJson<int>(json['amountCents']),
       description: serializer.fromJson<String?>(json['description']),
       status: serializer.fromJson<String>(json['status']),
+      piPoNo: serializer.fromJson<String?>(json['piPoNo']),
+      currency: serializer.fromJson<String>(json['currency']),
+      paymentStatus: serializer.fromJson<String>(json['paymentStatus']),
+      productionStatus: serializer.fromJson<String>(json['productionStatus']),
+      shippingStatus: serializer.fromJson<String>(json['shippingStatus']),
+      estimatedArrivalAt: serializer.fromJson<int?>(json['estimatedArrivalAt']),
+      orderResult: serializer.fromJson<String>(json['orderResult']),
+      estimatedRepurchaseAt: serializer.fromJson<int?>(
+        json['estimatedRepurchaseAt'],
+      ),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
     );
@@ -5787,6 +6038,14 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
       'amountCents': serializer.toJson<int>(amountCents),
       'description': serializer.toJson<String?>(description),
       'status': serializer.toJson<String>(status),
+      'piPoNo': serializer.toJson<String?>(piPoNo),
+      'currency': serializer.toJson<String>(currency),
+      'paymentStatus': serializer.toJson<String>(paymentStatus),
+      'productionStatus': serializer.toJson<String>(productionStatus),
+      'shippingStatus': serializer.toJson<String>(shippingStatus),
+      'estimatedArrivalAt': serializer.toJson<int?>(estimatedArrivalAt),
+      'orderResult': serializer.toJson<String>(orderResult),
+      'estimatedRepurchaseAt': serializer.toJson<int?>(estimatedRepurchaseAt),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
     };
@@ -5801,6 +6060,14 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
     int? amountCents,
     Value<String?> description = const Value.absent(),
     String? status,
+    Value<String?> piPoNo = const Value.absent(),
+    String? currency,
+    String? paymentStatus,
+    String? productionStatus,
+    String? shippingStatus,
+    Value<int?> estimatedArrivalAt = const Value.absent(),
+    String? orderResult,
+    Value<int?> estimatedRepurchaseAt = const Value.absent(),
     int? createdAt,
     int? updatedAt,
   }) => OrderRow(
@@ -5814,6 +6081,18 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
     amountCents: amountCents ?? this.amountCents,
     description: description.present ? description.value : this.description,
     status: status ?? this.status,
+    piPoNo: piPoNo.present ? piPoNo.value : this.piPoNo,
+    currency: currency ?? this.currency,
+    paymentStatus: paymentStatus ?? this.paymentStatus,
+    productionStatus: productionStatus ?? this.productionStatus,
+    shippingStatus: shippingStatus ?? this.shippingStatus,
+    estimatedArrivalAt: estimatedArrivalAt.present
+        ? estimatedArrivalAt.value
+        : this.estimatedArrivalAt,
+    orderResult: orderResult ?? this.orderResult,
+    estimatedRepurchaseAt: estimatedRepurchaseAt.present
+        ? estimatedRepurchaseAt.value
+        : this.estimatedRepurchaseAt,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -5835,6 +6114,26 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
           ? data.description.value
           : this.description,
       status: data.status.present ? data.status.value : this.status,
+      piPoNo: data.piPoNo.present ? data.piPoNo.value : this.piPoNo,
+      currency: data.currency.present ? data.currency.value : this.currency,
+      paymentStatus: data.paymentStatus.present
+          ? data.paymentStatus.value
+          : this.paymentStatus,
+      productionStatus: data.productionStatus.present
+          ? data.productionStatus.value
+          : this.productionStatus,
+      shippingStatus: data.shippingStatus.present
+          ? data.shippingStatus.value
+          : this.shippingStatus,
+      estimatedArrivalAt: data.estimatedArrivalAt.present
+          ? data.estimatedArrivalAt.value
+          : this.estimatedArrivalAt,
+      orderResult: data.orderResult.present
+          ? data.orderResult.value
+          : this.orderResult,
+      estimatedRepurchaseAt: data.estimatedRepurchaseAt.present
+          ? data.estimatedRepurchaseAt.value
+          : this.estimatedRepurchaseAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -5851,6 +6150,14 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
           ..write('amountCents: $amountCents, ')
           ..write('description: $description, ')
           ..write('status: $status, ')
+          ..write('piPoNo: $piPoNo, ')
+          ..write('currency: $currency, ')
+          ..write('paymentStatus: $paymentStatus, ')
+          ..write('productionStatus: $productionStatus, ')
+          ..write('shippingStatus: $shippingStatus, ')
+          ..write('estimatedArrivalAt: $estimatedArrivalAt, ')
+          ..write('orderResult: $orderResult, ')
+          ..write('estimatedRepurchaseAt: $estimatedRepurchaseAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -5867,6 +6174,14 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
     amountCents,
     description,
     status,
+    piPoNo,
+    currency,
+    paymentStatus,
+    productionStatus,
+    shippingStatus,
+    estimatedArrivalAt,
+    orderResult,
+    estimatedRepurchaseAt,
     createdAt,
     updatedAt,
   );
@@ -5882,6 +6197,14 @@ class OrderRow extends DataClass implements Insertable<OrderRow> {
           other.amountCents == this.amountCents &&
           other.description == this.description &&
           other.status == this.status &&
+          other.piPoNo == this.piPoNo &&
+          other.currency == this.currency &&
+          other.paymentStatus == this.paymentStatus &&
+          other.productionStatus == this.productionStatus &&
+          other.shippingStatus == this.shippingStatus &&
+          other.estimatedArrivalAt == this.estimatedArrivalAt &&
+          other.orderResult == this.orderResult &&
+          other.estimatedRepurchaseAt == this.estimatedRepurchaseAt &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -5895,6 +6218,14 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
   final Value<int> amountCents;
   final Value<String?> description;
   final Value<String> status;
+  final Value<String?> piPoNo;
+  final Value<String> currency;
+  final Value<String> paymentStatus;
+  final Value<String> productionStatus;
+  final Value<String> shippingStatus;
+  final Value<int?> estimatedArrivalAt;
+  final Value<String> orderResult;
+  final Value<int?> estimatedRepurchaseAt;
   final Value<int> createdAt;
   final Value<int> updatedAt;
   const OrdersCompanion({
@@ -5906,6 +6237,14 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
     this.amountCents = const Value.absent(),
     this.description = const Value.absent(),
     this.status = const Value.absent(),
+    this.piPoNo = const Value.absent(),
+    this.currency = const Value.absent(),
+    this.paymentStatus = const Value.absent(),
+    this.productionStatus = const Value.absent(),
+    this.shippingStatus = const Value.absent(),
+    this.estimatedArrivalAt = const Value.absent(),
+    this.orderResult = const Value.absent(),
+    this.estimatedRepurchaseAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
@@ -5918,6 +6257,14 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
     required int amountCents,
     this.description = const Value.absent(),
     this.status = const Value.absent(),
+    this.piPoNo = const Value.absent(),
+    this.currency = const Value.absent(),
+    this.paymentStatus = const Value.absent(),
+    this.productionStatus = const Value.absent(),
+    this.shippingStatus = const Value.absent(),
+    this.estimatedArrivalAt = const Value.absent(),
+    this.orderResult = const Value.absent(),
+    this.estimatedRepurchaseAt = const Value.absent(),
     required int createdAt,
     required int updatedAt,
   }) : customerId = Value(customerId),
@@ -5935,6 +6282,14 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
     Expression<int>? amountCents,
     Expression<String>? description,
     Expression<String>? status,
+    Expression<String>? piPoNo,
+    Expression<String>? currency,
+    Expression<String>? paymentStatus,
+    Expression<String>? productionStatus,
+    Expression<String>? shippingStatus,
+    Expression<int>? estimatedArrivalAt,
+    Expression<String>? orderResult,
+    Expression<int>? estimatedRepurchaseAt,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
   }) {
@@ -5947,6 +6302,16 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
       if (amountCents != null) 'amount_cents': amountCents,
       if (description != null) 'description': description,
       if (status != null) 'status': status,
+      if (piPoNo != null) 'pi_po_no': piPoNo,
+      if (currency != null) 'currency': currency,
+      if (paymentStatus != null) 'payment_status': paymentStatus,
+      if (productionStatus != null) 'production_status': productionStatus,
+      if (shippingStatus != null) 'shipping_status': shippingStatus,
+      if (estimatedArrivalAt != null)
+        'estimated_arrival_at': estimatedArrivalAt,
+      if (orderResult != null) 'order_result': orderResult,
+      if (estimatedRepurchaseAt != null)
+        'estimated_repurchase_at': estimatedRepurchaseAt,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
@@ -5961,6 +6326,14 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
     Value<int>? amountCents,
     Value<String?>? description,
     Value<String>? status,
+    Value<String?>? piPoNo,
+    Value<String>? currency,
+    Value<String>? paymentStatus,
+    Value<String>? productionStatus,
+    Value<String>? shippingStatus,
+    Value<int?>? estimatedArrivalAt,
+    Value<String>? orderResult,
+    Value<int?>? estimatedRepurchaseAt,
     Value<int>? createdAt,
     Value<int>? updatedAt,
   }) {
@@ -5973,6 +6346,15 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
       amountCents: amountCents ?? this.amountCents,
       description: description ?? this.description,
       status: status ?? this.status,
+      piPoNo: piPoNo ?? this.piPoNo,
+      currency: currency ?? this.currency,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
+      productionStatus: productionStatus ?? this.productionStatus,
+      shippingStatus: shippingStatus ?? this.shippingStatus,
+      estimatedArrivalAt: estimatedArrivalAt ?? this.estimatedArrivalAt,
+      orderResult: orderResult ?? this.orderResult,
+      estimatedRepurchaseAt:
+          estimatedRepurchaseAt ?? this.estimatedRepurchaseAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -6005,6 +6387,32 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
     if (status.present) {
       map['status'] = Variable<String>(status.value);
     }
+    if (piPoNo.present) {
+      map['pi_po_no'] = Variable<String>(piPoNo.value);
+    }
+    if (currency.present) {
+      map['currency'] = Variable<String>(currency.value);
+    }
+    if (paymentStatus.present) {
+      map['payment_status'] = Variable<String>(paymentStatus.value);
+    }
+    if (productionStatus.present) {
+      map['production_status'] = Variable<String>(productionStatus.value);
+    }
+    if (shippingStatus.present) {
+      map['shipping_status'] = Variable<String>(shippingStatus.value);
+    }
+    if (estimatedArrivalAt.present) {
+      map['estimated_arrival_at'] = Variable<int>(estimatedArrivalAt.value);
+    }
+    if (orderResult.present) {
+      map['order_result'] = Variable<String>(orderResult.value);
+    }
+    if (estimatedRepurchaseAt.present) {
+      map['estimated_repurchase_at'] = Variable<int>(
+        estimatedRepurchaseAt.value,
+      );
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<int>(createdAt.value);
     }
@@ -6025,6 +6433,14 @@ class OrdersCompanion extends UpdateCompanion<OrderRow> {
           ..write('amountCents: $amountCents, ')
           ..write('description: $description, ')
           ..write('status: $status, ')
+          ..write('piPoNo: $piPoNo, ')
+          ..write('currency: $currency, ')
+          ..write('paymentStatus: $paymentStatus, ')
+          ..write('productionStatus: $productionStatus, ')
+          ..write('shippingStatus: $shippingStatus, ')
+          ..write('estimatedArrivalAt: $estimatedArrivalAt, ')
+          ..write('orderResult: $orderResult, ')
+          ..write('estimatedRepurchaseAt: $estimatedRepurchaseAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -9132,6 +9548,2275 @@ class SamplesCompanion extends UpdateCompanion<SampleRow> {
   }
 }
 
+class $RegistrationsTable extends Registrations
+    with TableInfo<$RegistrationsTable, RegistrationRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RegistrationsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _opportunityIdMeta = const VerificationMeta(
+    'opportunityId',
+  );
+  @override
+  late final GeneratedColumn<int> opportunityId = GeneratedColumn<int>(
+    'opportunity_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES opportunities (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _countryMeta = const VerificationMeta(
+    'country',
+  );
+  @override
+  late final GeneratedColumn<String> country = GeneratedColumn<String>(
+    'country',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _requirementsMeta = const VerificationMeta(
+    'requirements',
+  );
+  @override
+  late final GeneratedColumn<String> requirements = GeneratedColumn<String>(
+    'requirements',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _documentChecklistMeta = const VerificationMeta(
+    'documentChecklist',
+  );
+  @override
+  late final GeneratedColumn<String> documentChecklist =
+      GeneratedColumn<String>(
+        'document_checklist',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _documentStatusMeta = const VerificationMeta(
+    'documentStatus',
+  );
+  @override
+  late final GeneratedColumn<String> documentStatus = GeneratedColumn<String>(
+    'document_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _submittedAtMeta = const VerificationMeta(
+    'submittedAt',
+  );
+  @override
+  late final GeneratedColumn<int> submittedAt = GeneratedColumn<int>(
+    'submitted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _expectedCompletedAtMeta =
+      const VerificationMeta('expectedCompletedAt');
+  @override
+  late final GeneratedColumn<int> expectedCompletedAt = GeneratedColumn<int>(
+    'expected_completed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _actualCompletedAtMeta = const VerificationMeta(
+    'actualCompletedAt',
+  );
+  @override
+  late final GeneratedColumn<int> actualCompletedAt = GeneratedColumn<int>(
+    'actual_completed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _costBearerMeta = const VerificationMeta(
+    'costBearer',
+  );
+  @override
+  late final GeneratedColumn<String> costBearer = GeneratedColumn<String>(
+    'cost_bearer',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('preparing'),
+  );
+  static const VerificationMeta _currentObstacleMeta = const VerificationMeta(
+    'currentObstacle',
+  );
+  @override
+  late final GeneratedColumn<String> currentObstacle = GeneratedColumn<String>(
+    'current_obstacle',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nextActionMeta = const VerificationMeta(
+    'nextAction',
+  );
+  @override
+  late final GeneratedColumn<String> nextAction = GeneratedColumn<String>(
+    'next_action',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _documentDueAtMeta = const VerificationMeta(
+    'documentDueAt',
+  );
+  @override
+  late final GeneratedColumn<int> documentDueAt = GeneratedColumn<int>(
+    'document_due_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _milestoneAtMeta = const VerificationMeta(
+    'milestoneAt',
+  );
+  @override
+  late final GeneratedColumn<int> milestoneAt = GeneratedColumn<int>(
+    'milestone_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _milestoneTitleMeta = const VerificationMeta(
+    'milestoneTitle',
+  );
+  @override
+  late final GeneratedColumn<String> milestoneTitle = GeneratedColumn<String>(
+    'milestone_title',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    opportunityId,
+    country,
+    requirements,
+    documentChecklist,
+    documentStatus,
+    submittedAt,
+    expectedCompletedAt,
+    actualCompletedAt,
+    costBearer,
+    status,
+    currentObstacle,
+    nextAction,
+    documentDueAt,
+    milestoneAt,
+    milestoneTitle,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'registrations';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RegistrationRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('opportunity_id')) {
+      context.handle(
+        _opportunityIdMeta,
+        opportunityId.isAcceptableOrUnknown(
+          data['opportunity_id']!,
+          _opportunityIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_opportunityIdMeta);
+    }
+    if (data.containsKey('country')) {
+      context.handle(
+        _countryMeta,
+        country.isAcceptableOrUnknown(data['country']!, _countryMeta),
+      );
+    }
+    if (data.containsKey('requirements')) {
+      context.handle(
+        _requirementsMeta,
+        requirements.isAcceptableOrUnknown(
+          data['requirements']!,
+          _requirementsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('document_checklist')) {
+      context.handle(
+        _documentChecklistMeta,
+        documentChecklist.isAcceptableOrUnknown(
+          data['document_checklist']!,
+          _documentChecklistMeta,
+        ),
+      );
+    }
+    if (data.containsKey('document_status')) {
+      context.handle(
+        _documentStatusMeta,
+        documentStatus.isAcceptableOrUnknown(
+          data['document_status']!,
+          _documentStatusMeta,
+        ),
+      );
+    }
+    if (data.containsKey('submitted_at')) {
+      context.handle(
+        _submittedAtMeta,
+        submittedAt.isAcceptableOrUnknown(
+          data['submitted_at']!,
+          _submittedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('expected_completed_at')) {
+      context.handle(
+        _expectedCompletedAtMeta,
+        expectedCompletedAt.isAcceptableOrUnknown(
+          data['expected_completed_at']!,
+          _expectedCompletedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('actual_completed_at')) {
+      context.handle(
+        _actualCompletedAtMeta,
+        actualCompletedAt.isAcceptableOrUnknown(
+          data['actual_completed_at']!,
+          _actualCompletedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cost_bearer')) {
+      context.handle(
+        _costBearerMeta,
+        costBearer.isAcceptableOrUnknown(data['cost_bearer']!, _costBearerMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('current_obstacle')) {
+      context.handle(
+        _currentObstacleMeta,
+        currentObstacle.isAcceptableOrUnknown(
+          data['current_obstacle']!,
+          _currentObstacleMeta,
+        ),
+      );
+    }
+    if (data.containsKey('next_action')) {
+      context.handle(
+        _nextActionMeta,
+        nextAction.isAcceptableOrUnknown(data['next_action']!, _nextActionMeta),
+      );
+    }
+    if (data.containsKey('document_due_at')) {
+      context.handle(
+        _documentDueAtMeta,
+        documentDueAt.isAcceptableOrUnknown(
+          data['document_due_at']!,
+          _documentDueAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('milestone_at')) {
+      context.handle(
+        _milestoneAtMeta,
+        milestoneAt.isAcceptableOrUnknown(
+          data['milestone_at']!,
+          _milestoneAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('milestone_title')) {
+      context.handle(
+        _milestoneTitleMeta,
+        milestoneTitle.isAcceptableOrUnknown(
+          data['milestone_title']!,
+          _milestoneTitleMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RegistrationRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RegistrationRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      opportunityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}opportunity_id'],
+      )!,
+      country: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}country'],
+      ),
+      requirements: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}requirements'],
+      ),
+      documentChecklist: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_checklist'],
+      ),
+      documentStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_status'],
+      )!,
+      submittedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}submitted_at'],
+      ),
+      expectedCompletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}expected_completed_at'],
+      ),
+      actualCompletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}actual_completed_at'],
+      ),
+      costBearer: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cost_bearer'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      currentObstacle: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}current_obstacle'],
+      ),
+      nextAction: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}next_action'],
+      ),
+      documentDueAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}document_due_at'],
+      ),
+      milestoneAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}milestone_at'],
+      ),
+      milestoneTitle: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}milestone_title'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $RegistrationsTable createAlias(String alias) {
+    return $RegistrationsTable(attachedDatabase, alias);
+  }
+}
+
+class RegistrationRow extends DataClass implements Insertable<RegistrationRow> {
+  final int id;
+  final int opportunityId;
+  final String? country;
+  final String? requirements;
+  final String? documentChecklist;
+  final String documentStatus;
+  final int? submittedAt;
+  final int? expectedCompletedAt;
+  final int? actualCompletedAt;
+  final String? costBearer;
+  final String status;
+  final String? currentObstacle;
+  final String? nextAction;
+  final int? documentDueAt;
+  final int? milestoneAt;
+  final String? milestoneTitle;
+  final int createdAt;
+  final int updatedAt;
+  const RegistrationRow({
+    required this.id,
+    required this.opportunityId,
+    this.country,
+    this.requirements,
+    this.documentChecklist,
+    required this.documentStatus,
+    this.submittedAt,
+    this.expectedCompletedAt,
+    this.actualCompletedAt,
+    this.costBearer,
+    required this.status,
+    this.currentObstacle,
+    this.nextAction,
+    this.documentDueAt,
+    this.milestoneAt,
+    this.milestoneTitle,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['opportunity_id'] = Variable<int>(opportunityId);
+    if (!nullToAbsent || country != null) {
+      map['country'] = Variable<String>(country);
+    }
+    if (!nullToAbsent || requirements != null) {
+      map['requirements'] = Variable<String>(requirements);
+    }
+    if (!nullToAbsent || documentChecklist != null) {
+      map['document_checklist'] = Variable<String>(documentChecklist);
+    }
+    map['document_status'] = Variable<String>(documentStatus);
+    if (!nullToAbsent || submittedAt != null) {
+      map['submitted_at'] = Variable<int>(submittedAt);
+    }
+    if (!nullToAbsent || expectedCompletedAt != null) {
+      map['expected_completed_at'] = Variable<int>(expectedCompletedAt);
+    }
+    if (!nullToAbsent || actualCompletedAt != null) {
+      map['actual_completed_at'] = Variable<int>(actualCompletedAt);
+    }
+    if (!nullToAbsent || costBearer != null) {
+      map['cost_bearer'] = Variable<String>(costBearer);
+    }
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || currentObstacle != null) {
+      map['current_obstacle'] = Variable<String>(currentObstacle);
+    }
+    if (!nullToAbsent || nextAction != null) {
+      map['next_action'] = Variable<String>(nextAction);
+    }
+    if (!nullToAbsent || documentDueAt != null) {
+      map['document_due_at'] = Variable<int>(documentDueAt);
+    }
+    if (!nullToAbsent || milestoneAt != null) {
+      map['milestone_at'] = Variable<int>(milestoneAt);
+    }
+    if (!nullToAbsent || milestoneTitle != null) {
+      map['milestone_title'] = Variable<String>(milestoneTitle);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  RegistrationsCompanion toCompanion(bool nullToAbsent) {
+    return RegistrationsCompanion(
+      id: Value(id),
+      opportunityId: Value(opportunityId),
+      country: country == null && nullToAbsent
+          ? const Value.absent()
+          : Value(country),
+      requirements: requirements == null && nullToAbsent
+          ? const Value.absent()
+          : Value(requirements),
+      documentChecklist: documentChecklist == null && nullToAbsent
+          ? const Value.absent()
+          : Value(documentChecklist),
+      documentStatus: Value(documentStatus),
+      submittedAt: submittedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(submittedAt),
+      expectedCompletedAt: expectedCompletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(expectedCompletedAt),
+      actualCompletedAt: actualCompletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(actualCompletedAt),
+      costBearer: costBearer == null && nullToAbsent
+          ? const Value.absent()
+          : Value(costBearer),
+      status: Value(status),
+      currentObstacle: currentObstacle == null && nullToAbsent
+          ? const Value.absent()
+          : Value(currentObstacle),
+      nextAction: nextAction == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextAction),
+      documentDueAt: documentDueAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(documentDueAt),
+      milestoneAt: milestoneAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(milestoneAt),
+      milestoneTitle: milestoneTitle == null && nullToAbsent
+          ? const Value.absent()
+          : Value(milestoneTitle),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory RegistrationRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RegistrationRow(
+      id: serializer.fromJson<int>(json['id']),
+      opportunityId: serializer.fromJson<int>(json['opportunityId']),
+      country: serializer.fromJson<String?>(json['country']),
+      requirements: serializer.fromJson<String?>(json['requirements']),
+      documentChecklist: serializer.fromJson<String?>(
+        json['documentChecklist'],
+      ),
+      documentStatus: serializer.fromJson<String>(json['documentStatus']),
+      submittedAt: serializer.fromJson<int?>(json['submittedAt']),
+      expectedCompletedAt: serializer.fromJson<int?>(
+        json['expectedCompletedAt'],
+      ),
+      actualCompletedAt: serializer.fromJson<int?>(json['actualCompletedAt']),
+      costBearer: serializer.fromJson<String?>(json['costBearer']),
+      status: serializer.fromJson<String>(json['status']),
+      currentObstacle: serializer.fromJson<String?>(json['currentObstacle']),
+      nextAction: serializer.fromJson<String?>(json['nextAction']),
+      documentDueAt: serializer.fromJson<int?>(json['documentDueAt']),
+      milestoneAt: serializer.fromJson<int?>(json['milestoneAt']),
+      milestoneTitle: serializer.fromJson<String?>(json['milestoneTitle']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'opportunityId': serializer.toJson<int>(opportunityId),
+      'country': serializer.toJson<String?>(country),
+      'requirements': serializer.toJson<String?>(requirements),
+      'documentChecklist': serializer.toJson<String?>(documentChecklist),
+      'documentStatus': serializer.toJson<String>(documentStatus),
+      'submittedAt': serializer.toJson<int?>(submittedAt),
+      'expectedCompletedAt': serializer.toJson<int?>(expectedCompletedAt),
+      'actualCompletedAt': serializer.toJson<int?>(actualCompletedAt),
+      'costBearer': serializer.toJson<String?>(costBearer),
+      'status': serializer.toJson<String>(status),
+      'currentObstacle': serializer.toJson<String?>(currentObstacle),
+      'nextAction': serializer.toJson<String?>(nextAction),
+      'documentDueAt': serializer.toJson<int?>(documentDueAt),
+      'milestoneAt': serializer.toJson<int?>(milestoneAt),
+      'milestoneTitle': serializer.toJson<String?>(milestoneTitle),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  RegistrationRow copyWith({
+    int? id,
+    int? opportunityId,
+    Value<String?> country = const Value.absent(),
+    Value<String?> requirements = const Value.absent(),
+    Value<String?> documentChecklist = const Value.absent(),
+    String? documentStatus,
+    Value<int?> submittedAt = const Value.absent(),
+    Value<int?> expectedCompletedAt = const Value.absent(),
+    Value<int?> actualCompletedAt = const Value.absent(),
+    Value<String?> costBearer = const Value.absent(),
+    String? status,
+    Value<String?> currentObstacle = const Value.absent(),
+    Value<String?> nextAction = const Value.absent(),
+    Value<int?> documentDueAt = const Value.absent(),
+    Value<int?> milestoneAt = const Value.absent(),
+    Value<String?> milestoneTitle = const Value.absent(),
+    int? createdAt,
+    int? updatedAt,
+  }) => RegistrationRow(
+    id: id ?? this.id,
+    opportunityId: opportunityId ?? this.opportunityId,
+    country: country.present ? country.value : this.country,
+    requirements: requirements.present ? requirements.value : this.requirements,
+    documentChecklist: documentChecklist.present
+        ? documentChecklist.value
+        : this.documentChecklist,
+    documentStatus: documentStatus ?? this.documentStatus,
+    submittedAt: submittedAt.present ? submittedAt.value : this.submittedAt,
+    expectedCompletedAt: expectedCompletedAt.present
+        ? expectedCompletedAt.value
+        : this.expectedCompletedAt,
+    actualCompletedAt: actualCompletedAt.present
+        ? actualCompletedAt.value
+        : this.actualCompletedAt,
+    costBearer: costBearer.present ? costBearer.value : this.costBearer,
+    status: status ?? this.status,
+    currentObstacle: currentObstacle.present
+        ? currentObstacle.value
+        : this.currentObstacle,
+    nextAction: nextAction.present ? nextAction.value : this.nextAction,
+    documentDueAt: documentDueAt.present
+        ? documentDueAt.value
+        : this.documentDueAt,
+    milestoneAt: milestoneAt.present ? milestoneAt.value : this.milestoneAt,
+    milestoneTitle: milestoneTitle.present
+        ? milestoneTitle.value
+        : this.milestoneTitle,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  RegistrationRow copyWithCompanion(RegistrationsCompanion data) {
+    return RegistrationRow(
+      id: data.id.present ? data.id.value : this.id,
+      opportunityId: data.opportunityId.present
+          ? data.opportunityId.value
+          : this.opportunityId,
+      country: data.country.present ? data.country.value : this.country,
+      requirements: data.requirements.present
+          ? data.requirements.value
+          : this.requirements,
+      documentChecklist: data.documentChecklist.present
+          ? data.documentChecklist.value
+          : this.documentChecklist,
+      documentStatus: data.documentStatus.present
+          ? data.documentStatus.value
+          : this.documentStatus,
+      submittedAt: data.submittedAt.present
+          ? data.submittedAt.value
+          : this.submittedAt,
+      expectedCompletedAt: data.expectedCompletedAt.present
+          ? data.expectedCompletedAt.value
+          : this.expectedCompletedAt,
+      actualCompletedAt: data.actualCompletedAt.present
+          ? data.actualCompletedAt.value
+          : this.actualCompletedAt,
+      costBearer: data.costBearer.present
+          ? data.costBearer.value
+          : this.costBearer,
+      status: data.status.present ? data.status.value : this.status,
+      currentObstacle: data.currentObstacle.present
+          ? data.currentObstacle.value
+          : this.currentObstacle,
+      nextAction: data.nextAction.present
+          ? data.nextAction.value
+          : this.nextAction,
+      documentDueAt: data.documentDueAt.present
+          ? data.documentDueAt.value
+          : this.documentDueAt,
+      milestoneAt: data.milestoneAt.present
+          ? data.milestoneAt.value
+          : this.milestoneAt,
+      milestoneTitle: data.milestoneTitle.present
+          ? data.milestoneTitle.value
+          : this.milestoneTitle,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RegistrationRow(')
+          ..write('id: $id, ')
+          ..write('opportunityId: $opportunityId, ')
+          ..write('country: $country, ')
+          ..write('requirements: $requirements, ')
+          ..write('documentChecklist: $documentChecklist, ')
+          ..write('documentStatus: $documentStatus, ')
+          ..write('submittedAt: $submittedAt, ')
+          ..write('expectedCompletedAt: $expectedCompletedAt, ')
+          ..write('actualCompletedAt: $actualCompletedAt, ')
+          ..write('costBearer: $costBearer, ')
+          ..write('status: $status, ')
+          ..write('currentObstacle: $currentObstacle, ')
+          ..write('nextAction: $nextAction, ')
+          ..write('documentDueAt: $documentDueAt, ')
+          ..write('milestoneAt: $milestoneAt, ')
+          ..write('milestoneTitle: $milestoneTitle, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    opportunityId,
+    country,
+    requirements,
+    documentChecklist,
+    documentStatus,
+    submittedAt,
+    expectedCompletedAt,
+    actualCompletedAt,
+    costBearer,
+    status,
+    currentObstacle,
+    nextAction,
+    documentDueAt,
+    milestoneAt,
+    milestoneTitle,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RegistrationRow &&
+          other.id == this.id &&
+          other.opportunityId == this.opportunityId &&
+          other.country == this.country &&
+          other.requirements == this.requirements &&
+          other.documentChecklist == this.documentChecklist &&
+          other.documentStatus == this.documentStatus &&
+          other.submittedAt == this.submittedAt &&
+          other.expectedCompletedAt == this.expectedCompletedAt &&
+          other.actualCompletedAt == this.actualCompletedAt &&
+          other.costBearer == this.costBearer &&
+          other.status == this.status &&
+          other.currentObstacle == this.currentObstacle &&
+          other.nextAction == this.nextAction &&
+          other.documentDueAt == this.documentDueAt &&
+          other.milestoneAt == this.milestoneAt &&
+          other.milestoneTitle == this.milestoneTitle &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class RegistrationsCompanion extends UpdateCompanion<RegistrationRow> {
+  final Value<int> id;
+  final Value<int> opportunityId;
+  final Value<String?> country;
+  final Value<String?> requirements;
+  final Value<String?> documentChecklist;
+  final Value<String> documentStatus;
+  final Value<int?> submittedAt;
+  final Value<int?> expectedCompletedAt;
+  final Value<int?> actualCompletedAt;
+  final Value<String?> costBearer;
+  final Value<String> status;
+  final Value<String?> currentObstacle;
+  final Value<String?> nextAction;
+  final Value<int?> documentDueAt;
+  final Value<int?> milestoneAt;
+  final Value<String?> milestoneTitle;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  const RegistrationsCompanion({
+    this.id = const Value.absent(),
+    this.opportunityId = const Value.absent(),
+    this.country = const Value.absent(),
+    this.requirements = const Value.absent(),
+    this.documentChecklist = const Value.absent(),
+    this.documentStatus = const Value.absent(),
+    this.submittedAt = const Value.absent(),
+    this.expectedCompletedAt = const Value.absent(),
+    this.actualCompletedAt = const Value.absent(),
+    this.costBearer = const Value.absent(),
+    this.status = const Value.absent(),
+    this.currentObstacle = const Value.absent(),
+    this.nextAction = const Value.absent(),
+    this.documentDueAt = const Value.absent(),
+    this.milestoneAt = const Value.absent(),
+    this.milestoneTitle = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  RegistrationsCompanion.insert({
+    this.id = const Value.absent(),
+    required int opportunityId,
+    this.country = const Value.absent(),
+    this.requirements = const Value.absent(),
+    this.documentChecklist = const Value.absent(),
+    this.documentStatus = const Value.absent(),
+    this.submittedAt = const Value.absent(),
+    this.expectedCompletedAt = const Value.absent(),
+    this.actualCompletedAt = const Value.absent(),
+    this.costBearer = const Value.absent(),
+    this.status = const Value.absent(),
+    this.currentObstacle = const Value.absent(),
+    this.nextAction = const Value.absent(),
+    this.documentDueAt = const Value.absent(),
+    this.milestoneAt = const Value.absent(),
+    this.milestoneTitle = const Value.absent(),
+    required int createdAt,
+    required int updatedAt,
+  }) : opportunityId = Value(opportunityId),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<RegistrationRow> custom({
+    Expression<int>? id,
+    Expression<int>? opportunityId,
+    Expression<String>? country,
+    Expression<String>? requirements,
+    Expression<String>? documentChecklist,
+    Expression<String>? documentStatus,
+    Expression<int>? submittedAt,
+    Expression<int>? expectedCompletedAt,
+    Expression<int>? actualCompletedAt,
+    Expression<String>? costBearer,
+    Expression<String>? status,
+    Expression<String>? currentObstacle,
+    Expression<String>? nextAction,
+    Expression<int>? documentDueAt,
+    Expression<int>? milestoneAt,
+    Expression<String>? milestoneTitle,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (opportunityId != null) 'opportunity_id': opportunityId,
+      if (country != null) 'country': country,
+      if (requirements != null) 'requirements': requirements,
+      if (documentChecklist != null) 'document_checklist': documentChecklist,
+      if (documentStatus != null) 'document_status': documentStatus,
+      if (submittedAt != null) 'submitted_at': submittedAt,
+      if (expectedCompletedAt != null)
+        'expected_completed_at': expectedCompletedAt,
+      if (actualCompletedAt != null) 'actual_completed_at': actualCompletedAt,
+      if (costBearer != null) 'cost_bearer': costBearer,
+      if (status != null) 'status': status,
+      if (currentObstacle != null) 'current_obstacle': currentObstacle,
+      if (nextAction != null) 'next_action': nextAction,
+      if (documentDueAt != null) 'document_due_at': documentDueAt,
+      if (milestoneAt != null) 'milestone_at': milestoneAt,
+      if (milestoneTitle != null) 'milestone_title': milestoneTitle,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  RegistrationsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? opportunityId,
+    Value<String?>? country,
+    Value<String?>? requirements,
+    Value<String?>? documentChecklist,
+    Value<String>? documentStatus,
+    Value<int?>? submittedAt,
+    Value<int?>? expectedCompletedAt,
+    Value<int?>? actualCompletedAt,
+    Value<String?>? costBearer,
+    Value<String>? status,
+    Value<String?>? currentObstacle,
+    Value<String?>? nextAction,
+    Value<int?>? documentDueAt,
+    Value<int?>? milestoneAt,
+    Value<String?>? milestoneTitle,
+    Value<int>? createdAt,
+    Value<int>? updatedAt,
+  }) {
+    return RegistrationsCompanion(
+      id: id ?? this.id,
+      opportunityId: opportunityId ?? this.opportunityId,
+      country: country ?? this.country,
+      requirements: requirements ?? this.requirements,
+      documentChecklist: documentChecklist ?? this.documentChecklist,
+      documentStatus: documentStatus ?? this.documentStatus,
+      submittedAt: submittedAt ?? this.submittedAt,
+      expectedCompletedAt: expectedCompletedAt ?? this.expectedCompletedAt,
+      actualCompletedAt: actualCompletedAt ?? this.actualCompletedAt,
+      costBearer: costBearer ?? this.costBearer,
+      status: status ?? this.status,
+      currentObstacle: currentObstacle ?? this.currentObstacle,
+      nextAction: nextAction ?? this.nextAction,
+      documentDueAt: documentDueAt ?? this.documentDueAt,
+      milestoneAt: milestoneAt ?? this.milestoneAt,
+      milestoneTitle: milestoneTitle ?? this.milestoneTitle,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (opportunityId.present) {
+      map['opportunity_id'] = Variable<int>(opportunityId.value);
+    }
+    if (country.present) {
+      map['country'] = Variable<String>(country.value);
+    }
+    if (requirements.present) {
+      map['requirements'] = Variable<String>(requirements.value);
+    }
+    if (documentChecklist.present) {
+      map['document_checklist'] = Variable<String>(documentChecklist.value);
+    }
+    if (documentStatus.present) {
+      map['document_status'] = Variable<String>(documentStatus.value);
+    }
+    if (submittedAt.present) {
+      map['submitted_at'] = Variable<int>(submittedAt.value);
+    }
+    if (expectedCompletedAt.present) {
+      map['expected_completed_at'] = Variable<int>(expectedCompletedAt.value);
+    }
+    if (actualCompletedAt.present) {
+      map['actual_completed_at'] = Variable<int>(actualCompletedAt.value);
+    }
+    if (costBearer.present) {
+      map['cost_bearer'] = Variable<String>(costBearer.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (currentObstacle.present) {
+      map['current_obstacle'] = Variable<String>(currentObstacle.value);
+    }
+    if (nextAction.present) {
+      map['next_action'] = Variable<String>(nextAction.value);
+    }
+    if (documentDueAt.present) {
+      map['document_due_at'] = Variable<int>(documentDueAt.value);
+    }
+    if (milestoneAt.present) {
+      map['milestone_at'] = Variable<int>(milestoneAt.value);
+    }
+    if (milestoneTitle.present) {
+      map['milestone_title'] = Variable<String>(milestoneTitle.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RegistrationsCompanion(')
+          ..write('id: $id, ')
+          ..write('opportunityId: $opportunityId, ')
+          ..write('country: $country, ')
+          ..write('requirements: $requirements, ')
+          ..write('documentChecklist: $documentChecklist, ')
+          ..write('documentStatus: $documentStatus, ')
+          ..write('submittedAt: $submittedAt, ')
+          ..write('expectedCompletedAt: $expectedCompletedAt, ')
+          ..write('actualCompletedAt: $actualCompletedAt, ')
+          ..write('costBearer: $costBearer, ')
+          ..write('status: $status, ')
+          ..write('currentObstacle: $currentObstacle, ')
+          ..write('nextAction: $nextAction, ')
+          ..write('documentDueAt: $documentDueAt, ')
+          ..write('milestoneAt: $milestoneAt, ')
+          ..write('milestoneTitle: $milestoneTitle, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TendersTable extends Tenders with TableInfo<$TendersTable, TenderRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TendersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _opportunityIdMeta = const VerificationMeta(
+    'opportunityId',
+  );
+  @override
+  late final GeneratedColumn<int> opportunityId = GeneratedColumn<int>(
+    'opportunity_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES opportunities (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _projectNoMeta = const VerificationMeta(
+    'projectNo',
+  );
+  @override
+  late final GeneratedColumn<String> projectNo = GeneratedColumn<String>(
+    'project_no',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deadlineAtMeta = const VerificationMeta(
+    'deadlineAt',
+  );
+  @override
+  late final GeneratedColumn<int> deadlineAt = GeneratedColumn<int>(
+    'deadline_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _documentStatusMeta = const VerificationMeta(
+    'documentStatus',
+  );
+  @override
+  late final GeneratedColumn<String> documentStatus = GeneratedColumn<String>(
+    'document_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('incomplete'),
+  );
+  static const VerificationMeta _qualificationStatusMeta =
+      const VerificationMeta('qualificationStatus');
+  @override
+  late final GeneratedColumn<String> qualificationStatus =
+      GeneratedColumn<String>(
+        'qualification_status',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('pending'),
+      );
+  static const VerificationMeta _bidderMeta = const VerificationMeta('bidder');
+  @override
+  late final GeneratedColumn<String> bidder = GeneratedColumn<String>(
+    'bidder',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _depositMinorMeta = const VerificationMeta(
+    'depositMinor',
+  );
+  @override
+  late final GeneratedColumn<int> depositMinor = GeneratedColumn<int>(
+    'deposit_minor',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _customerExperienceMeta =
+      const VerificationMeta('customerExperience');
+  @override
+  late final GeneratedColumn<String> customerExperience =
+      GeneratedColumn<String>(
+        'customer_experience',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _localTeamStatusMeta = const VerificationMeta(
+    'localTeamStatus',
+  );
+  @override
+  late final GeneratedColumn<String> localTeamStatus = GeneratedColumn<String>(
+    'local_team_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _fundingStatusMeta = const VerificationMeta(
+    'fundingStatus',
+  );
+  @override
+  late final GeneratedColumn<String> fundingStatus = GeneratedColumn<String>(
+    'funding_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _riskLevelMeta = const VerificationMeta(
+    'riskLevel',
+  );
+  @override
+  late final GeneratedColumn<String> riskLevel = GeneratedColumn<String>(
+    'risk_level',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('low'),
+  );
+  static const VerificationMeta _authorizationTypeMeta = const VerificationMeta(
+    'authorizationType',
+  );
+  @override
+  late final GeneratedColumn<String> authorizationType =
+      GeneratedColumn<String>(
+        'authorization_type',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('none'),
+      );
+  static const VerificationMeta _authorizationExpiresAtMeta =
+      const VerificationMeta('authorizationExpiresAt');
+  @override
+  late final GeneratedColumn<int> authorizationExpiresAt = GeneratedColumn<int>(
+    'authorization_expires_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _exclusiveQuoteScopeMeta =
+      const VerificationMeta('exclusiveQuoteScope');
+  @override
+  late final GeneratedColumn<String> exclusiveQuoteScope =
+      GeneratedColumn<String>(
+        'exclusive_quote_scope',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _floorPriceSupportMeta = const VerificationMeta(
+    'floorPriceSupport',
+  );
+  @override
+  late final GeneratedColumn<String> floorPriceSupport =
+      GeneratedColumn<String>(
+        'floor_price_support',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('preparing'),
+  );
+  static const VerificationMeta _nextActionMeta = const VerificationMeta(
+    'nextAction',
+  );
+  @override
+  late final GeneratedColumn<String> nextAction = GeneratedColumn<String>(
+    'next_action',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    opportunityId,
+    projectNo,
+    name,
+    deadlineAt,
+    documentStatus,
+    qualificationStatus,
+    bidder,
+    depositMinor,
+    customerExperience,
+    localTeamStatus,
+    fundingStatus,
+    riskLevel,
+    authorizationType,
+    authorizationExpiresAt,
+    exclusiveQuoteScope,
+    floorPriceSupport,
+    status,
+    nextAction,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'tenders';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TenderRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('opportunity_id')) {
+      context.handle(
+        _opportunityIdMeta,
+        opportunityId.isAcceptableOrUnknown(
+          data['opportunity_id']!,
+          _opportunityIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_opportunityIdMeta);
+    }
+    if (data.containsKey('project_no')) {
+      context.handle(
+        _projectNoMeta,
+        projectNo.isAcceptableOrUnknown(data['project_no']!, _projectNoMeta),
+      );
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    }
+    if (data.containsKey('deadline_at')) {
+      context.handle(
+        _deadlineAtMeta,
+        deadlineAt.isAcceptableOrUnknown(data['deadline_at']!, _deadlineAtMeta),
+      );
+    }
+    if (data.containsKey('document_status')) {
+      context.handle(
+        _documentStatusMeta,
+        documentStatus.isAcceptableOrUnknown(
+          data['document_status']!,
+          _documentStatusMeta,
+        ),
+      );
+    }
+    if (data.containsKey('qualification_status')) {
+      context.handle(
+        _qualificationStatusMeta,
+        qualificationStatus.isAcceptableOrUnknown(
+          data['qualification_status']!,
+          _qualificationStatusMeta,
+        ),
+      );
+    }
+    if (data.containsKey('bidder')) {
+      context.handle(
+        _bidderMeta,
+        bidder.isAcceptableOrUnknown(data['bidder']!, _bidderMeta),
+      );
+    }
+    if (data.containsKey('deposit_minor')) {
+      context.handle(
+        _depositMinorMeta,
+        depositMinor.isAcceptableOrUnknown(
+          data['deposit_minor']!,
+          _depositMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('customer_experience')) {
+      context.handle(
+        _customerExperienceMeta,
+        customerExperience.isAcceptableOrUnknown(
+          data['customer_experience']!,
+          _customerExperienceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('local_team_status')) {
+      context.handle(
+        _localTeamStatusMeta,
+        localTeamStatus.isAcceptableOrUnknown(
+          data['local_team_status']!,
+          _localTeamStatusMeta,
+        ),
+      );
+    }
+    if (data.containsKey('funding_status')) {
+      context.handle(
+        _fundingStatusMeta,
+        fundingStatus.isAcceptableOrUnknown(
+          data['funding_status']!,
+          _fundingStatusMeta,
+        ),
+      );
+    }
+    if (data.containsKey('risk_level')) {
+      context.handle(
+        _riskLevelMeta,
+        riskLevel.isAcceptableOrUnknown(data['risk_level']!, _riskLevelMeta),
+      );
+    }
+    if (data.containsKey('authorization_type')) {
+      context.handle(
+        _authorizationTypeMeta,
+        authorizationType.isAcceptableOrUnknown(
+          data['authorization_type']!,
+          _authorizationTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('authorization_expires_at')) {
+      context.handle(
+        _authorizationExpiresAtMeta,
+        authorizationExpiresAt.isAcceptableOrUnknown(
+          data['authorization_expires_at']!,
+          _authorizationExpiresAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('exclusive_quote_scope')) {
+      context.handle(
+        _exclusiveQuoteScopeMeta,
+        exclusiveQuoteScope.isAcceptableOrUnknown(
+          data['exclusive_quote_scope']!,
+          _exclusiveQuoteScopeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('floor_price_support')) {
+      context.handle(
+        _floorPriceSupportMeta,
+        floorPriceSupport.isAcceptableOrUnknown(
+          data['floor_price_support']!,
+          _floorPriceSupportMeta,
+        ),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('next_action')) {
+      context.handle(
+        _nextActionMeta,
+        nextAction.isAcceptableOrUnknown(data['next_action']!, _nextActionMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TenderRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TenderRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      opportunityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}opportunity_id'],
+      )!,
+      projectNo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}project_no'],
+      ),
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      ),
+      deadlineAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deadline_at'],
+      ),
+      documentStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_status'],
+      )!,
+      qualificationStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}qualification_status'],
+      )!,
+      bidder: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}bidder'],
+      ),
+      depositMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deposit_minor'],
+      ),
+      customerExperience: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}customer_experience'],
+      ),
+      localTeamStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}local_team_status'],
+      )!,
+      fundingStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}funding_status'],
+      )!,
+      riskLevel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}risk_level'],
+      )!,
+      authorizationType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}authorization_type'],
+      )!,
+      authorizationExpiresAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}authorization_expires_at'],
+      ),
+      exclusiveQuoteScope: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}exclusive_quote_scope'],
+      ),
+      floorPriceSupport: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}floor_price_support'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      nextAction: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}next_action'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $TendersTable createAlias(String alias) {
+    return $TendersTable(attachedDatabase, alias);
+  }
+}
+
+class TenderRow extends DataClass implements Insertable<TenderRow> {
+  final int id;
+  final int opportunityId;
+  final String? projectNo;
+  final String? name;
+  final int? deadlineAt;
+  final String documentStatus;
+  final String qualificationStatus;
+  final String? bidder;
+  final int? depositMinor;
+  final String? customerExperience;
+  final String localTeamStatus;
+  final String fundingStatus;
+  final String riskLevel;
+  final String authorizationType;
+  final int? authorizationExpiresAt;
+  final String? exclusiveQuoteScope;
+  final String? floorPriceSupport;
+  final String status;
+  final String? nextAction;
+  final int createdAt;
+  final int updatedAt;
+  const TenderRow({
+    required this.id,
+    required this.opportunityId,
+    this.projectNo,
+    this.name,
+    this.deadlineAt,
+    required this.documentStatus,
+    required this.qualificationStatus,
+    this.bidder,
+    this.depositMinor,
+    this.customerExperience,
+    required this.localTeamStatus,
+    required this.fundingStatus,
+    required this.riskLevel,
+    required this.authorizationType,
+    this.authorizationExpiresAt,
+    this.exclusiveQuoteScope,
+    this.floorPriceSupport,
+    required this.status,
+    this.nextAction,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['opportunity_id'] = Variable<int>(opportunityId);
+    if (!nullToAbsent || projectNo != null) {
+      map['project_no'] = Variable<String>(projectNo);
+    }
+    if (!nullToAbsent || name != null) {
+      map['name'] = Variable<String>(name);
+    }
+    if (!nullToAbsent || deadlineAt != null) {
+      map['deadline_at'] = Variable<int>(deadlineAt);
+    }
+    map['document_status'] = Variable<String>(documentStatus);
+    map['qualification_status'] = Variable<String>(qualificationStatus);
+    if (!nullToAbsent || bidder != null) {
+      map['bidder'] = Variable<String>(bidder);
+    }
+    if (!nullToAbsent || depositMinor != null) {
+      map['deposit_minor'] = Variable<int>(depositMinor);
+    }
+    if (!nullToAbsent || customerExperience != null) {
+      map['customer_experience'] = Variable<String>(customerExperience);
+    }
+    map['local_team_status'] = Variable<String>(localTeamStatus);
+    map['funding_status'] = Variable<String>(fundingStatus);
+    map['risk_level'] = Variable<String>(riskLevel);
+    map['authorization_type'] = Variable<String>(authorizationType);
+    if (!nullToAbsent || authorizationExpiresAt != null) {
+      map['authorization_expires_at'] = Variable<int>(authorizationExpiresAt);
+    }
+    if (!nullToAbsent || exclusiveQuoteScope != null) {
+      map['exclusive_quote_scope'] = Variable<String>(exclusiveQuoteScope);
+    }
+    if (!nullToAbsent || floorPriceSupport != null) {
+      map['floor_price_support'] = Variable<String>(floorPriceSupport);
+    }
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || nextAction != null) {
+      map['next_action'] = Variable<String>(nextAction);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  TendersCompanion toCompanion(bool nullToAbsent) {
+    return TendersCompanion(
+      id: Value(id),
+      opportunityId: Value(opportunityId),
+      projectNo: projectNo == null && nullToAbsent
+          ? const Value.absent()
+          : Value(projectNo),
+      name: name == null && nullToAbsent ? const Value.absent() : Value(name),
+      deadlineAt: deadlineAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deadlineAt),
+      documentStatus: Value(documentStatus),
+      qualificationStatus: Value(qualificationStatus),
+      bidder: bidder == null && nullToAbsent
+          ? const Value.absent()
+          : Value(bidder),
+      depositMinor: depositMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(depositMinor),
+      customerExperience: customerExperience == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customerExperience),
+      localTeamStatus: Value(localTeamStatus),
+      fundingStatus: Value(fundingStatus),
+      riskLevel: Value(riskLevel),
+      authorizationType: Value(authorizationType),
+      authorizationExpiresAt: authorizationExpiresAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(authorizationExpiresAt),
+      exclusiveQuoteScope: exclusiveQuoteScope == null && nullToAbsent
+          ? const Value.absent()
+          : Value(exclusiveQuoteScope),
+      floorPriceSupport: floorPriceSupport == null && nullToAbsent
+          ? const Value.absent()
+          : Value(floorPriceSupport),
+      status: Value(status),
+      nextAction: nextAction == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextAction),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory TenderRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TenderRow(
+      id: serializer.fromJson<int>(json['id']),
+      opportunityId: serializer.fromJson<int>(json['opportunityId']),
+      projectNo: serializer.fromJson<String?>(json['projectNo']),
+      name: serializer.fromJson<String?>(json['name']),
+      deadlineAt: serializer.fromJson<int?>(json['deadlineAt']),
+      documentStatus: serializer.fromJson<String>(json['documentStatus']),
+      qualificationStatus: serializer.fromJson<String>(
+        json['qualificationStatus'],
+      ),
+      bidder: serializer.fromJson<String?>(json['bidder']),
+      depositMinor: serializer.fromJson<int?>(json['depositMinor']),
+      customerExperience: serializer.fromJson<String?>(
+        json['customerExperience'],
+      ),
+      localTeamStatus: serializer.fromJson<String>(json['localTeamStatus']),
+      fundingStatus: serializer.fromJson<String>(json['fundingStatus']),
+      riskLevel: serializer.fromJson<String>(json['riskLevel']),
+      authorizationType: serializer.fromJson<String>(json['authorizationType']),
+      authorizationExpiresAt: serializer.fromJson<int?>(
+        json['authorizationExpiresAt'],
+      ),
+      exclusiveQuoteScope: serializer.fromJson<String?>(
+        json['exclusiveQuoteScope'],
+      ),
+      floorPriceSupport: serializer.fromJson<String?>(
+        json['floorPriceSupport'],
+      ),
+      status: serializer.fromJson<String>(json['status']),
+      nextAction: serializer.fromJson<String?>(json['nextAction']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'opportunityId': serializer.toJson<int>(opportunityId),
+      'projectNo': serializer.toJson<String?>(projectNo),
+      'name': serializer.toJson<String?>(name),
+      'deadlineAt': serializer.toJson<int?>(deadlineAt),
+      'documentStatus': serializer.toJson<String>(documentStatus),
+      'qualificationStatus': serializer.toJson<String>(qualificationStatus),
+      'bidder': serializer.toJson<String?>(bidder),
+      'depositMinor': serializer.toJson<int?>(depositMinor),
+      'customerExperience': serializer.toJson<String?>(customerExperience),
+      'localTeamStatus': serializer.toJson<String>(localTeamStatus),
+      'fundingStatus': serializer.toJson<String>(fundingStatus),
+      'riskLevel': serializer.toJson<String>(riskLevel),
+      'authorizationType': serializer.toJson<String>(authorizationType),
+      'authorizationExpiresAt': serializer.toJson<int?>(authorizationExpiresAt),
+      'exclusiveQuoteScope': serializer.toJson<String?>(exclusiveQuoteScope),
+      'floorPriceSupport': serializer.toJson<String?>(floorPriceSupport),
+      'status': serializer.toJson<String>(status),
+      'nextAction': serializer.toJson<String?>(nextAction),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  TenderRow copyWith({
+    int? id,
+    int? opportunityId,
+    Value<String?> projectNo = const Value.absent(),
+    Value<String?> name = const Value.absent(),
+    Value<int?> deadlineAt = const Value.absent(),
+    String? documentStatus,
+    String? qualificationStatus,
+    Value<String?> bidder = const Value.absent(),
+    Value<int?> depositMinor = const Value.absent(),
+    Value<String?> customerExperience = const Value.absent(),
+    String? localTeamStatus,
+    String? fundingStatus,
+    String? riskLevel,
+    String? authorizationType,
+    Value<int?> authorizationExpiresAt = const Value.absent(),
+    Value<String?> exclusiveQuoteScope = const Value.absent(),
+    Value<String?> floorPriceSupport = const Value.absent(),
+    String? status,
+    Value<String?> nextAction = const Value.absent(),
+    int? createdAt,
+    int? updatedAt,
+  }) => TenderRow(
+    id: id ?? this.id,
+    opportunityId: opportunityId ?? this.opportunityId,
+    projectNo: projectNo.present ? projectNo.value : this.projectNo,
+    name: name.present ? name.value : this.name,
+    deadlineAt: deadlineAt.present ? deadlineAt.value : this.deadlineAt,
+    documentStatus: documentStatus ?? this.documentStatus,
+    qualificationStatus: qualificationStatus ?? this.qualificationStatus,
+    bidder: bidder.present ? bidder.value : this.bidder,
+    depositMinor: depositMinor.present ? depositMinor.value : this.depositMinor,
+    customerExperience: customerExperience.present
+        ? customerExperience.value
+        : this.customerExperience,
+    localTeamStatus: localTeamStatus ?? this.localTeamStatus,
+    fundingStatus: fundingStatus ?? this.fundingStatus,
+    riskLevel: riskLevel ?? this.riskLevel,
+    authorizationType: authorizationType ?? this.authorizationType,
+    authorizationExpiresAt: authorizationExpiresAt.present
+        ? authorizationExpiresAt.value
+        : this.authorizationExpiresAt,
+    exclusiveQuoteScope: exclusiveQuoteScope.present
+        ? exclusiveQuoteScope.value
+        : this.exclusiveQuoteScope,
+    floorPriceSupport: floorPriceSupport.present
+        ? floorPriceSupport.value
+        : this.floorPriceSupport,
+    status: status ?? this.status,
+    nextAction: nextAction.present ? nextAction.value : this.nextAction,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  TenderRow copyWithCompanion(TendersCompanion data) {
+    return TenderRow(
+      id: data.id.present ? data.id.value : this.id,
+      opportunityId: data.opportunityId.present
+          ? data.opportunityId.value
+          : this.opportunityId,
+      projectNo: data.projectNo.present ? data.projectNo.value : this.projectNo,
+      name: data.name.present ? data.name.value : this.name,
+      deadlineAt: data.deadlineAt.present
+          ? data.deadlineAt.value
+          : this.deadlineAt,
+      documentStatus: data.documentStatus.present
+          ? data.documentStatus.value
+          : this.documentStatus,
+      qualificationStatus: data.qualificationStatus.present
+          ? data.qualificationStatus.value
+          : this.qualificationStatus,
+      bidder: data.bidder.present ? data.bidder.value : this.bidder,
+      depositMinor: data.depositMinor.present
+          ? data.depositMinor.value
+          : this.depositMinor,
+      customerExperience: data.customerExperience.present
+          ? data.customerExperience.value
+          : this.customerExperience,
+      localTeamStatus: data.localTeamStatus.present
+          ? data.localTeamStatus.value
+          : this.localTeamStatus,
+      fundingStatus: data.fundingStatus.present
+          ? data.fundingStatus.value
+          : this.fundingStatus,
+      riskLevel: data.riskLevel.present ? data.riskLevel.value : this.riskLevel,
+      authorizationType: data.authorizationType.present
+          ? data.authorizationType.value
+          : this.authorizationType,
+      authorizationExpiresAt: data.authorizationExpiresAt.present
+          ? data.authorizationExpiresAt.value
+          : this.authorizationExpiresAt,
+      exclusiveQuoteScope: data.exclusiveQuoteScope.present
+          ? data.exclusiveQuoteScope.value
+          : this.exclusiveQuoteScope,
+      floorPriceSupport: data.floorPriceSupport.present
+          ? data.floorPriceSupport.value
+          : this.floorPriceSupport,
+      status: data.status.present ? data.status.value : this.status,
+      nextAction: data.nextAction.present
+          ? data.nextAction.value
+          : this.nextAction,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TenderRow(')
+          ..write('id: $id, ')
+          ..write('opportunityId: $opportunityId, ')
+          ..write('projectNo: $projectNo, ')
+          ..write('name: $name, ')
+          ..write('deadlineAt: $deadlineAt, ')
+          ..write('documentStatus: $documentStatus, ')
+          ..write('qualificationStatus: $qualificationStatus, ')
+          ..write('bidder: $bidder, ')
+          ..write('depositMinor: $depositMinor, ')
+          ..write('customerExperience: $customerExperience, ')
+          ..write('localTeamStatus: $localTeamStatus, ')
+          ..write('fundingStatus: $fundingStatus, ')
+          ..write('riskLevel: $riskLevel, ')
+          ..write('authorizationType: $authorizationType, ')
+          ..write('authorizationExpiresAt: $authorizationExpiresAt, ')
+          ..write('exclusiveQuoteScope: $exclusiveQuoteScope, ')
+          ..write('floorPriceSupport: $floorPriceSupport, ')
+          ..write('status: $status, ')
+          ..write('nextAction: $nextAction, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    opportunityId,
+    projectNo,
+    name,
+    deadlineAt,
+    documentStatus,
+    qualificationStatus,
+    bidder,
+    depositMinor,
+    customerExperience,
+    localTeamStatus,
+    fundingStatus,
+    riskLevel,
+    authorizationType,
+    authorizationExpiresAt,
+    exclusiveQuoteScope,
+    floorPriceSupport,
+    status,
+    nextAction,
+    createdAt,
+    updatedAt,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TenderRow &&
+          other.id == this.id &&
+          other.opportunityId == this.opportunityId &&
+          other.projectNo == this.projectNo &&
+          other.name == this.name &&
+          other.deadlineAt == this.deadlineAt &&
+          other.documentStatus == this.documentStatus &&
+          other.qualificationStatus == this.qualificationStatus &&
+          other.bidder == this.bidder &&
+          other.depositMinor == this.depositMinor &&
+          other.customerExperience == this.customerExperience &&
+          other.localTeamStatus == this.localTeamStatus &&
+          other.fundingStatus == this.fundingStatus &&
+          other.riskLevel == this.riskLevel &&
+          other.authorizationType == this.authorizationType &&
+          other.authorizationExpiresAt == this.authorizationExpiresAt &&
+          other.exclusiveQuoteScope == this.exclusiveQuoteScope &&
+          other.floorPriceSupport == this.floorPriceSupport &&
+          other.status == this.status &&
+          other.nextAction == this.nextAction &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class TendersCompanion extends UpdateCompanion<TenderRow> {
+  final Value<int> id;
+  final Value<int> opportunityId;
+  final Value<String?> projectNo;
+  final Value<String?> name;
+  final Value<int?> deadlineAt;
+  final Value<String> documentStatus;
+  final Value<String> qualificationStatus;
+  final Value<String?> bidder;
+  final Value<int?> depositMinor;
+  final Value<String?> customerExperience;
+  final Value<String> localTeamStatus;
+  final Value<String> fundingStatus;
+  final Value<String> riskLevel;
+  final Value<String> authorizationType;
+  final Value<int?> authorizationExpiresAt;
+  final Value<String?> exclusiveQuoteScope;
+  final Value<String?> floorPriceSupport;
+  final Value<String> status;
+  final Value<String?> nextAction;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  const TendersCompanion({
+    this.id = const Value.absent(),
+    this.opportunityId = const Value.absent(),
+    this.projectNo = const Value.absent(),
+    this.name = const Value.absent(),
+    this.deadlineAt = const Value.absent(),
+    this.documentStatus = const Value.absent(),
+    this.qualificationStatus = const Value.absent(),
+    this.bidder = const Value.absent(),
+    this.depositMinor = const Value.absent(),
+    this.customerExperience = const Value.absent(),
+    this.localTeamStatus = const Value.absent(),
+    this.fundingStatus = const Value.absent(),
+    this.riskLevel = const Value.absent(),
+    this.authorizationType = const Value.absent(),
+    this.authorizationExpiresAt = const Value.absent(),
+    this.exclusiveQuoteScope = const Value.absent(),
+    this.floorPriceSupport = const Value.absent(),
+    this.status = const Value.absent(),
+    this.nextAction = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  TendersCompanion.insert({
+    this.id = const Value.absent(),
+    required int opportunityId,
+    this.projectNo = const Value.absent(),
+    this.name = const Value.absent(),
+    this.deadlineAt = const Value.absent(),
+    this.documentStatus = const Value.absent(),
+    this.qualificationStatus = const Value.absent(),
+    this.bidder = const Value.absent(),
+    this.depositMinor = const Value.absent(),
+    this.customerExperience = const Value.absent(),
+    this.localTeamStatus = const Value.absent(),
+    this.fundingStatus = const Value.absent(),
+    this.riskLevel = const Value.absent(),
+    this.authorizationType = const Value.absent(),
+    this.authorizationExpiresAt = const Value.absent(),
+    this.exclusiveQuoteScope = const Value.absent(),
+    this.floorPriceSupport = const Value.absent(),
+    this.status = const Value.absent(),
+    this.nextAction = const Value.absent(),
+    required int createdAt,
+    required int updatedAt,
+  }) : opportunityId = Value(opportunityId),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<TenderRow> custom({
+    Expression<int>? id,
+    Expression<int>? opportunityId,
+    Expression<String>? projectNo,
+    Expression<String>? name,
+    Expression<int>? deadlineAt,
+    Expression<String>? documentStatus,
+    Expression<String>? qualificationStatus,
+    Expression<String>? bidder,
+    Expression<int>? depositMinor,
+    Expression<String>? customerExperience,
+    Expression<String>? localTeamStatus,
+    Expression<String>? fundingStatus,
+    Expression<String>? riskLevel,
+    Expression<String>? authorizationType,
+    Expression<int>? authorizationExpiresAt,
+    Expression<String>? exclusiveQuoteScope,
+    Expression<String>? floorPriceSupport,
+    Expression<String>? status,
+    Expression<String>? nextAction,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (opportunityId != null) 'opportunity_id': opportunityId,
+      if (projectNo != null) 'project_no': projectNo,
+      if (name != null) 'name': name,
+      if (deadlineAt != null) 'deadline_at': deadlineAt,
+      if (documentStatus != null) 'document_status': documentStatus,
+      if (qualificationStatus != null)
+        'qualification_status': qualificationStatus,
+      if (bidder != null) 'bidder': bidder,
+      if (depositMinor != null) 'deposit_minor': depositMinor,
+      if (customerExperience != null) 'customer_experience': customerExperience,
+      if (localTeamStatus != null) 'local_team_status': localTeamStatus,
+      if (fundingStatus != null) 'funding_status': fundingStatus,
+      if (riskLevel != null) 'risk_level': riskLevel,
+      if (authorizationType != null) 'authorization_type': authorizationType,
+      if (authorizationExpiresAt != null)
+        'authorization_expires_at': authorizationExpiresAt,
+      if (exclusiveQuoteScope != null)
+        'exclusive_quote_scope': exclusiveQuoteScope,
+      if (floorPriceSupport != null) 'floor_price_support': floorPriceSupport,
+      if (status != null) 'status': status,
+      if (nextAction != null) 'next_action': nextAction,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  TendersCompanion copyWith({
+    Value<int>? id,
+    Value<int>? opportunityId,
+    Value<String?>? projectNo,
+    Value<String?>? name,
+    Value<int?>? deadlineAt,
+    Value<String>? documentStatus,
+    Value<String>? qualificationStatus,
+    Value<String?>? bidder,
+    Value<int?>? depositMinor,
+    Value<String?>? customerExperience,
+    Value<String>? localTeamStatus,
+    Value<String>? fundingStatus,
+    Value<String>? riskLevel,
+    Value<String>? authorizationType,
+    Value<int?>? authorizationExpiresAt,
+    Value<String?>? exclusiveQuoteScope,
+    Value<String?>? floorPriceSupport,
+    Value<String>? status,
+    Value<String?>? nextAction,
+    Value<int>? createdAt,
+    Value<int>? updatedAt,
+  }) {
+    return TendersCompanion(
+      id: id ?? this.id,
+      opportunityId: opportunityId ?? this.opportunityId,
+      projectNo: projectNo ?? this.projectNo,
+      name: name ?? this.name,
+      deadlineAt: deadlineAt ?? this.deadlineAt,
+      documentStatus: documentStatus ?? this.documentStatus,
+      qualificationStatus: qualificationStatus ?? this.qualificationStatus,
+      bidder: bidder ?? this.bidder,
+      depositMinor: depositMinor ?? this.depositMinor,
+      customerExperience: customerExperience ?? this.customerExperience,
+      localTeamStatus: localTeamStatus ?? this.localTeamStatus,
+      fundingStatus: fundingStatus ?? this.fundingStatus,
+      riskLevel: riskLevel ?? this.riskLevel,
+      authorizationType: authorizationType ?? this.authorizationType,
+      authorizationExpiresAt:
+          authorizationExpiresAt ?? this.authorizationExpiresAt,
+      exclusiveQuoteScope: exclusiveQuoteScope ?? this.exclusiveQuoteScope,
+      floorPriceSupport: floorPriceSupport ?? this.floorPriceSupport,
+      status: status ?? this.status,
+      nextAction: nextAction ?? this.nextAction,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (opportunityId.present) {
+      map['opportunity_id'] = Variable<int>(opportunityId.value);
+    }
+    if (projectNo.present) {
+      map['project_no'] = Variable<String>(projectNo.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (deadlineAt.present) {
+      map['deadline_at'] = Variable<int>(deadlineAt.value);
+    }
+    if (documentStatus.present) {
+      map['document_status'] = Variable<String>(documentStatus.value);
+    }
+    if (qualificationStatus.present) {
+      map['qualification_status'] = Variable<String>(qualificationStatus.value);
+    }
+    if (bidder.present) {
+      map['bidder'] = Variable<String>(bidder.value);
+    }
+    if (depositMinor.present) {
+      map['deposit_minor'] = Variable<int>(depositMinor.value);
+    }
+    if (customerExperience.present) {
+      map['customer_experience'] = Variable<String>(customerExperience.value);
+    }
+    if (localTeamStatus.present) {
+      map['local_team_status'] = Variable<String>(localTeamStatus.value);
+    }
+    if (fundingStatus.present) {
+      map['funding_status'] = Variable<String>(fundingStatus.value);
+    }
+    if (riskLevel.present) {
+      map['risk_level'] = Variable<String>(riskLevel.value);
+    }
+    if (authorizationType.present) {
+      map['authorization_type'] = Variable<String>(authorizationType.value);
+    }
+    if (authorizationExpiresAt.present) {
+      map['authorization_expires_at'] = Variable<int>(
+        authorizationExpiresAt.value,
+      );
+    }
+    if (exclusiveQuoteScope.present) {
+      map['exclusive_quote_scope'] = Variable<String>(
+        exclusiveQuoteScope.value,
+      );
+    }
+    if (floorPriceSupport.present) {
+      map['floor_price_support'] = Variable<String>(floorPriceSupport.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (nextAction.present) {
+      map['next_action'] = Variable<String>(nextAction.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TendersCompanion(')
+          ..write('id: $id, ')
+          ..write('opportunityId: $opportunityId, ')
+          ..write('projectNo: $projectNo, ')
+          ..write('name: $name, ')
+          ..write('deadlineAt: $deadlineAt, ')
+          ..write('documentStatus: $documentStatus, ')
+          ..write('qualificationStatus: $qualificationStatus, ')
+          ..write('bidder: $bidder, ')
+          ..write('depositMinor: $depositMinor, ')
+          ..write('customerExperience: $customerExperience, ')
+          ..write('localTeamStatus: $localTeamStatus, ')
+          ..write('fundingStatus: $fundingStatus, ')
+          ..write('riskLevel: $riskLevel, ')
+          ..write('authorizationType: $authorizationType, ')
+          ..write('authorizationExpiresAt: $authorizationExpiresAt, ')
+          ..write('exclusiveQuoteScope: $exclusiveQuoteScope, ')
+          ..write('floorPriceSupport: $floorPriceSupport, ')
+          ..write('status: $status, ')
+          ..write('nextAction: $nextAction, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -9146,6 +11831,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $AttachmentsTable attachments = $AttachmentsTable(this);
   late final $QuotesTable quotes = $QuotesTable(this);
   late final $SamplesTable samples = $SamplesTable(this);
+  late final $RegistrationsTable registrations = $RegistrationsTable(this);
+  late final $TendersTable tenders = $TendersTable(this);
   late final CustomerDao customerDao = CustomerDao(this as AppDatabase);
   late final ContactDao contactDao = ContactDao(this as AppDatabase);
   late final FollowupDao followupDao = FollowupDao(this as AppDatabase);
@@ -9173,6 +11860,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     attachments,
     quotes,
     samples,
+    registrations,
+    tenders,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -9273,6 +11962,20 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('samples', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'opportunities',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('registrations', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'opportunities',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('tenders', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -10422,6 +13125,43 @@ final class $$OpportunitiesTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$RegistrationsTable, List<RegistrationRow>>
+  _registrationsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.registrations,
+    aliasName: 'opportunities__id__registrations__opportunity_id',
+  );
+
+  $$RegistrationsTableProcessedTableManager get registrationsRefs {
+    final manager = $$RegistrationsTableTableManager(
+      $_db,
+      $_db.registrations,
+    ).filter((f) => f.opportunityId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_registrationsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$TendersTable, List<TenderRow>> _tendersRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.tenders,
+    aliasName: 'opportunities__id__tenders__opportunity_id',
+  );
+
+  $$TendersTableProcessedTableManager get tendersRefs {
+    final manager = $$TendersTableTableManager(
+      $_db,
+      $_db.tenders,
+    ).filter((f) => f.opportunityId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_tendersRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$OpportunitiesTableFilterComposer
@@ -10757,6 +13497,56 @@ class $$OpportunitiesTableFilterComposer
           }) => $$SamplesTableFilterComposer(
             $db: $db,
             $table: $db.samples,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> registrationsRefs(
+    Expression<bool> Function($$RegistrationsTableFilterComposer f) f,
+  ) {
+    final $$RegistrationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.registrations,
+      getReferencedColumn: (t) => t.opportunityId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegistrationsTableFilterComposer(
+            $db: $db,
+            $table: $db.registrations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> tendersRefs(
+    Expression<bool> Function($$TendersTableFilterComposer f) f,
+  ) {
+    final $$TendersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.tenders,
+      getReferencedColumn: (t) => t.opportunityId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TendersTableFilterComposer(
+            $db: $db,
+            $table: $db.tenders,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -11310,6 +14100,56 @@ class $$OpportunitiesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> registrationsRefs<T extends Object>(
+    Expression<T> Function($$RegistrationsTableAnnotationComposer a) f,
+  ) {
+    final $$RegistrationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.registrations,
+      getReferencedColumn: (t) => t.opportunityId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegistrationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.registrations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> tendersRefs<T extends Object>(
+    Expression<T> Function($$TendersTableAnnotationComposer a) f,
+  ) {
+    final $$TendersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.tenders,
+      getReferencedColumn: (t) => t.opportunityId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TendersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.tenders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$OpportunitiesTableTableManager
@@ -11332,6 +14172,8 @@ class $$OpportunitiesTableTableManager
             bool ordersRefs,
             bool quotesRefs,
             bool samplesRefs,
+            bool registrationsRefs,
+            bool tendersRefs,
           })
         > {
   $$OpportunitiesTableTableManager(_$AppDatabase db, $OpportunitiesTable table)
@@ -11521,6 +14363,8 @@ class $$OpportunitiesTableTableManager
                 ordersRefs = false,
                 quotesRefs = false,
                 samplesRefs = false,
+                registrationsRefs = false,
+                tendersRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -11530,6 +14374,8 @@ class $$OpportunitiesTableTableManager
                     if (ordersRefs) db.orders,
                     if (quotesRefs) db.quotes,
                     if (samplesRefs) db.samples,
+                    if (registrationsRefs) db.registrations,
+                    if (tendersRefs) db.tenders,
                   ],
                   addJoins:
                       <
@@ -11672,6 +14518,48 @@ class $$OpportunitiesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (registrationsRefs)
+                        await $_getPrefetchedData<
+                          OpportunityRow,
+                          $OpportunitiesTable,
+                          RegistrationRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OpportunitiesTableReferences
+                              ._registrationsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OpportunitiesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).registrationsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.opportunityId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (tendersRefs)
+                        await $_getPrefetchedData<
+                          OpportunityRow,
+                          $OpportunitiesTable,
+                          TenderRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OpportunitiesTableReferences
+                              ._tendersRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OpportunitiesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).tendersRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.opportunityId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -11699,6 +14587,8 @@ typedef $$OpportunitiesTableProcessedTableManager =
         bool ordersRefs,
         bool quotesRefs,
         bool samplesRefs,
+        bool registrationsRefs,
+        bool tendersRefs,
       })
     >;
 typedef $$ContactsTableCreateCompanionBuilder =
@@ -13422,6 +16312,14 @@ typedef $$OrdersTableCreateCompanionBuilder =
       required int amountCents,
       Value<String?> description,
       Value<String> status,
+      Value<String?> piPoNo,
+      Value<String> currency,
+      Value<String> paymentStatus,
+      Value<String> productionStatus,
+      Value<String> shippingStatus,
+      Value<int?> estimatedArrivalAt,
+      Value<String> orderResult,
+      Value<int?> estimatedRepurchaseAt,
       required int createdAt,
       required int updatedAt,
     });
@@ -13435,6 +16333,14 @@ typedef $$OrdersTableUpdateCompanionBuilder =
       Value<int> amountCents,
       Value<String?> description,
       Value<String> status,
+      Value<String?> piPoNo,
+      Value<String> currency,
+      Value<String> paymentStatus,
+      Value<String> productionStatus,
+      Value<String> shippingStatus,
+      Value<int?> estimatedArrivalAt,
+      Value<String> orderResult,
+      Value<int?> estimatedRepurchaseAt,
       Value<int> createdAt,
       Value<int> updatedAt,
     });
@@ -13532,6 +16438,46 @@ class $$OrdersTableFilterComposer
 
   ColumnFilters<String> get status => $composableBuilder(
     column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get piPoNo => $composableBuilder(
+    column: $table.piPoNo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paymentStatus => $composableBuilder(
+    column: $table.paymentStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get productionStatus => $composableBuilder(
+    column: $table.productionStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get shippingStatus => $composableBuilder(
+    column: $table.shippingStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get estimatedArrivalAt => $composableBuilder(
+    column: $table.estimatedArrivalAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get orderResult => $composableBuilder(
+    column: $table.orderResult,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get estimatedRepurchaseAt => $composableBuilder(
+    column: $table.estimatedRepurchaseAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -13656,6 +16602,46 @@ class $$OrdersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get piPoNo => $composableBuilder(
+    column: $table.piPoNo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get paymentStatus => $composableBuilder(
+    column: $table.paymentStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get productionStatus => $composableBuilder(
+    column: $table.productionStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get shippingStatus => $composableBuilder(
+    column: $table.shippingStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get estimatedArrivalAt => $composableBuilder(
+    column: $table.estimatedArrivalAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get orderResult => $composableBuilder(
+    column: $table.orderResult,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get estimatedRepurchaseAt => $composableBuilder(
+    column: $table.estimatedRepurchaseAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -13743,6 +16729,42 @@ class $$OrdersTableAnnotationComposer
 
   GeneratedColumn<String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get piPoNo =>
+      $composableBuilder(column: $table.piPoNo, builder: (column) => column);
+
+  GeneratedColumn<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => column);
+
+  GeneratedColumn<String> get paymentStatus => $composableBuilder(
+    column: $table.paymentStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get productionStatus => $composableBuilder(
+    column: $table.productionStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get shippingStatus => $composableBuilder(
+    column: $table.shippingStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get estimatedArrivalAt => $composableBuilder(
+    column: $table.estimatedArrivalAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get orderResult => $composableBuilder(
+    column: $table.orderResult,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get estimatedRepurchaseAt => $composableBuilder(
+    column: $table.estimatedRepurchaseAt,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -13862,6 +16884,14 @@ class $$OrdersTableTableManager
                 Value<int> amountCents = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<String> status = const Value.absent(),
+                Value<String?> piPoNo = const Value.absent(),
+                Value<String> currency = const Value.absent(),
+                Value<String> paymentStatus = const Value.absent(),
+                Value<String> productionStatus = const Value.absent(),
+                Value<String> shippingStatus = const Value.absent(),
+                Value<int?> estimatedArrivalAt = const Value.absent(),
+                Value<String> orderResult = const Value.absent(),
+                Value<int?> estimatedRepurchaseAt = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
               }) => OrdersCompanion(
@@ -13873,6 +16903,14 @@ class $$OrdersTableTableManager
                 amountCents: amountCents,
                 description: description,
                 status: status,
+                piPoNo: piPoNo,
+                currency: currency,
+                paymentStatus: paymentStatus,
+                productionStatus: productionStatus,
+                shippingStatus: shippingStatus,
+                estimatedArrivalAt: estimatedArrivalAt,
+                orderResult: orderResult,
+                estimatedRepurchaseAt: estimatedRepurchaseAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),
@@ -13886,6 +16924,14 @@ class $$OrdersTableTableManager
                 required int amountCents,
                 Value<String?> description = const Value.absent(),
                 Value<String> status = const Value.absent(),
+                Value<String?> piPoNo = const Value.absent(),
+                Value<String> currency = const Value.absent(),
+                Value<String> paymentStatus = const Value.absent(),
+                Value<String> productionStatus = const Value.absent(),
+                Value<String> shippingStatus = const Value.absent(),
+                Value<int?> estimatedArrivalAt = const Value.absent(),
+                Value<String> orderResult = const Value.absent(),
+                Value<int?> estimatedRepurchaseAt = const Value.absent(),
                 required int createdAt,
                 required int updatedAt,
               }) => OrdersCompanion.insert(
@@ -13897,6 +16943,14 @@ class $$OrdersTableTableManager
                 amountCents: amountCents,
                 description: description,
                 status: status,
+                piPoNo: piPoNo,
+                currency: currency,
+                paymentStatus: paymentStatus,
+                productionStatus: productionStatus,
+                shippingStatus: shippingStatus,
+                estimatedArrivalAt: estimatedArrivalAt,
+                orderResult: orderResult,
+                estimatedRepurchaseAt: estimatedRepurchaseAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),
@@ -16224,6 +19278,1234 @@ typedef $$SamplesTableProcessedTableManager =
       SampleRow,
       PrefetchHooks Function({bool opportunityId})
     >;
+typedef $$RegistrationsTableCreateCompanionBuilder =
+    RegistrationsCompanion Function({
+      Value<int> id,
+      required int opportunityId,
+      Value<String?> country,
+      Value<String?> requirements,
+      Value<String?> documentChecklist,
+      Value<String> documentStatus,
+      Value<int?> submittedAt,
+      Value<int?> expectedCompletedAt,
+      Value<int?> actualCompletedAt,
+      Value<String?> costBearer,
+      Value<String> status,
+      Value<String?> currentObstacle,
+      Value<String?> nextAction,
+      Value<int?> documentDueAt,
+      Value<int?> milestoneAt,
+      Value<String?> milestoneTitle,
+      required int createdAt,
+      required int updatedAt,
+    });
+typedef $$RegistrationsTableUpdateCompanionBuilder =
+    RegistrationsCompanion Function({
+      Value<int> id,
+      Value<int> opportunityId,
+      Value<String?> country,
+      Value<String?> requirements,
+      Value<String?> documentChecklist,
+      Value<String> documentStatus,
+      Value<int?> submittedAt,
+      Value<int?> expectedCompletedAt,
+      Value<int?> actualCompletedAt,
+      Value<String?> costBearer,
+      Value<String> status,
+      Value<String?> currentObstacle,
+      Value<String?> nextAction,
+      Value<int?> documentDueAt,
+      Value<int?> milestoneAt,
+      Value<String?> milestoneTitle,
+      Value<int> createdAt,
+      Value<int> updatedAt,
+    });
+
+final class $$RegistrationsTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $RegistrationsTable, RegistrationRow> {
+  $$RegistrationsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $OpportunitiesTable _opportunityIdTable(_$AppDatabase db) => db
+      .opportunities
+      .createAlias('registrations__opportunity_id__opportunities__id');
+
+  $$OpportunitiesTableProcessedTableManager get opportunityId {
+    final $_column = $_itemColumn<int>('opportunity_id')!;
+
+    final manager = $$OpportunitiesTableTableManager(
+      $_db,
+      $_db.opportunities,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_opportunityIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$RegistrationsTableFilterComposer
+    extends Composer<_$AppDatabase, $RegistrationsTable> {
+  $$RegistrationsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get country => $composableBuilder(
+    column: $table.country,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get requirements => $composableBuilder(
+    column: $table.requirements,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentChecklist => $composableBuilder(
+    column: $table.documentChecklist,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentStatus => $composableBuilder(
+    column: $table.documentStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get submittedAt => $composableBuilder(
+    column: $table.submittedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get expectedCompletedAt => $composableBuilder(
+    column: $table.expectedCompletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get actualCompletedAt => $composableBuilder(
+    column: $table.actualCompletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get costBearer => $composableBuilder(
+    column: $table.costBearer,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currentObstacle => $composableBuilder(
+    column: $table.currentObstacle,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nextAction => $composableBuilder(
+    column: $table.nextAction,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get documentDueAt => $composableBuilder(
+    column: $table.documentDueAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get milestoneAt => $composableBuilder(
+    column: $table.milestoneAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get milestoneTitle => $composableBuilder(
+    column: $table.milestoneTitle,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$OpportunitiesTableFilterComposer get opportunityId {
+    final $$OpportunitiesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableFilterComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RegistrationsTableOrderingComposer
+    extends Composer<_$AppDatabase, $RegistrationsTable> {
+  $$RegistrationsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get country => $composableBuilder(
+    column: $table.country,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get requirements => $composableBuilder(
+    column: $table.requirements,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get documentChecklist => $composableBuilder(
+    column: $table.documentChecklist,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get documentStatus => $composableBuilder(
+    column: $table.documentStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get submittedAt => $composableBuilder(
+    column: $table.submittedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get expectedCompletedAt => $composableBuilder(
+    column: $table.expectedCompletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get actualCompletedAt => $composableBuilder(
+    column: $table.actualCompletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get costBearer => $composableBuilder(
+    column: $table.costBearer,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currentObstacle => $composableBuilder(
+    column: $table.currentObstacle,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nextAction => $composableBuilder(
+    column: $table.nextAction,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get documentDueAt => $composableBuilder(
+    column: $table.documentDueAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get milestoneAt => $composableBuilder(
+    column: $table.milestoneAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get milestoneTitle => $composableBuilder(
+    column: $table.milestoneTitle,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$OpportunitiesTableOrderingComposer get opportunityId {
+    final $$OpportunitiesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableOrderingComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RegistrationsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RegistrationsTable> {
+  $$RegistrationsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get country =>
+      $composableBuilder(column: $table.country, builder: (column) => column);
+
+  GeneratedColumn<String> get requirements => $composableBuilder(
+    column: $table.requirements,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get documentChecklist => $composableBuilder(
+    column: $table.documentChecklist,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get documentStatus => $composableBuilder(
+    column: $table.documentStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get submittedAt => $composableBuilder(
+    column: $table.submittedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get expectedCompletedAt => $composableBuilder(
+    column: $table.expectedCompletedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get actualCompletedAt => $composableBuilder(
+    column: $table.actualCompletedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get costBearer => $composableBuilder(
+    column: $table.costBearer,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get currentObstacle => $composableBuilder(
+    column: $table.currentObstacle,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get nextAction => $composableBuilder(
+    column: $table.nextAction,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get documentDueAt => $composableBuilder(
+    column: $table.documentDueAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get milestoneAt => $composableBuilder(
+    column: $table.milestoneAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get milestoneTitle => $composableBuilder(
+    column: $table.milestoneTitle,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$OpportunitiesTableAnnotationComposer get opportunityId {
+    final $$OpportunitiesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RegistrationsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RegistrationsTable,
+          RegistrationRow,
+          $$RegistrationsTableFilterComposer,
+          $$RegistrationsTableOrderingComposer,
+          $$RegistrationsTableAnnotationComposer,
+          $$RegistrationsTableCreateCompanionBuilder,
+          $$RegistrationsTableUpdateCompanionBuilder,
+          (RegistrationRow, $$RegistrationsTableReferences),
+          RegistrationRow,
+          PrefetchHooks Function({bool opportunityId})
+        > {
+  $$RegistrationsTableTableManager(_$AppDatabase db, $RegistrationsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RegistrationsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RegistrationsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RegistrationsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> opportunityId = const Value.absent(),
+                Value<String?> country = const Value.absent(),
+                Value<String?> requirements = const Value.absent(),
+                Value<String?> documentChecklist = const Value.absent(),
+                Value<String> documentStatus = const Value.absent(),
+                Value<int?> submittedAt = const Value.absent(),
+                Value<int?> expectedCompletedAt = const Value.absent(),
+                Value<int?> actualCompletedAt = const Value.absent(),
+                Value<String?> costBearer = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> currentObstacle = const Value.absent(),
+                Value<String?> nextAction = const Value.absent(),
+                Value<int?> documentDueAt = const Value.absent(),
+                Value<int?> milestoneAt = const Value.absent(),
+                Value<String?> milestoneTitle = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+              }) => RegistrationsCompanion(
+                id: id,
+                opportunityId: opportunityId,
+                country: country,
+                requirements: requirements,
+                documentChecklist: documentChecklist,
+                documentStatus: documentStatus,
+                submittedAt: submittedAt,
+                expectedCompletedAt: expectedCompletedAt,
+                actualCompletedAt: actualCompletedAt,
+                costBearer: costBearer,
+                status: status,
+                currentObstacle: currentObstacle,
+                nextAction: nextAction,
+                documentDueAt: documentDueAt,
+                milestoneAt: milestoneAt,
+                milestoneTitle: milestoneTitle,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int opportunityId,
+                Value<String?> country = const Value.absent(),
+                Value<String?> requirements = const Value.absent(),
+                Value<String?> documentChecklist = const Value.absent(),
+                Value<String> documentStatus = const Value.absent(),
+                Value<int?> submittedAt = const Value.absent(),
+                Value<int?> expectedCompletedAt = const Value.absent(),
+                Value<int?> actualCompletedAt = const Value.absent(),
+                Value<String?> costBearer = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> currentObstacle = const Value.absent(),
+                Value<String?> nextAction = const Value.absent(),
+                Value<int?> documentDueAt = const Value.absent(),
+                Value<int?> milestoneAt = const Value.absent(),
+                Value<String?> milestoneTitle = const Value.absent(),
+                required int createdAt,
+                required int updatedAt,
+              }) => RegistrationsCompanion.insert(
+                id: id,
+                opportunityId: opportunityId,
+                country: country,
+                requirements: requirements,
+                documentChecklist: documentChecklist,
+                documentStatus: documentStatus,
+                submittedAt: submittedAt,
+                expectedCompletedAt: expectedCompletedAt,
+                actualCompletedAt: actualCompletedAt,
+                costBearer: costBearer,
+                status: status,
+                currentObstacle: currentObstacle,
+                nextAction: nextAction,
+                documentDueAt: documentDueAt,
+                milestoneAt: milestoneAt,
+                milestoneTitle: milestoneTitle,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$RegistrationsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({opportunityId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (opportunityId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.opportunityId,
+                                referencedTable: $$RegistrationsTableReferences
+                                    ._opportunityIdTable(db),
+                                referencedColumn: $$RegistrationsTableReferences
+                                    ._opportunityIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$RegistrationsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RegistrationsTable,
+      RegistrationRow,
+      $$RegistrationsTableFilterComposer,
+      $$RegistrationsTableOrderingComposer,
+      $$RegistrationsTableAnnotationComposer,
+      $$RegistrationsTableCreateCompanionBuilder,
+      $$RegistrationsTableUpdateCompanionBuilder,
+      (RegistrationRow, $$RegistrationsTableReferences),
+      RegistrationRow,
+      PrefetchHooks Function({bool opportunityId})
+    >;
+typedef $$TendersTableCreateCompanionBuilder =
+    TendersCompanion Function({
+      Value<int> id,
+      required int opportunityId,
+      Value<String?> projectNo,
+      Value<String?> name,
+      Value<int?> deadlineAt,
+      Value<String> documentStatus,
+      Value<String> qualificationStatus,
+      Value<String?> bidder,
+      Value<int?> depositMinor,
+      Value<String?> customerExperience,
+      Value<String> localTeamStatus,
+      Value<String> fundingStatus,
+      Value<String> riskLevel,
+      Value<String> authorizationType,
+      Value<int?> authorizationExpiresAt,
+      Value<String?> exclusiveQuoteScope,
+      Value<String?> floorPriceSupport,
+      Value<String> status,
+      Value<String?> nextAction,
+      required int createdAt,
+      required int updatedAt,
+    });
+typedef $$TendersTableUpdateCompanionBuilder =
+    TendersCompanion Function({
+      Value<int> id,
+      Value<int> opportunityId,
+      Value<String?> projectNo,
+      Value<String?> name,
+      Value<int?> deadlineAt,
+      Value<String> documentStatus,
+      Value<String> qualificationStatus,
+      Value<String?> bidder,
+      Value<int?> depositMinor,
+      Value<String?> customerExperience,
+      Value<String> localTeamStatus,
+      Value<String> fundingStatus,
+      Value<String> riskLevel,
+      Value<String> authorizationType,
+      Value<int?> authorizationExpiresAt,
+      Value<String?> exclusiveQuoteScope,
+      Value<String?> floorPriceSupport,
+      Value<String> status,
+      Value<String?> nextAction,
+      Value<int> createdAt,
+      Value<int> updatedAt,
+    });
+
+final class $$TendersTableReferences
+    extends BaseReferences<_$AppDatabase, $TendersTable, TenderRow> {
+  $$TendersTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $OpportunitiesTable _opportunityIdTable(_$AppDatabase db) => db
+      .opportunities
+      .createAlias('tenders__opportunity_id__opportunities__id');
+
+  $$OpportunitiesTableProcessedTableManager get opportunityId {
+    final $_column = $_itemColumn<int>('opportunity_id')!;
+
+    final manager = $$OpportunitiesTableTableManager(
+      $_db,
+      $_db.opportunities,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_opportunityIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$TendersTableFilterComposer
+    extends Composer<_$AppDatabase, $TendersTable> {
+  $$TendersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get projectNo => $composableBuilder(
+    column: $table.projectNo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deadlineAt => $composableBuilder(
+    column: $table.deadlineAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentStatus => $composableBuilder(
+    column: $table.documentStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get qualificationStatus => $composableBuilder(
+    column: $table.qualificationStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bidder => $composableBuilder(
+    column: $table.bidder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get depositMinor => $composableBuilder(
+    column: $table.depositMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get customerExperience => $composableBuilder(
+    column: $table.customerExperience,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get localTeamStatus => $composableBuilder(
+    column: $table.localTeamStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fundingStatus => $composableBuilder(
+    column: $table.fundingStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get riskLevel => $composableBuilder(
+    column: $table.riskLevel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get authorizationType => $composableBuilder(
+    column: $table.authorizationType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get authorizationExpiresAt => $composableBuilder(
+    column: $table.authorizationExpiresAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get exclusiveQuoteScope => $composableBuilder(
+    column: $table.exclusiveQuoteScope,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get floorPriceSupport => $composableBuilder(
+    column: $table.floorPriceSupport,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nextAction => $composableBuilder(
+    column: $table.nextAction,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$OpportunitiesTableFilterComposer get opportunityId {
+    final $$OpportunitiesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableFilterComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TendersTableOrderingComposer
+    extends Composer<_$AppDatabase, $TendersTable> {
+  $$TendersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get projectNo => $composableBuilder(
+    column: $table.projectNo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deadlineAt => $composableBuilder(
+    column: $table.deadlineAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get documentStatus => $composableBuilder(
+    column: $table.documentStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get qualificationStatus => $composableBuilder(
+    column: $table.qualificationStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get bidder => $composableBuilder(
+    column: $table.bidder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get depositMinor => $composableBuilder(
+    column: $table.depositMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get customerExperience => $composableBuilder(
+    column: $table.customerExperience,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get localTeamStatus => $composableBuilder(
+    column: $table.localTeamStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fundingStatus => $composableBuilder(
+    column: $table.fundingStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get riskLevel => $composableBuilder(
+    column: $table.riskLevel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get authorizationType => $composableBuilder(
+    column: $table.authorizationType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get authorizationExpiresAt => $composableBuilder(
+    column: $table.authorizationExpiresAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get exclusiveQuoteScope => $composableBuilder(
+    column: $table.exclusiveQuoteScope,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get floorPriceSupport => $composableBuilder(
+    column: $table.floorPriceSupport,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nextAction => $composableBuilder(
+    column: $table.nextAction,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$OpportunitiesTableOrderingComposer get opportunityId {
+    final $$OpportunitiesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableOrderingComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TendersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TendersTable> {
+  $$TendersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get projectNo =>
+      $composableBuilder(column: $table.projectNo, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get deadlineAt => $composableBuilder(
+    column: $table.deadlineAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get documentStatus => $composableBuilder(
+    column: $table.documentStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get qualificationStatus => $composableBuilder(
+    column: $table.qualificationStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get bidder =>
+      $composableBuilder(column: $table.bidder, builder: (column) => column);
+
+  GeneratedColumn<int> get depositMinor => $composableBuilder(
+    column: $table.depositMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get customerExperience => $composableBuilder(
+    column: $table.customerExperience,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get localTeamStatus => $composableBuilder(
+    column: $table.localTeamStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get fundingStatus => $composableBuilder(
+    column: $table.fundingStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get riskLevel =>
+      $composableBuilder(column: $table.riskLevel, builder: (column) => column);
+
+  GeneratedColumn<String> get authorizationType => $composableBuilder(
+    column: $table.authorizationType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get authorizationExpiresAt => $composableBuilder(
+    column: $table.authorizationExpiresAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get exclusiveQuoteScope => $composableBuilder(
+    column: $table.exclusiveQuoteScope,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get floorPriceSupport => $composableBuilder(
+    column: $table.floorPriceSupport,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get nextAction => $composableBuilder(
+    column: $table.nextAction,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$OpportunitiesTableAnnotationComposer get opportunityId {
+    final $$OpportunitiesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TendersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TendersTable,
+          TenderRow,
+          $$TendersTableFilterComposer,
+          $$TendersTableOrderingComposer,
+          $$TendersTableAnnotationComposer,
+          $$TendersTableCreateCompanionBuilder,
+          $$TendersTableUpdateCompanionBuilder,
+          (TenderRow, $$TendersTableReferences),
+          TenderRow,
+          PrefetchHooks Function({bool opportunityId})
+        > {
+  $$TendersTableTableManager(_$AppDatabase db, $TendersTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TendersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TendersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TendersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> opportunityId = const Value.absent(),
+                Value<String?> projectNo = const Value.absent(),
+                Value<String?> name = const Value.absent(),
+                Value<int?> deadlineAt = const Value.absent(),
+                Value<String> documentStatus = const Value.absent(),
+                Value<String> qualificationStatus = const Value.absent(),
+                Value<String?> bidder = const Value.absent(),
+                Value<int?> depositMinor = const Value.absent(),
+                Value<String?> customerExperience = const Value.absent(),
+                Value<String> localTeamStatus = const Value.absent(),
+                Value<String> fundingStatus = const Value.absent(),
+                Value<String> riskLevel = const Value.absent(),
+                Value<String> authorizationType = const Value.absent(),
+                Value<int?> authorizationExpiresAt = const Value.absent(),
+                Value<String?> exclusiveQuoteScope = const Value.absent(),
+                Value<String?> floorPriceSupport = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> nextAction = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+              }) => TendersCompanion(
+                id: id,
+                opportunityId: opportunityId,
+                projectNo: projectNo,
+                name: name,
+                deadlineAt: deadlineAt,
+                documentStatus: documentStatus,
+                qualificationStatus: qualificationStatus,
+                bidder: bidder,
+                depositMinor: depositMinor,
+                customerExperience: customerExperience,
+                localTeamStatus: localTeamStatus,
+                fundingStatus: fundingStatus,
+                riskLevel: riskLevel,
+                authorizationType: authorizationType,
+                authorizationExpiresAt: authorizationExpiresAt,
+                exclusiveQuoteScope: exclusiveQuoteScope,
+                floorPriceSupport: floorPriceSupport,
+                status: status,
+                nextAction: nextAction,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int opportunityId,
+                Value<String?> projectNo = const Value.absent(),
+                Value<String?> name = const Value.absent(),
+                Value<int?> deadlineAt = const Value.absent(),
+                Value<String> documentStatus = const Value.absent(),
+                Value<String> qualificationStatus = const Value.absent(),
+                Value<String?> bidder = const Value.absent(),
+                Value<int?> depositMinor = const Value.absent(),
+                Value<String?> customerExperience = const Value.absent(),
+                Value<String> localTeamStatus = const Value.absent(),
+                Value<String> fundingStatus = const Value.absent(),
+                Value<String> riskLevel = const Value.absent(),
+                Value<String> authorizationType = const Value.absent(),
+                Value<int?> authorizationExpiresAt = const Value.absent(),
+                Value<String?> exclusiveQuoteScope = const Value.absent(),
+                Value<String?> floorPriceSupport = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> nextAction = const Value.absent(),
+                required int createdAt,
+                required int updatedAt,
+              }) => TendersCompanion.insert(
+                id: id,
+                opportunityId: opportunityId,
+                projectNo: projectNo,
+                name: name,
+                deadlineAt: deadlineAt,
+                documentStatus: documentStatus,
+                qualificationStatus: qualificationStatus,
+                bidder: bidder,
+                depositMinor: depositMinor,
+                customerExperience: customerExperience,
+                localTeamStatus: localTeamStatus,
+                fundingStatus: fundingStatus,
+                riskLevel: riskLevel,
+                authorizationType: authorizationType,
+                authorizationExpiresAt: authorizationExpiresAt,
+                exclusiveQuoteScope: exclusiveQuoteScope,
+                floorPriceSupport: floorPriceSupport,
+                status: status,
+                nextAction: nextAction,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$TendersTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({opportunityId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (opportunityId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.opportunityId,
+                                referencedTable: $$TendersTableReferences
+                                    ._opportunityIdTable(db),
+                                referencedColumn: $$TendersTableReferences
+                                    ._opportunityIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$TendersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TendersTable,
+      TenderRow,
+      $$TendersTableFilterComposer,
+      $$TendersTableOrderingComposer,
+      $$TendersTableAnnotationComposer,
+      $$TendersTableCreateCompanionBuilder,
+      $$TendersTableUpdateCompanionBuilder,
+      (TenderRow, $$TendersTableReferences),
+      TenderRow,
+      PrefetchHooks Function({bool opportunityId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -16249,4 +20531,8 @@ class $AppDatabaseManager {
       $$QuotesTableTableManager(_db, _db.quotes);
   $$SamplesTableTableManager get samples =>
       $$SamplesTableTableManager(_db, _db.samples);
+  $$RegistrationsTableTableManager get registrations =>
+      $$RegistrationsTableTableManager(_db, _db.registrations);
+  $$TendersTableTableManager get tenders =>
+      $$TendersTableTableManager(_db, _db.tenders);
 }

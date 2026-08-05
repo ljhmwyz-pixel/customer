@@ -23,8 +23,10 @@ import 'tables/followups.dart';
 import 'tables/orders.dart';
 import 'tables/opportunities.dart';
 import 'tables/quotes.dart';
+import 'tables/registrations.dart';
 import 'tables/samples.dart';
 import 'tables/tags.dart';
+import 'tables/tenders.dart';
 
 part 'database.g.dart';
 
@@ -41,6 +43,8 @@ part 'database.g.dart';
     Attachments,
     Quotes,
     Samples,
+    Registrations,
+    Tenders,
   ],
   daos: [
     CustomerDao,
@@ -64,7 +68,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -72,6 +76,7 @@ class AppDatabase extends _$AppDatabase {
       await m.createAll();
       await _createIndexes();
       await _createQuoteSampleIndexes();
+      await _createRegistrationTenderOrderIndexes();
     },
     onUpgrade: (m, from, to) async {
       if (from < 2) {
@@ -85,6 +90,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 5) {
         await _migrateV4ToV5(m);
+      }
+      if (from < 6) {
+        await _migrateV5ToV6(m);
       }
     },
     beforeOpen: (details) async {
@@ -323,6 +331,51 @@ class AppDatabase extends _$AppDatabase {
     await _createQuoteSampleIndexes();
   }
 
+  Future<void> _migrateV5ToV6(Migrator m) async {
+    await m.createTable(registrations);
+    await m.createTable(tenders);
+    await m.addColumn(orders, orders.piPoNo);
+    await m.addColumn(orders, orders.currency);
+    await m.addColumn(orders, orders.paymentStatus);
+    await m.addColumn(orders, orders.productionStatus);
+    await m.addColumn(orders, orders.shippingStatus);
+    await m.addColumn(orders, orders.estimatedArrivalAt);
+    await m.addColumn(orders, orders.orderResult);
+    await m.addColumn(orders, orders.estimatedRepurchaseAt);
+
+    await customStatement('''
+      UPDATE orders
+      SET currency = 'CNY',
+          payment_status = CASE status
+            WHEN 'paid' THEN 'paid'
+            WHEN 'completed' THEN 'paid'
+            WHEN 'cancelled' THEN 'cancelled'
+            ELSE 'pending'
+          END,
+          production_status = CASE status
+            WHEN 'shipped' THEN 'completed'
+            WHEN 'paid' THEN 'completed'
+            WHEN 'completed' THEN 'completed'
+            WHEN 'cancelled' THEN 'cancelled'
+            ELSE 'pending'
+          END,
+          shipping_status = CASE status
+            WHEN 'shipped' THEN 'shipped'
+            WHEN 'paid' THEN 'shipped'
+            WHEN 'completed' THEN 'delivered'
+            WHEN 'cancelled' THEN 'cancelled'
+            ELSE 'pending'
+          END,
+          order_result = CASE status
+            WHEN 'completed' THEN 'completed'
+            WHEN 'cancelled' THEN 'cancelled'
+            ELSE 'inProgress'
+          END
+    ''');
+
+    await _createRegistrationTenderOrderIndexes();
+  }
+
   Future<void> _createQuoteSampleIndexes() async {
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_quotes_opportunity_date '
@@ -339,6 +392,33 @@ class AppDatabase extends _$AppDatabase {
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_samples_planned_test '
       'ON samples(planned_test_at)',
+    );
+  }
+
+  Future<void> _createRegistrationTenderOrderIndexes() async {
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_registrations_opportunity '
+      'ON registrations(opportunity_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_registrations_status_expected '
+      'ON registrations(status, expected_completed_at)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_registrations_document_due '
+      'ON registrations(document_due_at)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_tenders_opportunity '
+      'ON tenders(opportunity_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_tenders_status_deadline '
+      'ON tenders(status, deadline_at)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_orders_estimated_repurchase '
+      'ON orders(estimated_repurchase_at)',
     );
   }
 }

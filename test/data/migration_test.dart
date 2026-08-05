@@ -7,19 +7,19 @@ import 'package:sqlite3/sqlite3.dart' as sqlite;
 
 import 'helpers.dart';
 
-/// v5 数据库初始化与 v1/v2/v3/v4 真库升级。
+/// v6 数据库初始化与 v1/v2/v3/v5 真库升级。
 void main() {
   late AppDatabase db;
 
-  group('v5 新库', () {
+  group('v6 新库', () {
     setUp(() async => db = await openTestDb());
     tearDown(() async => db.close());
 
-    test('schemaVersion 为 5', () {
-      expect(db.schemaVersion, 5);
+    test('schemaVersion 为 6', () {
+      expect(db.schemaVersion, 6);
     });
 
-    test('空库初始化后九张表全部建成', () async {
+    test('空库初始化后十三张表全部建成', () async {
       final rows = await db
           .customSelect(
             "SELECT name FROM sqlite_master WHERE type = 'table' "
@@ -39,7 +39,9 @@ void main() {
         'opportunities',
         'tags',
         'quotes',
+        'registrations',
         'samples',
+        'tenders',
       });
     });
 
@@ -61,6 +63,7 @@ void main() {
         'idx_followups_customer',
         'idx_orders_customer',
         'idx_orders_opportunity',
+        'idx_orders_estimated_repurchase',
         'idx_opportunities_customer',
         'idx_opportunities_legacy_default',
         'idx_opportunities_next_follow',
@@ -74,10 +77,15 @@ void main() {
         'idx_quotes_valid_until',
         'idx_samples_opportunity_status',
         'idx_samples_planned_test',
+        'idx_registrations_opportunity',
+        'idx_registrations_status_expected',
+        'idx_registrations_document_due',
+        'idx_tenders_opportunity',
+        'idx_tenders_status_deadline',
       });
     });
 
-    test('v3 跟进字段、v4 任务和 v5 报价样品字段已建成', () async {
+    test('v3 跟进、v4 任务、v5 报价样品和 v6 业务字段已建成', () async {
       expect(
         await _columnNames(db, 'followups'),
         containsAll({
@@ -114,13 +122,26 @@ void main() {
         await _columnNames(db, 'samples'),
         containsAll({'sent_at', 'delivered_at', 'planned_test_at', 'status'}),
       );
+      expect(
+        await _columnNames(db, 'orders'),
+        containsAll({
+          'pi_po_no',
+          'currency',
+          'payment_status',
+          'production_status',
+          'shipping_status',
+          'estimated_arrival_at',
+          'order_result',
+          'estimated_repurchase_at',
+        }),
+      );
     });
 
-    test('user_version 写入为 5', () async {
+    test('user_version 写入为 6', () async {
       // drift 用 SQLite 的 user_version 记录 schema 版本，
       // 这个值不对的话后续 onUpgrade 会走错分支。
       final row = await db.customSelect('PRAGMA user_version').getSingle();
-      expect(row.data.values.first, 5);
+      expect(row.data.values.first, 6);
     });
 
     test('外键约束在 beforeOpen 后处于开启状态', () async {
@@ -168,7 +189,7 @@ void main() {
           )
           .get();
       // 索引没有被重复创建成两条。
-      expect(rows.length, 21);
+      expect(rows.length, 27);
     });
   });
 
@@ -191,7 +212,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 5);
+      expect(version.data.values.first, 6);
 
       final opportunities = await migrated.customSelect('''
             SELECT customer_id, name, stage, status, is_legacy_default
@@ -292,7 +313,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 5);
+      expect(version.data.values.first, 6);
 
       final followup = await migrated.customSelect('''
             SELECT opportunity_id, content, conclusion, feedback, stage,
@@ -374,7 +395,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 5);
+      expect(version.data.values.first, 6);
       await _expectLegacyTaskBackfill(migrated);
 
       final followup = await migrated.customSelect('''
@@ -383,6 +404,71 @@ void main() {
       expect(followup.read<String>('feedback'), '旧结论');
       expect(followup.read<String>('stage'), 'quoted');
       expect(followup.read<String>('next_action'), '发送修订报价');
+
+      final foreignKeyErrors = await migrated
+          .customSelect('PRAGMA foreign_key_check')
+          .get();
+      expect(foreignKeyErrors, isEmpty);
+    } finally {
+      await migrated.close();
+      await directory.delete(recursive: true);
+    }
+  });
+
+  test('v5 真库升级按固定规则拆分订单状态并保留原字段', () async {
+    final directory = await Directory.systemTemp.createTemp('customer-v5-');
+    final file = File('${directory.path}/customer.sqlite');
+    final raw = sqlite.sqlite3.open(file.path);
+    try {
+      _createV5Fixture(raw);
+    } finally {
+      raw.close();
+    }
+
+    final migrated = AppDatabase.forTesting(NativeDatabase(file));
+    try {
+      await migrated.customSelect('SELECT 1').getSingle();
+
+      final version = await migrated
+          .customSelect('PRAGMA user_version')
+          .getSingle();
+      expect(version.data.values.first, 6);
+
+      final orders = await migrated.customSelect('''
+            SELECT customer_id, opportunity_id, order_no, ordered_at,
+                   amount_cents, description, status, currency,
+                   payment_status, production_status, shipping_status,
+                   order_result, created_at, updated_at
+            FROM orders
+            ORDER BY id
+          ''').get();
+      expect(orders, hasLength(5));
+
+      const expectedStates = [
+        ('pending', 'pending', 'pending', 'pending', 'inProgress'),
+        ('shipped', 'pending', 'completed', 'shipped', 'inProgress'),
+        ('paid', 'paid', 'completed', 'shipped', 'inProgress'),
+        ('completed', 'paid', 'completed', 'delivered', 'completed'),
+        ('cancelled', 'cancelled', 'cancelled', 'cancelled', 'cancelled'),
+      ];
+      for (var index = 0; index < orders.length; index++) {
+        final row = orders[index];
+        final expected = expectedStates[index];
+        expect(row.read<int>('customer_id'), 1);
+        expect(row.read<int>('opportunity_id'), 1);
+        expect(row.read<String>('order_no'), 'V5-00${index + 1}');
+        expect(row.read<int>('ordered_at'), 1785888000000 + index);
+        expect(row.read<int>('amount_cents'), 10000 + index);
+        expect(row.read<String>('description'), '旧订单${index + 1}');
+        expect(row.read<String>('status'), expected.$1);
+        expect(row.read<String>('currency'), 'CNY');
+        expect(row.read<String>('payment_status'), expected.$2);
+        expect(row.read<String>('production_status'), expected.$3);
+        expect(row.read<String>('shipping_status'), expected.$4);
+        expect(row.read<String>('order_result'), expected.$5);
+        expect(row.read<int>('created_at'), 1785888000100 + index);
+        expect(row.read<int>('updated_at'), 1785888000200 + index);
+      }
 
       final foreignKeyErrors = await migrated
           .customSelect('PRAGMA foreign_key_check')
@@ -645,4 +731,72 @@ void _upgradeFixtureToV3(sqlite.Database db) {
   ''');
   db.execute('UPDATE opportunities SET last_follow_at = 1785888000000');
   db.execute('PRAGMA user_version = 3');
+}
+
+void _createV5Fixture(sqlite.Database db) {
+  db.execute('PRAGMA foreign_keys = ON');
+  db.execute('''
+    CREATE TABLE customers (
+      id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    )
+  ''');
+  db.execute('''
+    CREATE TABLE opportunities (
+      id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      customer_id INTEGER NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    )
+  ''');
+  db.execute('''
+    CREATE TABLE orders (
+      id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      customer_id INTEGER NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+      opportunity_id INTEGER REFERENCES opportunities(id) ON DELETE SET NULL,
+      order_no TEXT NOT NULL UNIQUE,
+      ordered_at INTEGER NOT NULL,
+      amount_cents INTEGER NOT NULL,
+      description TEXT,
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    )
+  ''');
+
+  db.execute('''
+    INSERT INTO customers (id, name, created_at, updated_at)
+    VALUES (1, 'v5 客户', 1785888000000, 1785888000000)
+  ''');
+  db.execute('''
+    INSERT INTO opportunities (id, customer_id, name, created_at, updated_at)
+    VALUES (1, 1, 'v5 项目', 1785888000000, 1785888000000)
+  ''');
+
+  const statuses = ['pending', 'shipped', 'paid', 'completed', 'cancelled'];
+  for (var index = 0; index < statuses.length; index++) {
+    db.execute(
+      '''
+        INSERT INTO orders (
+          customer_id, opportunity_id, order_no, ordered_at, amount_cents,
+          description, status, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ''',
+      [
+        1,
+        1,
+        'V5-00${index + 1}',
+        1785888000000 + index,
+        10000 + index,
+        '旧订单${index + 1}',
+        statuses[index],
+        1785888000100 + index,
+        1785888000200 + index,
+      ],
+    );
+  }
+  db.execute('PRAGMA user_version = 5');
 }
