@@ -7,16 +7,16 @@ import 'package:sqlite3/sqlite3.dart' as sqlite;
 
 import 'helpers.dart';
 
-/// v4 数据库初始化与 v1/v2/v3 真库升级。
+/// v5 数据库初始化与 v1/v2/v3/v4 真库升级。
 void main() {
   late AppDatabase db;
 
-  group('v4 新库', () {
+  group('v5 新库', () {
     setUp(() async => db = await openTestDb());
     tearDown(() async => db.close());
 
-    test('schemaVersion 为 4', () {
-      expect(db.schemaVersion, 4);
+    test('schemaVersion 为 5', () {
+      expect(db.schemaVersion, 5);
     });
 
     test('空库初始化后九张表全部建成', () async {
@@ -38,6 +38,8 @@ void main() {
         'orders',
         'opportunities',
         'tags',
+        'quotes',
+        'samples',
       });
     });
 
@@ -68,10 +70,14 @@ void main() {
         'idx_plans_plan_at',
         'idx_plans_source_rule',
         'idx_followups_opportunity',
+        'idx_quotes_opportunity_date',
+        'idx_quotes_valid_until',
+        'idx_samples_opportunity_status',
+        'idx_samples_planned_test',
       });
     });
 
-    test('v3 跟进字段和 v4 任务基础字段已建成', () async {
+    test('v3 跟进字段、v4 任务和 v5 报价样品字段已建成', () async {
       expect(
         await _columnNames(db, 'followups'),
         containsAll({
@@ -100,13 +106,21 @@ void main() {
           'cancelled_at',
         }),
       );
+      expect(
+        await _columnNames(db, 'quotes'),
+        containsAll({'quote_no', 'version', 'valid_until'}),
+      );
+      expect(
+        await _columnNames(db, 'samples'),
+        containsAll({'sent_at', 'delivered_at', 'planned_test_at', 'status'}),
+      );
     });
 
-    test('user_version 写入为 4', () async {
+    test('user_version 写入为 5', () async {
       // drift 用 SQLite 的 user_version 记录 schema 版本，
       // 这个值不对的话后续 onUpgrade 会走错分支。
       final row = await db.customSelect('PRAGMA user_version').getSingle();
-      expect(row.data.values.first, 4);
+      expect(row.data.values.first, 5);
     });
 
     test('外键约束在 beforeOpen 后处于开启状态', () async {
@@ -154,7 +168,7 @@ void main() {
           )
           .get();
       // 索引没有被重复创建成两条。
-      expect(rows.length, 17);
+      expect(rows.length, 21);
     });
   });
 
@@ -177,7 +191,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 4);
+      expect(version.data.values.first, 5);
 
       final opportunities = await migrated.customSelect('''
             SELECT customer_id, name, stage, status, is_legacy_default
@@ -278,7 +292,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 4);
+      expect(version.data.values.first, 5);
 
       final followup = await migrated.customSelect('''
             SELECT opportunity_id, content, conclusion, feedback, stage,
@@ -360,7 +374,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 4);
+      expect(version.data.values.first, 5);
       await _expectLegacyTaskBackfill(migrated);
 
       final followup = await migrated.customSelect('''

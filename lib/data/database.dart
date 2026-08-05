@@ -20,6 +20,8 @@ import 'tables/follow_plans.dart';
 import 'tables/followups.dart';
 import 'tables/orders.dart';
 import 'tables/opportunities.dart';
+import 'tables/quotes.dart';
+import 'tables/samples.dart';
 import 'tables/tags.dart';
 
 part 'database.g.dart';
@@ -35,6 +37,8 @@ part 'database.g.dart';
     Tags,
     CustomerTags,
     Attachments,
+    Quotes,
+    Samples,
   ],
   daos: [
     CustomerDao,
@@ -56,13 +60,14 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) async {
       await m.createAll();
       await _createIndexes();
+      await _createQuoteSampleIndexes();
     },
     onUpgrade: (m, from, to) async {
       if (from < 2) {
@@ -73,6 +78,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 4) {
         await _migrateV3ToV4(m, addOpportunityTaskFields: from >= 2);
+      }
+      if (from < 5) {
+        await _migrateV4ToV5(m);
       }
     },
     beforeOpen: (details) async {
@@ -301,6 +309,32 @@ class AppDatabase extends _$AppDatabase {
       'CREATE UNIQUE INDEX IF NOT EXISTS idx_plans_source_rule '
       'ON follow_plans(source_type, source_id, rule_key) '
       'WHERE source_id IS NOT NULL AND rule_key IS NOT NULL',
+    );
+  }
+
+  Future<void> _migrateV4ToV5(Migrator m) async {
+    await m.createTable(quotes);
+    await m.createTable(samples);
+    await _createIndexes();
+    await _createQuoteSampleIndexes();
+  }
+
+  Future<void> _createQuoteSampleIndexes() async {
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_quotes_opportunity_date '
+      'ON quotes(opportunity_id, quoted_at DESC)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_quotes_valid_until '
+      'ON quotes(valid_until)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_samples_opportunity_status '
+      'ON samples(opportunity_id, status)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_samples_planned_test '
+      'ON samples(planned_test_at)',
     );
   }
 }

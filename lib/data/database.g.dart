@@ -7178,6 +7178,1960 @@ class AttachmentsCompanion extends UpdateCompanion<AttachmentRow> {
   }
 }
 
+class $QuotesTable extends Quotes with TableInfo<$QuotesTable, QuoteRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $QuotesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _opportunityIdMeta = const VerificationMeta(
+    'opportunityId',
+  );
+  @override
+  late final GeneratedColumn<int> opportunityId = GeneratedColumn<int>(
+    'opportunity_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES opportunities (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _quoteNoMeta = const VerificationMeta(
+    'quoteNo',
+  );
+  @override
+  late final GeneratedColumn<String> quoteNo = GeneratedColumn<String>(
+    'quote_no',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 50,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _productModelMeta = const VerificationMeta(
+    'productModel',
+  );
+  @override
+  late final GeneratedColumn<String> productModel = GeneratedColumn<String>(
+    'product_model',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _quantityMeta = const VerificationMeta(
+    'quantity',
+  );
+  @override
+  late final GeneratedColumn<int> quantity = GeneratedColumn<int>(
+    'quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _currencyMeta = const VerificationMeta(
+    'currency',
+  );
+  @override
+  late final GeneratedColumn<String> currency = GeneratedColumn<String>(
+    'currency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('USD'),
+  );
+  static const VerificationMeta _unitPriceMinorMeta = const VerificationMeta(
+    'unitPriceMinor',
+  );
+  @override
+  late final GeneratedColumn<int> unitPriceMinor = GeneratedColumn<int>(
+    'unit_price_minor',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _totalAmountMinorMeta = const VerificationMeta(
+    'totalAmountMinor',
+  );
+  @override
+  late final GeneratedColumn<int> totalAmountMinor = GeneratedColumn<int>(
+    'total_amount_minor',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _quotedAtMeta = const VerificationMeta(
+    'quotedAt',
+  );
+  @override
+  late final GeneratedColumn<int> quotedAt = GeneratedColumn<int>(
+    'quoted_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _validUntilMeta = const VerificationMeta(
+    'validUntil',
+  );
+  @override
+  late final GeneratedColumn<int> validUntil = GeneratedColumn<int>(
+    'valid_until',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _customerReceivedMeta = const VerificationMeta(
+    'customerReceived',
+  );
+  @override
+  late final GeneratedColumn<bool> customerReceived = GeneratedColumn<bool>(
+    'customer_received',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("customer_received" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _customerFeedbackMeta = const VerificationMeta(
+    'customerFeedback',
+  );
+  @override
+  late final GeneratedColumn<String> customerFeedback = GeneratedColumn<String>(
+    'customer_feedback',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nextFollowAtMeta = const VerificationMeta(
+    'nextFollowAt',
+  );
+  @override
+  late final GeneratedColumn<int> nextFollowAt = GeneratedColumn<int>(
+    'next_follow_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _resultMeta = const VerificationMeta('result');
+  @override
+  late final GeneratedColumn<String> result = GeneratedColumn<String>(
+    'result',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    opportunityId,
+    quoteNo,
+    version,
+    productModel,
+    quantity,
+    currency,
+    unitPriceMinor,
+    totalAmountMinor,
+    quotedAt,
+    validUntil,
+    customerReceived,
+    customerFeedback,
+    nextFollowAt,
+    result,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'quotes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<QuoteRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('opportunity_id')) {
+      context.handle(
+        _opportunityIdMeta,
+        opportunityId.isAcceptableOrUnknown(
+          data['opportunity_id']!,
+          _opportunityIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_opportunityIdMeta);
+    }
+    if (data.containsKey('quote_no')) {
+      context.handle(
+        _quoteNoMeta,
+        quoteNo.isAcceptableOrUnknown(data['quote_no']!, _quoteNoMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_quoteNoMeta);
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_versionMeta);
+    }
+    if (data.containsKey('product_model')) {
+      context.handle(
+        _productModelMeta,
+        productModel.isAcceptableOrUnknown(
+          data['product_model']!,
+          _productModelMeta,
+        ),
+      );
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(
+        _quantityMeta,
+        quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_quantityMeta);
+    }
+    if (data.containsKey('currency')) {
+      context.handle(
+        _currencyMeta,
+        currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta),
+      );
+    }
+    if (data.containsKey('unit_price_minor')) {
+      context.handle(
+        _unitPriceMinorMeta,
+        unitPriceMinor.isAcceptableOrUnknown(
+          data['unit_price_minor']!,
+          _unitPriceMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('total_amount_minor')) {
+      context.handle(
+        _totalAmountMinorMeta,
+        totalAmountMinor.isAcceptableOrUnknown(
+          data['total_amount_minor']!,
+          _totalAmountMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('quoted_at')) {
+      context.handle(
+        _quotedAtMeta,
+        quotedAt.isAcceptableOrUnknown(data['quoted_at']!, _quotedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_quotedAtMeta);
+    }
+    if (data.containsKey('valid_until')) {
+      context.handle(
+        _validUntilMeta,
+        validUntil.isAcceptableOrUnknown(data['valid_until']!, _validUntilMeta),
+      );
+    }
+    if (data.containsKey('customer_received')) {
+      context.handle(
+        _customerReceivedMeta,
+        customerReceived.isAcceptableOrUnknown(
+          data['customer_received']!,
+          _customerReceivedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('customer_feedback')) {
+      context.handle(
+        _customerFeedbackMeta,
+        customerFeedback.isAcceptableOrUnknown(
+          data['customer_feedback']!,
+          _customerFeedbackMeta,
+        ),
+      );
+    }
+    if (data.containsKey('next_follow_at')) {
+      context.handle(
+        _nextFollowAtMeta,
+        nextFollowAt.isAcceptableOrUnknown(
+          data['next_follow_at']!,
+          _nextFollowAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('result')) {
+      context.handle(
+        _resultMeta,
+        result.isAcceptableOrUnknown(data['result']!, _resultMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  QuoteRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return QuoteRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      opportunityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}opportunity_id'],
+      )!,
+      quoteNo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}quote_no'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      productModel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}product_model'],
+      ),
+      quantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}quantity'],
+      )!,
+      currency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency'],
+      )!,
+      unitPriceMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}unit_price_minor'],
+      ),
+      totalAmountMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total_amount_minor'],
+      ),
+      quotedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}quoted_at'],
+      )!,
+      validUntil: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}valid_until'],
+      ),
+      customerReceived: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}customer_received'],
+      )!,
+      customerFeedback: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}customer_feedback'],
+      ),
+      nextFollowAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}next_follow_at'],
+      ),
+      result: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}result'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $QuotesTable createAlias(String alias) {
+    return $QuotesTable(attachedDatabase, alias);
+  }
+}
+
+class QuoteRow extends DataClass implements Insertable<QuoteRow> {
+  final int id;
+  final int opportunityId;
+  final String quoteNo;
+  final int version;
+  final String? productModel;
+  final int quantity;
+  final String currency;
+  final int? unitPriceMinor;
+  final int? totalAmountMinor;
+  final int quotedAt;
+  final int? validUntil;
+  final bool customerReceived;
+  final String? customerFeedback;
+  final int? nextFollowAt;
+  final String? result;
+  final int createdAt;
+  final int updatedAt;
+  const QuoteRow({
+    required this.id,
+    required this.opportunityId,
+    required this.quoteNo,
+    required this.version,
+    this.productModel,
+    required this.quantity,
+    required this.currency,
+    this.unitPriceMinor,
+    this.totalAmountMinor,
+    required this.quotedAt,
+    this.validUntil,
+    required this.customerReceived,
+    this.customerFeedback,
+    this.nextFollowAt,
+    this.result,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['opportunity_id'] = Variable<int>(opportunityId);
+    map['quote_no'] = Variable<String>(quoteNo);
+    map['version'] = Variable<int>(version);
+    if (!nullToAbsent || productModel != null) {
+      map['product_model'] = Variable<String>(productModel);
+    }
+    map['quantity'] = Variable<int>(quantity);
+    map['currency'] = Variable<String>(currency);
+    if (!nullToAbsent || unitPriceMinor != null) {
+      map['unit_price_minor'] = Variable<int>(unitPriceMinor);
+    }
+    if (!nullToAbsent || totalAmountMinor != null) {
+      map['total_amount_minor'] = Variable<int>(totalAmountMinor);
+    }
+    map['quoted_at'] = Variable<int>(quotedAt);
+    if (!nullToAbsent || validUntil != null) {
+      map['valid_until'] = Variable<int>(validUntil);
+    }
+    map['customer_received'] = Variable<bool>(customerReceived);
+    if (!nullToAbsent || customerFeedback != null) {
+      map['customer_feedback'] = Variable<String>(customerFeedback);
+    }
+    if (!nullToAbsent || nextFollowAt != null) {
+      map['next_follow_at'] = Variable<int>(nextFollowAt);
+    }
+    if (!nullToAbsent || result != null) {
+      map['result'] = Variable<String>(result);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  QuotesCompanion toCompanion(bool nullToAbsent) {
+    return QuotesCompanion(
+      id: Value(id),
+      opportunityId: Value(opportunityId),
+      quoteNo: Value(quoteNo),
+      version: Value(version),
+      productModel: productModel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(productModel),
+      quantity: Value(quantity),
+      currency: Value(currency),
+      unitPriceMinor: unitPriceMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(unitPriceMinor),
+      totalAmountMinor: totalAmountMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(totalAmountMinor),
+      quotedAt: Value(quotedAt),
+      validUntil: validUntil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(validUntil),
+      customerReceived: Value(customerReceived),
+      customerFeedback: customerFeedback == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customerFeedback),
+      nextFollowAt: nextFollowAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextFollowAt),
+      result: result == null && nullToAbsent
+          ? const Value.absent()
+          : Value(result),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory QuoteRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return QuoteRow(
+      id: serializer.fromJson<int>(json['id']),
+      opportunityId: serializer.fromJson<int>(json['opportunityId']),
+      quoteNo: serializer.fromJson<String>(json['quoteNo']),
+      version: serializer.fromJson<int>(json['version']),
+      productModel: serializer.fromJson<String?>(json['productModel']),
+      quantity: serializer.fromJson<int>(json['quantity']),
+      currency: serializer.fromJson<String>(json['currency']),
+      unitPriceMinor: serializer.fromJson<int?>(json['unitPriceMinor']),
+      totalAmountMinor: serializer.fromJson<int?>(json['totalAmountMinor']),
+      quotedAt: serializer.fromJson<int>(json['quotedAt']),
+      validUntil: serializer.fromJson<int?>(json['validUntil']),
+      customerReceived: serializer.fromJson<bool>(json['customerReceived']),
+      customerFeedback: serializer.fromJson<String?>(json['customerFeedback']),
+      nextFollowAt: serializer.fromJson<int?>(json['nextFollowAt']),
+      result: serializer.fromJson<String?>(json['result']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'opportunityId': serializer.toJson<int>(opportunityId),
+      'quoteNo': serializer.toJson<String>(quoteNo),
+      'version': serializer.toJson<int>(version),
+      'productModel': serializer.toJson<String?>(productModel),
+      'quantity': serializer.toJson<int>(quantity),
+      'currency': serializer.toJson<String>(currency),
+      'unitPriceMinor': serializer.toJson<int?>(unitPriceMinor),
+      'totalAmountMinor': serializer.toJson<int?>(totalAmountMinor),
+      'quotedAt': serializer.toJson<int>(quotedAt),
+      'validUntil': serializer.toJson<int?>(validUntil),
+      'customerReceived': serializer.toJson<bool>(customerReceived),
+      'customerFeedback': serializer.toJson<String?>(customerFeedback),
+      'nextFollowAt': serializer.toJson<int?>(nextFollowAt),
+      'result': serializer.toJson<String?>(result),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  QuoteRow copyWith({
+    int? id,
+    int? opportunityId,
+    String? quoteNo,
+    int? version,
+    Value<String?> productModel = const Value.absent(),
+    int? quantity,
+    String? currency,
+    Value<int?> unitPriceMinor = const Value.absent(),
+    Value<int?> totalAmountMinor = const Value.absent(),
+    int? quotedAt,
+    Value<int?> validUntil = const Value.absent(),
+    bool? customerReceived,
+    Value<String?> customerFeedback = const Value.absent(),
+    Value<int?> nextFollowAt = const Value.absent(),
+    Value<String?> result = const Value.absent(),
+    int? createdAt,
+    int? updatedAt,
+  }) => QuoteRow(
+    id: id ?? this.id,
+    opportunityId: opportunityId ?? this.opportunityId,
+    quoteNo: quoteNo ?? this.quoteNo,
+    version: version ?? this.version,
+    productModel: productModel.present ? productModel.value : this.productModel,
+    quantity: quantity ?? this.quantity,
+    currency: currency ?? this.currency,
+    unitPriceMinor: unitPriceMinor.present
+        ? unitPriceMinor.value
+        : this.unitPriceMinor,
+    totalAmountMinor: totalAmountMinor.present
+        ? totalAmountMinor.value
+        : this.totalAmountMinor,
+    quotedAt: quotedAt ?? this.quotedAt,
+    validUntil: validUntil.present ? validUntil.value : this.validUntil,
+    customerReceived: customerReceived ?? this.customerReceived,
+    customerFeedback: customerFeedback.present
+        ? customerFeedback.value
+        : this.customerFeedback,
+    nextFollowAt: nextFollowAt.present ? nextFollowAt.value : this.nextFollowAt,
+    result: result.present ? result.value : this.result,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  QuoteRow copyWithCompanion(QuotesCompanion data) {
+    return QuoteRow(
+      id: data.id.present ? data.id.value : this.id,
+      opportunityId: data.opportunityId.present
+          ? data.opportunityId.value
+          : this.opportunityId,
+      quoteNo: data.quoteNo.present ? data.quoteNo.value : this.quoteNo,
+      version: data.version.present ? data.version.value : this.version,
+      productModel: data.productModel.present
+          ? data.productModel.value
+          : this.productModel,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      currency: data.currency.present ? data.currency.value : this.currency,
+      unitPriceMinor: data.unitPriceMinor.present
+          ? data.unitPriceMinor.value
+          : this.unitPriceMinor,
+      totalAmountMinor: data.totalAmountMinor.present
+          ? data.totalAmountMinor.value
+          : this.totalAmountMinor,
+      quotedAt: data.quotedAt.present ? data.quotedAt.value : this.quotedAt,
+      validUntil: data.validUntil.present
+          ? data.validUntil.value
+          : this.validUntil,
+      customerReceived: data.customerReceived.present
+          ? data.customerReceived.value
+          : this.customerReceived,
+      customerFeedback: data.customerFeedback.present
+          ? data.customerFeedback.value
+          : this.customerFeedback,
+      nextFollowAt: data.nextFollowAt.present
+          ? data.nextFollowAt.value
+          : this.nextFollowAt,
+      result: data.result.present ? data.result.value : this.result,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('QuoteRow(')
+          ..write('id: $id, ')
+          ..write('opportunityId: $opportunityId, ')
+          ..write('quoteNo: $quoteNo, ')
+          ..write('version: $version, ')
+          ..write('productModel: $productModel, ')
+          ..write('quantity: $quantity, ')
+          ..write('currency: $currency, ')
+          ..write('unitPriceMinor: $unitPriceMinor, ')
+          ..write('totalAmountMinor: $totalAmountMinor, ')
+          ..write('quotedAt: $quotedAt, ')
+          ..write('validUntil: $validUntil, ')
+          ..write('customerReceived: $customerReceived, ')
+          ..write('customerFeedback: $customerFeedback, ')
+          ..write('nextFollowAt: $nextFollowAt, ')
+          ..write('result: $result, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    opportunityId,
+    quoteNo,
+    version,
+    productModel,
+    quantity,
+    currency,
+    unitPriceMinor,
+    totalAmountMinor,
+    quotedAt,
+    validUntil,
+    customerReceived,
+    customerFeedback,
+    nextFollowAt,
+    result,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is QuoteRow &&
+          other.id == this.id &&
+          other.opportunityId == this.opportunityId &&
+          other.quoteNo == this.quoteNo &&
+          other.version == this.version &&
+          other.productModel == this.productModel &&
+          other.quantity == this.quantity &&
+          other.currency == this.currency &&
+          other.unitPriceMinor == this.unitPriceMinor &&
+          other.totalAmountMinor == this.totalAmountMinor &&
+          other.quotedAt == this.quotedAt &&
+          other.validUntil == this.validUntil &&
+          other.customerReceived == this.customerReceived &&
+          other.customerFeedback == this.customerFeedback &&
+          other.nextFollowAt == this.nextFollowAt &&
+          other.result == this.result &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class QuotesCompanion extends UpdateCompanion<QuoteRow> {
+  final Value<int> id;
+  final Value<int> opportunityId;
+  final Value<String> quoteNo;
+  final Value<int> version;
+  final Value<String?> productModel;
+  final Value<int> quantity;
+  final Value<String> currency;
+  final Value<int?> unitPriceMinor;
+  final Value<int?> totalAmountMinor;
+  final Value<int> quotedAt;
+  final Value<int?> validUntil;
+  final Value<bool> customerReceived;
+  final Value<String?> customerFeedback;
+  final Value<int?> nextFollowAt;
+  final Value<String?> result;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  const QuotesCompanion({
+    this.id = const Value.absent(),
+    this.opportunityId = const Value.absent(),
+    this.quoteNo = const Value.absent(),
+    this.version = const Value.absent(),
+    this.productModel = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.currency = const Value.absent(),
+    this.unitPriceMinor = const Value.absent(),
+    this.totalAmountMinor = const Value.absent(),
+    this.quotedAt = const Value.absent(),
+    this.validUntil = const Value.absent(),
+    this.customerReceived = const Value.absent(),
+    this.customerFeedback = const Value.absent(),
+    this.nextFollowAt = const Value.absent(),
+    this.result = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  QuotesCompanion.insert({
+    this.id = const Value.absent(),
+    required int opportunityId,
+    required String quoteNo,
+    required int version,
+    this.productModel = const Value.absent(),
+    required int quantity,
+    this.currency = const Value.absent(),
+    this.unitPriceMinor = const Value.absent(),
+    this.totalAmountMinor = const Value.absent(),
+    required int quotedAt,
+    this.validUntil = const Value.absent(),
+    this.customerReceived = const Value.absent(),
+    this.customerFeedback = const Value.absent(),
+    this.nextFollowAt = const Value.absent(),
+    this.result = const Value.absent(),
+    required int createdAt,
+    required int updatedAt,
+  }) : opportunityId = Value(opportunityId),
+       quoteNo = Value(quoteNo),
+       version = Value(version),
+       quantity = Value(quantity),
+       quotedAt = Value(quotedAt),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<QuoteRow> custom({
+    Expression<int>? id,
+    Expression<int>? opportunityId,
+    Expression<String>? quoteNo,
+    Expression<int>? version,
+    Expression<String>? productModel,
+    Expression<int>? quantity,
+    Expression<String>? currency,
+    Expression<int>? unitPriceMinor,
+    Expression<int>? totalAmountMinor,
+    Expression<int>? quotedAt,
+    Expression<int>? validUntil,
+    Expression<bool>? customerReceived,
+    Expression<String>? customerFeedback,
+    Expression<int>? nextFollowAt,
+    Expression<String>? result,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (opportunityId != null) 'opportunity_id': opportunityId,
+      if (quoteNo != null) 'quote_no': quoteNo,
+      if (version != null) 'version': version,
+      if (productModel != null) 'product_model': productModel,
+      if (quantity != null) 'quantity': quantity,
+      if (currency != null) 'currency': currency,
+      if (unitPriceMinor != null) 'unit_price_minor': unitPriceMinor,
+      if (totalAmountMinor != null) 'total_amount_minor': totalAmountMinor,
+      if (quotedAt != null) 'quoted_at': quotedAt,
+      if (validUntil != null) 'valid_until': validUntil,
+      if (customerReceived != null) 'customer_received': customerReceived,
+      if (customerFeedback != null) 'customer_feedback': customerFeedback,
+      if (nextFollowAt != null) 'next_follow_at': nextFollowAt,
+      if (result != null) 'result': result,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  QuotesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? opportunityId,
+    Value<String>? quoteNo,
+    Value<int>? version,
+    Value<String?>? productModel,
+    Value<int>? quantity,
+    Value<String>? currency,
+    Value<int?>? unitPriceMinor,
+    Value<int?>? totalAmountMinor,
+    Value<int>? quotedAt,
+    Value<int?>? validUntil,
+    Value<bool>? customerReceived,
+    Value<String?>? customerFeedback,
+    Value<int?>? nextFollowAt,
+    Value<String?>? result,
+    Value<int>? createdAt,
+    Value<int>? updatedAt,
+  }) {
+    return QuotesCompanion(
+      id: id ?? this.id,
+      opportunityId: opportunityId ?? this.opportunityId,
+      quoteNo: quoteNo ?? this.quoteNo,
+      version: version ?? this.version,
+      productModel: productModel ?? this.productModel,
+      quantity: quantity ?? this.quantity,
+      currency: currency ?? this.currency,
+      unitPriceMinor: unitPriceMinor ?? this.unitPriceMinor,
+      totalAmountMinor: totalAmountMinor ?? this.totalAmountMinor,
+      quotedAt: quotedAt ?? this.quotedAt,
+      validUntil: validUntil ?? this.validUntil,
+      customerReceived: customerReceived ?? this.customerReceived,
+      customerFeedback: customerFeedback ?? this.customerFeedback,
+      nextFollowAt: nextFollowAt ?? this.nextFollowAt,
+      result: result ?? this.result,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (opportunityId.present) {
+      map['opportunity_id'] = Variable<int>(opportunityId.value);
+    }
+    if (quoteNo.present) {
+      map['quote_no'] = Variable<String>(quoteNo.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (productModel.present) {
+      map['product_model'] = Variable<String>(productModel.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<int>(quantity.value);
+    }
+    if (currency.present) {
+      map['currency'] = Variable<String>(currency.value);
+    }
+    if (unitPriceMinor.present) {
+      map['unit_price_minor'] = Variable<int>(unitPriceMinor.value);
+    }
+    if (totalAmountMinor.present) {
+      map['total_amount_minor'] = Variable<int>(totalAmountMinor.value);
+    }
+    if (quotedAt.present) {
+      map['quoted_at'] = Variable<int>(quotedAt.value);
+    }
+    if (validUntil.present) {
+      map['valid_until'] = Variable<int>(validUntil.value);
+    }
+    if (customerReceived.present) {
+      map['customer_received'] = Variable<bool>(customerReceived.value);
+    }
+    if (customerFeedback.present) {
+      map['customer_feedback'] = Variable<String>(customerFeedback.value);
+    }
+    if (nextFollowAt.present) {
+      map['next_follow_at'] = Variable<int>(nextFollowAt.value);
+    }
+    if (result.present) {
+      map['result'] = Variable<String>(result.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('QuotesCompanion(')
+          ..write('id: $id, ')
+          ..write('opportunityId: $opportunityId, ')
+          ..write('quoteNo: $quoteNo, ')
+          ..write('version: $version, ')
+          ..write('productModel: $productModel, ')
+          ..write('quantity: $quantity, ')
+          ..write('currency: $currency, ')
+          ..write('unitPriceMinor: $unitPriceMinor, ')
+          ..write('totalAmountMinor: $totalAmountMinor, ')
+          ..write('quotedAt: $quotedAt, ')
+          ..write('validUntil: $validUntil, ')
+          ..write('customerReceived: $customerReceived, ')
+          ..write('customerFeedback: $customerFeedback, ')
+          ..write('nextFollowAt: $nextFollowAt, ')
+          ..write('result: $result, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SamplesTable extends Samples with TableInfo<$SamplesTable, SampleRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SamplesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _opportunityIdMeta = const VerificationMeta(
+    'opportunityId',
+  );
+  @override
+  late final GeneratedColumn<int> opportunityId = GeneratedColumn<int>(
+    'opportunity_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES opportunities (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _sampleModelMeta = const VerificationMeta(
+    'sampleModel',
+  );
+  @override
+  late final GeneratedColumn<String> sampleModel = GeneratedColumn<String>(
+    'sample_model',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _quantityMeta = const VerificationMeta(
+    'quantity',
+  );
+  @override
+  late final GeneratedColumn<int> quantity = GeneratedColumn<int>(
+    'quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _feeMinorMeta = const VerificationMeta(
+    'feeMinor',
+  );
+  @override
+  late final GeneratedColumn<int> feeMinor = GeneratedColumn<int>(
+    'fee_minor',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sentAtMeta = const VerificationMeta('sentAt');
+  @override
+  late final GeneratedColumn<int> sentAt = GeneratedColumn<int>(
+    'sent_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _carrierMeta = const VerificationMeta(
+    'carrier',
+  );
+  @override
+  late final GeneratedColumn<String> carrier = GeneratedColumn<String>(
+    'carrier',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _trackingNoMeta = const VerificationMeta(
+    'trackingNo',
+  );
+  @override
+  late final GeneratedColumn<String> trackingNo = GeneratedColumn<String>(
+    'tracking_no',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deliveredAtMeta = const VerificationMeta(
+    'deliveredAt',
+  );
+  @override
+  late final GeneratedColumn<int> deliveredAt = GeneratedColumn<int>(
+    'delivered_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _recipientMeta = const VerificationMeta(
+    'recipient',
+  );
+  @override
+  late final GeneratedColumn<String> recipient = GeneratedColumn<String>(
+    'recipient',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _testerMeta = const VerificationMeta('tester');
+  @override
+  late final GeneratedColumn<String> tester = GeneratedColumn<String>(
+    'tester',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _plannedTestAtMeta = const VerificationMeta(
+    'plannedTestAt',
+  );
+  @override
+  late final GeneratedColumn<int> plannedTestAt = GeneratedColumn<int>(
+    'planned_test_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('preparing'),
+  );
+  static const VerificationMeta _testResultMeta = const VerificationMeta(
+    'testResult',
+  );
+  @override
+  late final GeneratedColumn<String> testResult = GeneratedColumn<String>(
+    'test_result',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nextActionMeta = const VerificationMeta(
+    'nextAction',
+  );
+  @override
+  late final GeneratedColumn<String> nextAction = GeneratedColumn<String>(
+    'next_action',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    opportunityId,
+    sampleModel,
+    quantity,
+    feeMinor,
+    sentAt,
+    carrier,
+    trackingNo,
+    deliveredAt,
+    recipient,
+    tester,
+    plannedTestAt,
+    status,
+    testResult,
+    nextAction,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'samples';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SampleRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('opportunity_id')) {
+      context.handle(
+        _opportunityIdMeta,
+        opportunityId.isAcceptableOrUnknown(
+          data['opportunity_id']!,
+          _opportunityIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_opportunityIdMeta);
+    }
+    if (data.containsKey('sample_model')) {
+      context.handle(
+        _sampleModelMeta,
+        sampleModel.isAcceptableOrUnknown(
+          data['sample_model']!,
+          _sampleModelMeta,
+        ),
+      );
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(
+        _quantityMeta,
+        quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_quantityMeta);
+    }
+    if (data.containsKey('fee_minor')) {
+      context.handle(
+        _feeMinorMeta,
+        feeMinor.isAcceptableOrUnknown(data['fee_minor']!, _feeMinorMeta),
+      );
+    }
+    if (data.containsKey('sent_at')) {
+      context.handle(
+        _sentAtMeta,
+        sentAt.isAcceptableOrUnknown(data['sent_at']!, _sentAtMeta),
+      );
+    }
+    if (data.containsKey('carrier')) {
+      context.handle(
+        _carrierMeta,
+        carrier.isAcceptableOrUnknown(data['carrier']!, _carrierMeta),
+      );
+    }
+    if (data.containsKey('tracking_no')) {
+      context.handle(
+        _trackingNoMeta,
+        trackingNo.isAcceptableOrUnknown(data['tracking_no']!, _trackingNoMeta),
+      );
+    }
+    if (data.containsKey('delivered_at')) {
+      context.handle(
+        _deliveredAtMeta,
+        deliveredAt.isAcceptableOrUnknown(
+          data['delivered_at']!,
+          _deliveredAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('recipient')) {
+      context.handle(
+        _recipientMeta,
+        recipient.isAcceptableOrUnknown(data['recipient']!, _recipientMeta),
+      );
+    }
+    if (data.containsKey('tester')) {
+      context.handle(
+        _testerMeta,
+        tester.isAcceptableOrUnknown(data['tester']!, _testerMeta),
+      );
+    }
+    if (data.containsKey('planned_test_at')) {
+      context.handle(
+        _plannedTestAtMeta,
+        plannedTestAt.isAcceptableOrUnknown(
+          data['planned_test_at']!,
+          _plannedTestAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('test_result')) {
+      context.handle(
+        _testResultMeta,
+        testResult.isAcceptableOrUnknown(data['test_result']!, _testResultMeta),
+      );
+    }
+    if (data.containsKey('next_action')) {
+      context.handle(
+        _nextActionMeta,
+        nextAction.isAcceptableOrUnknown(data['next_action']!, _nextActionMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SampleRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SampleRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      opportunityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}opportunity_id'],
+      )!,
+      sampleModel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sample_model'],
+      ),
+      quantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}quantity'],
+      )!,
+      feeMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}fee_minor'],
+      ),
+      sentAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sent_at'],
+      ),
+      carrier: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}carrier'],
+      ),
+      trackingNo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tracking_no'],
+      ),
+      deliveredAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}delivered_at'],
+      ),
+      recipient: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recipient'],
+      ),
+      tester: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tester'],
+      ),
+      plannedTestAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}planned_test_at'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      testResult: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}test_result'],
+      ),
+      nextAction: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}next_action'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SamplesTable createAlias(String alias) {
+    return $SamplesTable(attachedDatabase, alias);
+  }
+}
+
+class SampleRow extends DataClass implements Insertable<SampleRow> {
+  final int id;
+  final int opportunityId;
+  final String? sampleModel;
+  final int quantity;
+  final int? feeMinor;
+  final int? sentAt;
+  final String? carrier;
+  final String? trackingNo;
+  final int? deliveredAt;
+  final String? recipient;
+  final String? tester;
+  final int? plannedTestAt;
+  final String status;
+  final String? testResult;
+  final String? nextAction;
+  final int createdAt;
+  final int updatedAt;
+  const SampleRow({
+    required this.id,
+    required this.opportunityId,
+    this.sampleModel,
+    required this.quantity,
+    this.feeMinor,
+    this.sentAt,
+    this.carrier,
+    this.trackingNo,
+    this.deliveredAt,
+    this.recipient,
+    this.tester,
+    this.plannedTestAt,
+    required this.status,
+    this.testResult,
+    this.nextAction,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['opportunity_id'] = Variable<int>(opportunityId);
+    if (!nullToAbsent || sampleModel != null) {
+      map['sample_model'] = Variable<String>(sampleModel);
+    }
+    map['quantity'] = Variable<int>(quantity);
+    if (!nullToAbsent || feeMinor != null) {
+      map['fee_minor'] = Variable<int>(feeMinor);
+    }
+    if (!nullToAbsent || sentAt != null) {
+      map['sent_at'] = Variable<int>(sentAt);
+    }
+    if (!nullToAbsent || carrier != null) {
+      map['carrier'] = Variable<String>(carrier);
+    }
+    if (!nullToAbsent || trackingNo != null) {
+      map['tracking_no'] = Variable<String>(trackingNo);
+    }
+    if (!nullToAbsent || deliveredAt != null) {
+      map['delivered_at'] = Variable<int>(deliveredAt);
+    }
+    if (!nullToAbsent || recipient != null) {
+      map['recipient'] = Variable<String>(recipient);
+    }
+    if (!nullToAbsent || tester != null) {
+      map['tester'] = Variable<String>(tester);
+    }
+    if (!nullToAbsent || plannedTestAt != null) {
+      map['planned_test_at'] = Variable<int>(plannedTestAt);
+    }
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || testResult != null) {
+      map['test_result'] = Variable<String>(testResult);
+    }
+    if (!nullToAbsent || nextAction != null) {
+      map['next_action'] = Variable<String>(nextAction);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  SamplesCompanion toCompanion(bool nullToAbsent) {
+    return SamplesCompanion(
+      id: Value(id),
+      opportunityId: Value(opportunityId),
+      sampleModel: sampleModel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sampleModel),
+      quantity: Value(quantity),
+      feeMinor: feeMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(feeMinor),
+      sentAt: sentAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sentAt),
+      carrier: carrier == null && nullToAbsent
+          ? const Value.absent()
+          : Value(carrier),
+      trackingNo: trackingNo == null && nullToAbsent
+          ? const Value.absent()
+          : Value(trackingNo),
+      deliveredAt: deliveredAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deliveredAt),
+      recipient: recipient == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recipient),
+      tester: tester == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tester),
+      plannedTestAt: plannedTestAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(plannedTestAt),
+      status: Value(status),
+      testResult: testResult == null && nullToAbsent
+          ? const Value.absent()
+          : Value(testResult),
+      nextAction: nextAction == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextAction),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory SampleRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SampleRow(
+      id: serializer.fromJson<int>(json['id']),
+      opportunityId: serializer.fromJson<int>(json['opportunityId']),
+      sampleModel: serializer.fromJson<String?>(json['sampleModel']),
+      quantity: serializer.fromJson<int>(json['quantity']),
+      feeMinor: serializer.fromJson<int?>(json['feeMinor']),
+      sentAt: serializer.fromJson<int?>(json['sentAt']),
+      carrier: serializer.fromJson<String?>(json['carrier']),
+      trackingNo: serializer.fromJson<String?>(json['trackingNo']),
+      deliveredAt: serializer.fromJson<int?>(json['deliveredAt']),
+      recipient: serializer.fromJson<String?>(json['recipient']),
+      tester: serializer.fromJson<String?>(json['tester']),
+      plannedTestAt: serializer.fromJson<int?>(json['plannedTestAt']),
+      status: serializer.fromJson<String>(json['status']),
+      testResult: serializer.fromJson<String?>(json['testResult']),
+      nextAction: serializer.fromJson<String?>(json['nextAction']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'opportunityId': serializer.toJson<int>(opportunityId),
+      'sampleModel': serializer.toJson<String?>(sampleModel),
+      'quantity': serializer.toJson<int>(quantity),
+      'feeMinor': serializer.toJson<int?>(feeMinor),
+      'sentAt': serializer.toJson<int?>(sentAt),
+      'carrier': serializer.toJson<String?>(carrier),
+      'trackingNo': serializer.toJson<String?>(trackingNo),
+      'deliveredAt': serializer.toJson<int?>(deliveredAt),
+      'recipient': serializer.toJson<String?>(recipient),
+      'tester': serializer.toJson<String?>(tester),
+      'plannedTestAt': serializer.toJson<int?>(plannedTestAt),
+      'status': serializer.toJson<String>(status),
+      'testResult': serializer.toJson<String?>(testResult),
+      'nextAction': serializer.toJson<String?>(nextAction),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  SampleRow copyWith({
+    int? id,
+    int? opportunityId,
+    Value<String?> sampleModel = const Value.absent(),
+    int? quantity,
+    Value<int?> feeMinor = const Value.absent(),
+    Value<int?> sentAt = const Value.absent(),
+    Value<String?> carrier = const Value.absent(),
+    Value<String?> trackingNo = const Value.absent(),
+    Value<int?> deliveredAt = const Value.absent(),
+    Value<String?> recipient = const Value.absent(),
+    Value<String?> tester = const Value.absent(),
+    Value<int?> plannedTestAt = const Value.absent(),
+    String? status,
+    Value<String?> testResult = const Value.absent(),
+    Value<String?> nextAction = const Value.absent(),
+    int? createdAt,
+    int? updatedAt,
+  }) => SampleRow(
+    id: id ?? this.id,
+    opportunityId: opportunityId ?? this.opportunityId,
+    sampleModel: sampleModel.present ? sampleModel.value : this.sampleModel,
+    quantity: quantity ?? this.quantity,
+    feeMinor: feeMinor.present ? feeMinor.value : this.feeMinor,
+    sentAt: sentAt.present ? sentAt.value : this.sentAt,
+    carrier: carrier.present ? carrier.value : this.carrier,
+    trackingNo: trackingNo.present ? trackingNo.value : this.trackingNo,
+    deliveredAt: deliveredAt.present ? deliveredAt.value : this.deliveredAt,
+    recipient: recipient.present ? recipient.value : this.recipient,
+    tester: tester.present ? tester.value : this.tester,
+    plannedTestAt: plannedTestAt.present
+        ? plannedTestAt.value
+        : this.plannedTestAt,
+    status: status ?? this.status,
+    testResult: testResult.present ? testResult.value : this.testResult,
+    nextAction: nextAction.present ? nextAction.value : this.nextAction,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  SampleRow copyWithCompanion(SamplesCompanion data) {
+    return SampleRow(
+      id: data.id.present ? data.id.value : this.id,
+      opportunityId: data.opportunityId.present
+          ? data.opportunityId.value
+          : this.opportunityId,
+      sampleModel: data.sampleModel.present
+          ? data.sampleModel.value
+          : this.sampleModel,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      feeMinor: data.feeMinor.present ? data.feeMinor.value : this.feeMinor,
+      sentAt: data.sentAt.present ? data.sentAt.value : this.sentAt,
+      carrier: data.carrier.present ? data.carrier.value : this.carrier,
+      trackingNo: data.trackingNo.present
+          ? data.trackingNo.value
+          : this.trackingNo,
+      deliveredAt: data.deliveredAt.present
+          ? data.deliveredAt.value
+          : this.deliveredAt,
+      recipient: data.recipient.present ? data.recipient.value : this.recipient,
+      tester: data.tester.present ? data.tester.value : this.tester,
+      plannedTestAt: data.plannedTestAt.present
+          ? data.plannedTestAt.value
+          : this.plannedTestAt,
+      status: data.status.present ? data.status.value : this.status,
+      testResult: data.testResult.present
+          ? data.testResult.value
+          : this.testResult,
+      nextAction: data.nextAction.present
+          ? data.nextAction.value
+          : this.nextAction,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SampleRow(')
+          ..write('id: $id, ')
+          ..write('opportunityId: $opportunityId, ')
+          ..write('sampleModel: $sampleModel, ')
+          ..write('quantity: $quantity, ')
+          ..write('feeMinor: $feeMinor, ')
+          ..write('sentAt: $sentAt, ')
+          ..write('carrier: $carrier, ')
+          ..write('trackingNo: $trackingNo, ')
+          ..write('deliveredAt: $deliveredAt, ')
+          ..write('recipient: $recipient, ')
+          ..write('tester: $tester, ')
+          ..write('plannedTestAt: $plannedTestAt, ')
+          ..write('status: $status, ')
+          ..write('testResult: $testResult, ')
+          ..write('nextAction: $nextAction, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    opportunityId,
+    sampleModel,
+    quantity,
+    feeMinor,
+    sentAt,
+    carrier,
+    trackingNo,
+    deliveredAt,
+    recipient,
+    tester,
+    plannedTestAt,
+    status,
+    testResult,
+    nextAction,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SampleRow &&
+          other.id == this.id &&
+          other.opportunityId == this.opportunityId &&
+          other.sampleModel == this.sampleModel &&
+          other.quantity == this.quantity &&
+          other.feeMinor == this.feeMinor &&
+          other.sentAt == this.sentAt &&
+          other.carrier == this.carrier &&
+          other.trackingNo == this.trackingNo &&
+          other.deliveredAt == this.deliveredAt &&
+          other.recipient == this.recipient &&
+          other.tester == this.tester &&
+          other.plannedTestAt == this.plannedTestAt &&
+          other.status == this.status &&
+          other.testResult == this.testResult &&
+          other.nextAction == this.nextAction &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class SamplesCompanion extends UpdateCompanion<SampleRow> {
+  final Value<int> id;
+  final Value<int> opportunityId;
+  final Value<String?> sampleModel;
+  final Value<int> quantity;
+  final Value<int?> feeMinor;
+  final Value<int?> sentAt;
+  final Value<String?> carrier;
+  final Value<String?> trackingNo;
+  final Value<int?> deliveredAt;
+  final Value<String?> recipient;
+  final Value<String?> tester;
+  final Value<int?> plannedTestAt;
+  final Value<String> status;
+  final Value<String?> testResult;
+  final Value<String?> nextAction;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  const SamplesCompanion({
+    this.id = const Value.absent(),
+    this.opportunityId = const Value.absent(),
+    this.sampleModel = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.feeMinor = const Value.absent(),
+    this.sentAt = const Value.absent(),
+    this.carrier = const Value.absent(),
+    this.trackingNo = const Value.absent(),
+    this.deliveredAt = const Value.absent(),
+    this.recipient = const Value.absent(),
+    this.tester = const Value.absent(),
+    this.plannedTestAt = const Value.absent(),
+    this.status = const Value.absent(),
+    this.testResult = const Value.absent(),
+    this.nextAction = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  SamplesCompanion.insert({
+    this.id = const Value.absent(),
+    required int opportunityId,
+    this.sampleModel = const Value.absent(),
+    required int quantity,
+    this.feeMinor = const Value.absent(),
+    this.sentAt = const Value.absent(),
+    this.carrier = const Value.absent(),
+    this.trackingNo = const Value.absent(),
+    this.deliveredAt = const Value.absent(),
+    this.recipient = const Value.absent(),
+    this.tester = const Value.absent(),
+    this.plannedTestAt = const Value.absent(),
+    this.status = const Value.absent(),
+    this.testResult = const Value.absent(),
+    this.nextAction = const Value.absent(),
+    required int createdAt,
+    required int updatedAt,
+  }) : opportunityId = Value(opportunityId),
+       quantity = Value(quantity),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<SampleRow> custom({
+    Expression<int>? id,
+    Expression<int>? opportunityId,
+    Expression<String>? sampleModel,
+    Expression<int>? quantity,
+    Expression<int>? feeMinor,
+    Expression<int>? sentAt,
+    Expression<String>? carrier,
+    Expression<String>? trackingNo,
+    Expression<int>? deliveredAt,
+    Expression<String>? recipient,
+    Expression<String>? tester,
+    Expression<int>? plannedTestAt,
+    Expression<String>? status,
+    Expression<String>? testResult,
+    Expression<String>? nextAction,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (opportunityId != null) 'opportunity_id': opportunityId,
+      if (sampleModel != null) 'sample_model': sampleModel,
+      if (quantity != null) 'quantity': quantity,
+      if (feeMinor != null) 'fee_minor': feeMinor,
+      if (sentAt != null) 'sent_at': sentAt,
+      if (carrier != null) 'carrier': carrier,
+      if (trackingNo != null) 'tracking_no': trackingNo,
+      if (deliveredAt != null) 'delivered_at': deliveredAt,
+      if (recipient != null) 'recipient': recipient,
+      if (tester != null) 'tester': tester,
+      if (plannedTestAt != null) 'planned_test_at': plannedTestAt,
+      if (status != null) 'status': status,
+      if (testResult != null) 'test_result': testResult,
+      if (nextAction != null) 'next_action': nextAction,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  SamplesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? opportunityId,
+    Value<String?>? sampleModel,
+    Value<int>? quantity,
+    Value<int?>? feeMinor,
+    Value<int?>? sentAt,
+    Value<String?>? carrier,
+    Value<String?>? trackingNo,
+    Value<int?>? deliveredAt,
+    Value<String?>? recipient,
+    Value<String?>? tester,
+    Value<int?>? plannedTestAt,
+    Value<String>? status,
+    Value<String?>? testResult,
+    Value<String?>? nextAction,
+    Value<int>? createdAt,
+    Value<int>? updatedAt,
+  }) {
+    return SamplesCompanion(
+      id: id ?? this.id,
+      opportunityId: opportunityId ?? this.opportunityId,
+      sampleModel: sampleModel ?? this.sampleModel,
+      quantity: quantity ?? this.quantity,
+      feeMinor: feeMinor ?? this.feeMinor,
+      sentAt: sentAt ?? this.sentAt,
+      carrier: carrier ?? this.carrier,
+      trackingNo: trackingNo ?? this.trackingNo,
+      deliveredAt: deliveredAt ?? this.deliveredAt,
+      recipient: recipient ?? this.recipient,
+      tester: tester ?? this.tester,
+      plannedTestAt: plannedTestAt ?? this.plannedTestAt,
+      status: status ?? this.status,
+      testResult: testResult ?? this.testResult,
+      nextAction: nextAction ?? this.nextAction,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (opportunityId.present) {
+      map['opportunity_id'] = Variable<int>(opportunityId.value);
+    }
+    if (sampleModel.present) {
+      map['sample_model'] = Variable<String>(sampleModel.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<int>(quantity.value);
+    }
+    if (feeMinor.present) {
+      map['fee_minor'] = Variable<int>(feeMinor.value);
+    }
+    if (sentAt.present) {
+      map['sent_at'] = Variable<int>(sentAt.value);
+    }
+    if (carrier.present) {
+      map['carrier'] = Variable<String>(carrier.value);
+    }
+    if (trackingNo.present) {
+      map['tracking_no'] = Variable<String>(trackingNo.value);
+    }
+    if (deliveredAt.present) {
+      map['delivered_at'] = Variable<int>(deliveredAt.value);
+    }
+    if (recipient.present) {
+      map['recipient'] = Variable<String>(recipient.value);
+    }
+    if (tester.present) {
+      map['tester'] = Variable<String>(tester.value);
+    }
+    if (plannedTestAt.present) {
+      map['planned_test_at'] = Variable<int>(plannedTestAt.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (testResult.present) {
+      map['test_result'] = Variable<String>(testResult.value);
+    }
+    if (nextAction.present) {
+      map['next_action'] = Variable<String>(nextAction.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SamplesCompanion(')
+          ..write('id: $id, ')
+          ..write('opportunityId: $opportunityId, ')
+          ..write('sampleModel: $sampleModel, ')
+          ..write('quantity: $quantity, ')
+          ..write('feeMinor: $feeMinor, ')
+          ..write('sentAt: $sentAt, ')
+          ..write('carrier: $carrier, ')
+          ..write('trackingNo: $trackingNo, ')
+          ..write('deliveredAt: $deliveredAt, ')
+          ..write('recipient: $recipient, ')
+          ..write('tester: $tester, ')
+          ..write('plannedTestAt: $plannedTestAt, ')
+          ..write('status: $status, ')
+          ..write('testResult: $testResult, ')
+          ..write('nextAction: $nextAction, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -7190,6 +9144,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $TagsTable tags = $TagsTable(this);
   late final $CustomerTagsTable customerTags = $CustomerTagsTable(this);
   late final $AttachmentsTable attachments = $AttachmentsTable(this);
+  late final $QuotesTable quotes = $QuotesTable(this);
+  late final $SamplesTable samples = $SamplesTable(this);
   late final CustomerDao customerDao = CustomerDao(this as AppDatabase);
   late final ContactDao contactDao = ContactDao(this as AppDatabase);
   late final FollowupDao followupDao = FollowupDao(this as AppDatabase);
@@ -7213,6 +9169,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     tags,
     customerTags,
     attachments,
+    quotes,
+    samples,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -7299,6 +9257,20 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('attachments', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'opportunities',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('quotes', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'opportunities',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('samples', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -8410,6 +10382,44 @@ final class $$OpportunitiesTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$QuotesTable, List<QuoteRow>> _quotesRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.quotes,
+    aliasName: 'opportunities__id__quotes__opportunity_id',
+  );
+
+  $$QuotesTableProcessedTableManager get quotesRefs {
+    final manager = $$QuotesTableTableManager(
+      $_db,
+      $_db.quotes,
+    ).filter((f) => f.opportunityId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_quotesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$SamplesTable, List<SampleRow>> _samplesRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.samples,
+    aliasName: 'opportunities__id__samples__opportunity_id',
+  );
+
+  $$SamplesTableProcessedTableManager get samplesRefs {
+    final manager = $$SamplesTableTableManager(
+      $_db,
+      $_db.samples,
+    ).filter((f) => f.opportunityId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_samplesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$OpportunitiesTableFilterComposer
@@ -8695,6 +10705,56 @@ class $$OpportunitiesTableFilterComposer
           }) => $$OrdersTableFilterComposer(
             $db: $db,
             $table: $db.orders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> quotesRefs(
+    Expression<bool> Function($$QuotesTableFilterComposer f) f,
+  ) {
+    final $$QuotesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.quotes,
+      getReferencedColumn: (t) => t.opportunityId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$QuotesTableFilterComposer(
+            $db: $db,
+            $table: $db.quotes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> samplesRefs(
+    Expression<bool> Function($$SamplesTableFilterComposer f) f,
+  ) {
+    final $$SamplesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.samples,
+      getReferencedColumn: (t) => t.opportunityId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SamplesTableFilterComposer(
+            $db: $db,
+            $table: $db.samples,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -9198,6 +11258,56 @@ class $$OpportunitiesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> quotesRefs<T extends Object>(
+    Expression<T> Function($$QuotesTableAnnotationComposer a) f,
+  ) {
+    final $$QuotesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.quotes,
+      getReferencedColumn: (t) => t.opportunityId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$QuotesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.quotes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> samplesRefs<T extends Object>(
+    Expression<T> Function($$SamplesTableAnnotationComposer a) f,
+  ) {
+    final $$SamplesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.samples,
+      getReferencedColumn: (t) => t.opportunityId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SamplesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.samples,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$OpportunitiesTableTableManager
@@ -9218,6 +11328,8 @@ class $$OpportunitiesTableTableManager
             bool followupsRefs,
             bool followPlansRefs,
             bool ordersRefs,
+            bool quotesRefs,
+            bool samplesRefs,
           })
         > {
   $$OpportunitiesTableTableManager(_$AppDatabase db, $OpportunitiesTable table)
@@ -9405,6 +11517,8 @@ class $$OpportunitiesTableTableManager
                 followupsRefs = false,
                 followPlansRefs = false,
                 ordersRefs = false,
+                quotesRefs = false,
+                samplesRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -9412,6 +11526,8 @@ class $$OpportunitiesTableTableManager
                     if (followupsRefs) db.followups,
                     if (followPlansRefs) db.followPlans,
                     if (ordersRefs) db.orders,
+                    if (quotesRefs) db.quotes,
+                    if (samplesRefs) db.samples,
                   ],
                   addJoins:
                       <
@@ -9512,6 +11628,48 @@ class $$OpportunitiesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (quotesRefs)
+                        await $_getPrefetchedData<
+                          OpportunityRow,
+                          $OpportunitiesTable,
+                          QuoteRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OpportunitiesTableReferences
+                              ._quotesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OpportunitiesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).quotesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.opportunityId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (samplesRefs)
+                        await $_getPrefetchedData<
+                          OpportunityRow,
+                          $OpportunitiesTable,
+                          SampleRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OpportunitiesTableReferences
+                              ._samplesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OpportunitiesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).samplesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.opportunityId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -9537,6 +11695,8 @@ typedef $$OpportunitiesTableProcessedTableManager =
         bool followupsRefs,
         bool followPlansRefs,
         bool ordersRefs,
+        bool quotesRefs,
+        bool samplesRefs,
       })
     >;
 typedef $$ContactsTableCreateCompanionBuilder =
@@ -12959,6 +15119,1109 @@ typedef $$AttachmentsTableProcessedTableManager =
       AttachmentRow,
       PrefetchHooks Function({bool followupId, bool orderId})
     >;
+typedef $$QuotesTableCreateCompanionBuilder =
+    QuotesCompanion Function({
+      Value<int> id,
+      required int opportunityId,
+      required String quoteNo,
+      required int version,
+      Value<String?> productModel,
+      required int quantity,
+      Value<String> currency,
+      Value<int?> unitPriceMinor,
+      Value<int?> totalAmountMinor,
+      required int quotedAt,
+      Value<int?> validUntil,
+      Value<bool> customerReceived,
+      Value<String?> customerFeedback,
+      Value<int?> nextFollowAt,
+      Value<String?> result,
+      required int createdAt,
+      required int updatedAt,
+    });
+typedef $$QuotesTableUpdateCompanionBuilder =
+    QuotesCompanion Function({
+      Value<int> id,
+      Value<int> opportunityId,
+      Value<String> quoteNo,
+      Value<int> version,
+      Value<String?> productModel,
+      Value<int> quantity,
+      Value<String> currency,
+      Value<int?> unitPriceMinor,
+      Value<int?> totalAmountMinor,
+      Value<int> quotedAt,
+      Value<int?> validUntil,
+      Value<bool> customerReceived,
+      Value<String?> customerFeedback,
+      Value<int?> nextFollowAt,
+      Value<String?> result,
+      Value<int> createdAt,
+      Value<int> updatedAt,
+    });
+
+final class $$QuotesTableReferences
+    extends BaseReferences<_$AppDatabase, $QuotesTable, QuoteRow> {
+  $$QuotesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $OpportunitiesTable _opportunityIdTable(_$AppDatabase db) =>
+      db.opportunities.createAlias('quotes__opportunity_id__opportunities__id');
+
+  $$OpportunitiesTableProcessedTableManager get opportunityId {
+    final $_column = $_itemColumn<int>('opportunity_id')!;
+
+    final manager = $$OpportunitiesTableTableManager(
+      $_db,
+      $_db.opportunities,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_opportunityIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$QuotesTableFilterComposer
+    extends Composer<_$AppDatabase, $QuotesTable> {
+  $$QuotesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get quoteNo => $composableBuilder(
+    column: $table.quoteNo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get productModel => $composableBuilder(
+    column: $table.productModel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get unitPriceMinor => $composableBuilder(
+    column: $table.unitPriceMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get totalAmountMinor => $composableBuilder(
+    column: $table.totalAmountMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get quotedAt => $composableBuilder(
+    column: $table.quotedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get validUntil => $composableBuilder(
+    column: $table.validUntil,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get customerReceived => $composableBuilder(
+    column: $table.customerReceived,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get customerFeedback => $composableBuilder(
+    column: $table.customerFeedback,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get nextFollowAt => $composableBuilder(
+    column: $table.nextFollowAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get result => $composableBuilder(
+    column: $table.result,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$OpportunitiesTableFilterComposer get opportunityId {
+    final $$OpportunitiesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableFilterComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$QuotesTableOrderingComposer
+    extends Composer<_$AppDatabase, $QuotesTable> {
+  $$QuotesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get quoteNo => $composableBuilder(
+    column: $table.quoteNo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get productModel => $composableBuilder(
+    column: $table.productModel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get unitPriceMinor => $composableBuilder(
+    column: $table.unitPriceMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get totalAmountMinor => $composableBuilder(
+    column: $table.totalAmountMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get quotedAt => $composableBuilder(
+    column: $table.quotedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get validUntil => $composableBuilder(
+    column: $table.validUntil,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get customerReceived => $composableBuilder(
+    column: $table.customerReceived,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get customerFeedback => $composableBuilder(
+    column: $table.customerFeedback,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get nextFollowAt => $composableBuilder(
+    column: $table.nextFollowAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get result => $composableBuilder(
+    column: $table.result,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$OpportunitiesTableOrderingComposer get opportunityId {
+    final $$OpportunitiesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableOrderingComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$QuotesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $QuotesTable> {
+  $$QuotesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get quoteNo =>
+      $composableBuilder(column: $table.quoteNo, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get productModel => $composableBuilder(
+    column: $table.productModel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => column);
+
+  GeneratedColumn<int> get unitPriceMinor => $composableBuilder(
+    column: $table.unitPriceMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get totalAmountMinor => $composableBuilder(
+    column: $table.totalAmountMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get quotedAt =>
+      $composableBuilder(column: $table.quotedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get validUntil => $composableBuilder(
+    column: $table.validUntil,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get customerReceived => $composableBuilder(
+    column: $table.customerReceived,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get customerFeedback => $composableBuilder(
+    column: $table.customerFeedback,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get nextFollowAt => $composableBuilder(
+    column: $table.nextFollowAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get result =>
+      $composableBuilder(column: $table.result, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$OpportunitiesTableAnnotationComposer get opportunityId {
+    final $$OpportunitiesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$QuotesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $QuotesTable,
+          QuoteRow,
+          $$QuotesTableFilterComposer,
+          $$QuotesTableOrderingComposer,
+          $$QuotesTableAnnotationComposer,
+          $$QuotesTableCreateCompanionBuilder,
+          $$QuotesTableUpdateCompanionBuilder,
+          (QuoteRow, $$QuotesTableReferences),
+          QuoteRow,
+          PrefetchHooks Function({bool opportunityId})
+        > {
+  $$QuotesTableTableManager(_$AppDatabase db, $QuotesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$QuotesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$QuotesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$QuotesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> opportunityId = const Value.absent(),
+                Value<String> quoteNo = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String?> productModel = const Value.absent(),
+                Value<int> quantity = const Value.absent(),
+                Value<String> currency = const Value.absent(),
+                Value<int?> unitPriceMinor = const Value.absent(),
+                Value<int?> totalAmountMinor = const Value.absent(),
+                Value<int> quotedAt = const Value.absent(),
+                Value<int?> validUntil = const Value.absent(),
+                Value<bool> customerReceived = const Value.absent(),
+                Value<String?> customerFeedback = const Value.absent(),
+                Value<int?> nextFollowAt = const Value.absent(),
+                Value<String?> result = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+              }) => QuotesCompanion(
+                id: id,
+                opportunityId: opportunityId,
+                quoteNo: quoteNo,
+                version: version,
+                productModel: productModel,
+                quantity: quantity,
+                currency: currency,
+                unitPriceMinor: unitPriceMinor,
+                totalAmountMinor: totalAmountMinor,
+                quotedAt: quotedAt,
+                validUntil: validUntil,
+                customerReceived: customerReceived,
+                customerFeedback: customerFeedback,
+                nextFollowAt: nextFollowAt,
+                result: result,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int opportunityId,
+                required String quoteNo,
+                required int version,
+                Value<String?> productModel = const Value.absent(),
+                required int quantity,
+                Value<String> currency = const Value.absent(),
+                Value<int?> unitPriceMinor = const Value.absent(),
+                Value<int?> totalAmountMinor = const Value.absent(),
+                required int quotedAt,
+                Value<int?> validUntil = const Value.absent(),
+                Value<bool> customerReceived = const Value.absent(),
+                Value<String?> customerFeedback = const Value.absent(),
+                Value<int?> nextFollowAt = const Value.absent(),
+                Value<String?> result = const Value.absent(),
+                required int createdAt,
+                required int updatedAt,
+              }) => QuotesCompanion.insert(
+                id: id,
+                opportunityId: opportunityId,
+                quoteNo: quoteNo,
+                version: version,
+                productModel: productModel,
+                quantity: quantity,
+                currency: currency,
+                unitPriceMinor: unitPriceMinor,
+                totalAmountMinor: totalAmountMinor,
+                quotedAt: quotedAt,
+                validUntil: validUntil,
+                customerReceived: customerReceived,
+                customerFeedback: customerFeedback,
+                nextFollowAt: nextFollowAt,
+                result: result,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) =>
+                    (e.readTable(table), $$QuotesTableReferences(db, table, e)),
+              )
+              .toList(),
+          prefetchHooksCallback: ({opportunityId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (opportunityId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.opportunityId,
+                                referencedTable: $$QuotesTableReferences
+                                    ._opportunityIdTable(db),
+                                referencedColumn: $$QuotesTableReferences
+                                    ._opportunityIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$QuotesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $QuotesTable,
+      QuoteRow,
+      $$QuotesTableFilterComposer,
+      $$QuotesTableOrderingComposer,
+      $$QuotesTableAnnotationComposer,
+      $$QuotesTableCreateCompanionBuilder,
+      $$QuotesTableUpdateCompanionBuilder,
+      (QuoteRow, $$QuotesTableReferences),
+      QuoteRow,
+      PrefetchHooks Function({bool opportunityId})
+    >;
+typedef $$SamplesTableCreateCompanionBuilder =
+    SamplesCompanion Function({
+      Value<int> id,
+      required int opportunityId,
+      Value<String?> sampleModel,
+      required int quantity,
+      Value<int?> feeMinor,
+      Value<int?> sentAt,
+      Value<String?> carrier,
+      Value<String?> trackingNo,
+      Value<int?> deliveredAt,
+      Value<String?> recipient,
+      Value<String?> tester,
+      Value<int?> plannedTestAt,
+      Value<String> status,
+      Value<String?> testResult,
+      Value<String?> nextAction,
+      required int createdAt,
+      required int updatedAt,
+    });
+typedef $$SamplesTableUpdateCompanionBuilder =
+    SamplesCompanion Function({
+      Value<int> id,
+      Value<int> opportunityId,
+      Value<String?> sampleModel,
+      Value<int> quantity,
+      Value<int?> feeMinor,
+      Value<int?> sentAt,
+      Value<String?> carrier,
+      Value<String?> trackingNo,
+      Value<int?> deliveredAt,
+      Value<String?> recipient,
+      Value<String?> tester,
+      Value<int?> plannedTestAt,
+      Value<String> status,
+      Value<String?> testResult,
+      Value<String?> nextAction,
+      Value<int> createdAt,
+      Value<int> updatedAt,
+    });
+
+final class $$SamplesTableReferences
+    extends BaseReferences<_$AppDatabase, $SamplesTable, SampleRow> {
+  $$SamplesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $OpportunitiesTable _opportunityIdTable(_$AppDatabase db) => db
+      .opportunities
+      .createAlias('samples__opportunity_id__opportunities__id');
+
+  $$OpportunitiesTableProcessedTableManager get opportunityId {
+    final $_column = $_itemColumn<int>('opportunity_id')!;
+
+    final manager = $$OpportunitiesTableTableManager(
+      $_db,
+      $_db.opportunities,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_opportunityIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$SamplesTableFilterComposer
+    extends Composer<_$AppDatabase, $SamplesTable> {
+  $$SamplesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sampleModel => $composableBuilder(
+    column: $table.sampleModel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get feeMinor => $composableBuilder(
+    column: $table.feeMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sentAt => $composableBuilder(
+    column: $table.sentAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get carrier => $composableBuilder(
+    column: $table.carrier,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get trackingNo => $composableBuilder(
+    column: $table.trackingNo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deliveredAt => $composableBuilder(
+    column: $table.deliveredAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recipient => $composableBuilder(
+    column: $table.recipient,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tester => $composableBuilder(
+    column: $table.tester,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get plannedTestAt => $composableBuilder(
+    column: $table.plannedTestAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get testResult => $composableBuilder(
+    column: $table.testResult,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nextAction => $composableBuilder(
+    column: $table.nextAction,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$OpportunitiesTableFilterComposer get opportunityId {
+    final $$OpportunitiesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableFilterComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SamplesTableOrderingComposer
+    extends Composer<_$AppDatabase, $SamplesTable> {
+  $$SamplesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sampleModel => $composableBuilder(
+    column: $table.sampleModel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get feeMinor => $composableBuilder(
+    column: $table.feeMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sentAt => $composableBuilder(
+    column: $table.sentAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get carrier => $composableBuilder(
+    column: $table.carrier,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get trackingNo => $composableBuilder(
+    column: $table.trackingNo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deliveredAt => $composableBuilder(
+    column: $table.deliveredAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get recipient => $composableBuilder(
+    column: $table.recipient,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tester => $composableBuilder(
+    column: $table.tester,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get plannedTestAt => $composableBuilder(
+    column: $table.plannedTestAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get testResult => $composableBuilder(
+    column: $table.testResult,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nextAction => $composableBuilder(
+    column: $table.nextAction,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$OpportunitiesTableOrderingComposer get opportunityId {
+    final $$OpportunitiesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableOrderingComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SamplesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SamplesTable> {
+  $$SamplesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get sampleModel => $composableBuilder(
+    column: $table.sampleModel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<int> get feeMinor =>
+      $composableBuilder(column: $table.feeMinor, builder: (column) => column);
+
+  GeneratedColumn<int> get sentAt =>
+      $composableBuilder(column: $table.sentAt, builder: (column) => column);
+
+  GeneratedColumn<String> get carrier =>
+      $composableBuilder(column: $table.carrier, builder: (column) => column);
+
+  GeneratedColumn<String> get trackingNo => $composableBuilder(
+    column: $table.trackingNo,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get deliveredAt => $composableBuilder(
+    column: $table.deliveredAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get recipient =>
+      $composableBuilder(column: $table.recipient, builder: (column) => column);
+
+  GeneratedColumn<String> get tester =>
+      $composableBuilder(column: $table.tester, builder: (column) => column);
+
+  GeneratedColumn<int> get plannedTestAt => $composableBuilder(
+    column: $table.plannedTestAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get testResult => $composableBuilder(
+    column: $table.testResult,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get nextAction => $composableBuilder(
+    column: $table.nextAction,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$OpportunitiesTableAnnotationComposer get opportunityId {
+    final $$OpportunitiesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SamplesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SamplesTable,
+          SampleRow,
+          $$SamplesTableFilterComposer,
+          $$SamplesTableOrderingComposer,
+          $$SamplesTableAnnotationComposer,
+          $$SamplesTableCreateCompanionBuilder,
+          $$SamplesTableUpdateCompanionBuilder,
+          (SampleRow, $$SamplesTableReferences),
+          SampleRow,
+          PrefetchHooks Function({bool opportunityId})
+        > {
+  $$SamplesTableTableManager(_$AppDatabase db, $SamplesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SamplesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SamplesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SamplesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> opportunityId = const Value.absent(),
+                Value<String?> sampleModel = const Value.absent(),
+                Value<int> quantity = const Value.absent(),
+                Value<int?> feeMinor = const Value.absent(),
+                Value<int?> sentAt = const Value.absent(),
+                Value<String?> carrier = const Value.absent(),
+                Value<String?> trackingNo = const Value.absent(),
+                Value<int?> deliveredAt = const Value.absent(),
+                Value<String?> recipient = const Value.absent(),
+                Value<String?> tester = const Value.absent(),
+                Value<int?> plannedTestAt = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> testResult = const Value.absent(),
+                Value<String?> nextAction = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+              }) => SamplesCompanion(
+                id: id,
+                opportunityId: opportunityId,
+                sampleModel: sampleModel,
+                quantity: quantity,
+                feeMinor: feeMinor,
+                sentAt: sentAt,
+                carrier: carrier,
+                trackingNo: trackingNo,
+                deliveredAt: deliveredAt,
+                recipient: recipient,
+                tester: tester,
+                plannedTestAt: plannedTestAt,
+                status: status,
+                testResult: testResult,
+                nextAction: nextAction,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int opportunityId,
+                Value<String?> sampleModel = const Value.absent(),
+                required int quantity,
+                Value<int?> feeMinor = const Value.absent(),
+                Value<int?> sentAt = const Value.absent(),
+                Value<String?> carrier = const Value.absent(),
+                Value<String?> trackingNo = const Value.absent(),
+                Value<int?> deliveredAt = const Value.absent(),
+                Value<String?> recipient = const Value.absent(),
+                Value<String?> tester = const Value.absent(),
+                Value<int?> plannedTestAt = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> testResult = const Value.absent(),
+                Value<String?> nextAction = const Value.absent(),
+                required int createdAt,
+                required int updatedAt,
+              }) => SamplesCompanion.insert(
+                id: id,
+                opportunityId: opportunityId,
+                sampleModel: sampleModel,
+                quantity: quantity,
+                feeMinor: feeMinor,
+                sentAt: sentAt,
+                carrier: carrier,
+                trackingNo: trackingNo,
+                deliveredAt: deliveredAt,
+                recipient: recipient,
+                tester: tester,
+                plannedTestAt: plannedTestAt,
+                status: status,
+                testResult: testResult,
+                nextAction: nextAction,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$SamplesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({opportunityId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (opportunityId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.opportunityId,
+                                referencedTable: $$SamplesTableReferences
+                                    ._opportunityIdTable(db),
+                                referencedColumn: $$SamplesTableReferences
+                                    ._opportunityIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$SamplesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SamplesTable,
+      SampleRow,
+      $$SamplesTableFilterComposer,
+      $$SamplesTableOrderingComposer,
+      $$SamplesTableAnnotationComposer,
+      $$SamplesTableCreateCompanionBuilder,
+      $$SamplesTableUpdateCompanionBuilder,
+      (SampleRow, $$SamplesTableReferences),
+      SampleRow,
+      PrefetchHooks Function({bool opportunityId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -12980,4 +16243,8 @@ class $AppDatabaseManager {
       $$CustomerTagsTableTableManager(_db, _db.customerTags);
   $$AttachmentsTableTableManager get attachments =>
       $$AttachmentsTableTableManager(_db, _db.attachments);
+  $$QuotesTableTableManager get quotes =>
+      $$QuotesTableTableManager(_db, _db.quotes);
+  $$SamplesTableTableManager get samples =>
+      $$SamplesTableTableManager(_db, _db.samples);
 }
