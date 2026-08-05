@@ -174,6 +174,13 @@ class CustomerDetailData {
   final int completedAmountCents;
 }
 
+class DashboardData {
+  const DashboardData({required this.metrics, required this.anomalies});
+
+  final DashboardMetrics metrics;
+  final List<DashboardAnomaly> anomalies;
+}
+
 class CustomerService {
   CustomerService(this._db, this._scheduler);
 
@@ -572,4 +579,18 @@ final customerDetailProvider = FutureProvider.family<CustomerDetailData?, int>((
 final homePlansProvider = FutureProvider<List<TodayPlanItem>>((ref) {
   ref.watch(customerRevisionProvider);
   return ref.watch(databaseProvider).planDao.listToday(now: DateTime.now());
+});
+
+final dashboardProvider = FutureProvider<DashboardData>((ref) async {
+  ref.watch(customerRevisionProvider);
+  final db = ref.watch(databaseProvider);
+  final now = DateTime.now();
+  final values = await Future.wait<Object>([
+    db.customerDao.dashboardMetrics(now: now),
+    db.customerDao.dashboardAnomalies(now: now),
+  ]);
+  return DashboardData(
+    metrics: values[0] as DashboardMetrics,
+    anomalies: values[1] as List<DashboardAnomaly>,
+  );
 });

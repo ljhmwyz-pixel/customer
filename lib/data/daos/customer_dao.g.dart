@@ -8,6 +8,9 @@ mixin _$CustomerDaoMixin on DatabaseAccessor<AppDatabase> {
   $ContactsTable get contacts => attachedDatabase.contacts;
   $TagsTable get tags => attachedDatabase.tags;
   $CustomerTagsTable get customerTags => attachedDatabase.customerTags;
+  $OpportunitiesTable get opportunities => attachedDatabase.opportunities;
+  $FollowupsTable get followups => attachedDatabase.followups;
+  $OrdersTable get orders => attachedDatabase.orders;
   CustomerDaoManager get managers => CustomerDaoManager(this);
 }
 
@@ -22,4 +25,10 @@ class CustomerDaoManager {
       $$TagsTableTableManager(_db.attachedDatabase, _db.tags);
   $$CustomerTagsTableTableManager get customerTags =>
       $$CustomerTagsTableTableManager(_db.attachedDatabase, _db.customerTags);
+  $$OpportunitiesTableTableManager get opportunities =>
+      $$OpportunitiesTableTableManager(_db.attachedDatabase, _db.opportunities);
+  $$FollowupsTableTableManager get followups =>
+      $$FollowupsTableTableManager(_db.attachedDatabase, _db.followups);
+  $$OrdersTableTableManager get orders =>
+      $$OrdersTableTableManager(_db.attachedDatabase, _db.orders);
 }

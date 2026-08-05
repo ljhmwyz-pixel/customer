@@ -4,6 +4,9 @@ import '../../models/enums.dart';
 import '../database.dart';
 import '../tables/contacts.dart';
 import '../tables/customers.dart';
+import '../tables/followups.dart';
+import '../tables/opportunities.dart';
+import '../tables/orders.dart';
 import '../tables/tags.dart';
 
 part 'customer_dao.g.dart';
@@ -36,8 +39,64 @@ class CustomerListItem {
   }
 }
 
+class DashboardMetrics {
+  const DashboardMetrics({
+    required this.totalCustomers,
+    required this.customerCountsByGrade,
+    required this.projectCountsByStage,
+    required this.followupsThisWeek,
+    required this.stalledQuoteCount,
+    required this.stalledSampleCount,
+    required this.forecastAmountMinor,
+    required this.weightedForecastAmountMinor,
+    required this.wonAmountMinor,
+  });
+
+  final int totalCustomers;
+  final Map<CustomerGrade, int> customerCountsByGrade;
+  final Map<OpportunityStage, int> projectCountsByStage;
+  final int followupsThisWeek;
+  final int? stalledQuoteCount;
+  final int? stalledSampleCount;
+  final int forecastAmountMinor;
+  final int weightedForecastAmountMinor;
+  final int wonAmountMinor;
+}
+
+enum DashboardAnomalyKind { longSilence, internalSupport }
+
+class DashboardAnomaly {
+  const DashboardAnomaly({
+    required this.customerId,
+    required this.customerName,
+    required this.opportunityId,
+    required this.opportunityName,
+    required this.kind,
+    required this.severity,
+    required this.detail,
+  });
+
+  final int customerId;
+  final String customerName;
+  final int? opportunityId;
+  final String? opportunityName;
+  final DashboardAnomalyKind kind;
+  final int severity;
+  final String detail;
+}
+
 /// 客户数据访问。标签的读写也归这里，因为标签只在客户上下文中使用。
-@DriftAccessor(tables: [Customers, Contacts, Tags, CustomerTags])
+@DriftAccessor(
+  tables: [
+    Customers,
+    Contacts,
+    Tags,
+    CustomerTags,
+    Followups,
+    Opportunities,
+    Orders,
+  ],
+)
 class CustomerDao extends DatabaseAccessor<AppDatabase>
     with _$CustomerDaoMixin {
   CustomerDao(super.db);
@@ -303,6 +362,125 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
       result[stage] = row.read(count) ?? 0;
     }
     return result;
+  }
+
+  Future<DashboardMetrics> dashboardMetrics({required DateTime now}) async {
+    final local = now.toLocal();
+    final weekStart = DateTime(local.year, local.month, local.day)
+        .subtract(Duration(days: local.weekday - DateTime.monday))
+        .toUtc()
+        .millisecondsSinceEpoch;
+    final nowMs = now.toUtc().millisecondsSinceEpoch;
+    final threeMonths = now
+        .toUtc()
+        .add(const Duration(days: 90))
+        .millisecondsSinceEpoch;
+    final customersCount = await customSelect(
+      'SELECT COUNT(*) AS value FROM customers',
+      readsFrom: {customers},
+    ).getSingle();
+    final grades = await customSelect(
+      'SELECT grade, COUNT(*) AS value FROM customers GROUP BY grade',
+      readsFrom: {customers},
+    ).get();
+    final stages = await customSelect(
+      '''SELECT stage, COUNT(*) AS value FROM opportunities
+         WHERE status NOT IN ('paused', 'won', 'closed')
+           AND stage NOT IN ('lost', 'paused') GROUP BY stage''',
+      readsFrom: {db.opportunities},
+    ).get();
+    final followupResult = await customSelect(
+      'SELECT COUNT(*) AS value FROM followups WHERE occurred_at >= ? AND occurred_at <= ?',
+      variables: [Variable.withInt(weekStart), Variable.withInt(nowMs)],
+      readsFrom: {db.followups},
+    ).getSingle();
+    final forecast = await customSelect(
+      '''SELECT COALESCE(SUM(forecast_amount_minor), 0) AS total,
+                COALESCE(SUM(forecast_amount_minor * probability_percent / 100), 0) AS weighted
+         FROM opportunities
+         WHERE expected_close_at IS NOT NULL AND expected_close_at <= ?
+           AND status NOT IN ('paused', 'won', 'closed')
+           AND stage NOT IN ('lost', 'paused')''',
+      variables: [Variable.withInt(threeMonths)],
+      readsFrom: {db.opportunities},
+    ).getSingle();
+    final won = await customSelect(
+      "SELECT COALESCE(SUM(amount_cents), 0) AS value FROM orders WHERE status = 'completed'",
+      readsFrom: {db.orders},
+    ).getSingle();
+    return DashboardMetrics(
+      totalCustomers: customersCount.read<int>('value'),
+      customerCountsByGrade: {
+        for (final grade in CustomerGrade.values)
+          grade:
+              grades
+                  .where((row) => row.read<String>('grade') == grade.dbValue)
+                  .map((row) => row.read<int>('value'))
+                  .firstOrNull ??
+              0,
+      },
+      projectCountsByStage: {
+        for (final stage in OpportunityStage.values)
+          stage:
+              stages
+                  .where((row) => row.read<String>('stage') == stage.dbValue)
+                  .map((row) => row.read<int>('value'))
+                  .firstOrNull ??
+              0,
+      },
+      followupsThisWeek: followupResult.read<int>('value'),
+      stalledQuoteCount: null,
+      stalledSampleCount: null,
+      forecastAmountMinor: forecast.read<int>('total'),
+      weightedForecastAmountMinor: forecast.read<int>('weighted'),
+      wonAmountMinor: won.read<int>('value'),
+    );
+  }
+
+  Future<List<DashboardAnomaly>> dashboardAnomalies({
+    required DateTime now,
+  }) async {
+    final rows = await customSelect(
+      '''SELECT c.id AS customer_id, c.name AS customer_name,
+                NULL AS opportunity_id, NULL AS opportunity_name,
+                'long_silence' AS kind,
+                CAST((? - COALESCE(c.last_follow_at, c.created_at)) / 86400000 AS INTEGER) AS severity,
+                CAST((? - COALESCE(c.last_follow_at, c.created_at)) / 86400000 AS TEXT) || ' 天未联系' AS detail
+         FROM customers c
+         WHERE c.stage NOT IN ('deal', 'lost')
+           AND (? - COALESCE(c.last_follow_at, c.created_at)) >=
+             CASE c.grade WHEN 'a' THEN 14 * 86400000
+                          WHEN 'b' THEN 30 * 86400000
+                          ELSE 60 * 86400000 END
+         UNION ALL
+         SELECT c.id, c.name, o.id, o.name, 'internal_support', 1000,
+                o.current_obstacle
+         FROM customers c JOIN opportunities o ON o.customer_id = c.id
+         WHERE o.current_obstacle IS NOT NULL AND TRIM(o.current_obstacle) <> ''
+           AND o.status NOT IN ('paused', 'won', 'closed')
+           AND o.stage NOT IN ('lost', 'paused')
+         ORDER BY severity DESC, customer_id ASC''',
+      variables: [
+        Variable.withInt(now.toUtc().millisecondsSinceEpoch),
+        Variable.withInt(now.toUtc().millisecondsSinceEpoch),
+        Variable.withInt(now.toUtc().millisecondsSinceEpoch),
+      ],
+      readsFrom: {customers, db.opportunities},
+    ).get();
+    return rows.map((row) {
+      final kind = row.read<String>('kind');
+      return DashboardAnomaly(
+        customerId: row.read<int>('customer_id'),
+        customerName: row.read<String>('customer_name'),
+        opportunityId: row.readNullable<int>('opportunity_id'),
+        opportunityName: row.readNullable<String>('opportunity_name'),
+        kind: kind == 'internal_support'
+            ? DashboardAnomalyKind.internalSupport
+            : DashboardAnomalyKind.longSilence,
+        severity: row.read<int>('severity'),
+        detail: row.read<String>('detail'),
+      );
+    }).toList();
   }
 
   // ── 标签 ──

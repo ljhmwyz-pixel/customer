@@ -120,3 +120,31 @@ Android emulator evidence:
 - Screenshot captured at `/tmp/customer-stage9b.png` for manual visual inspection.
 
 Manual-risk boundary: the emulator pass confirms install and cold-start compatibility; task action taps remain covered by widget/service tests.
+
+## Stage 9C: Management Dashboard and Supported Anomalies
+
+Date: 2026-08-05
+
+Fresh automated evidence:
+
+- `dart run build_runner build --delete-conflicting-outputs`: exit 0; installed build_runner reports the legacy flag is ignored.
+- `flutter analyze`: `No issues found!`.
+- `flutter test`: 202 tests passed, zero failures.
+- `flutter build apk --debug`: generated `build/app/outputs/flutter-apk/app-debug.apk`.
+- `git diff --check`: passed with no whitespace errors.
+
+Delivered scope:
+
+- Typed aggregate metrics for customer totals/grades, active project stages, current-week follow-ups, three-month forecast, weighted forecast, and completed-order revenue.
+- Explainable long-silence and internal-support anomaly queries with customer/project drill-down targets.
+- Funnel placeholder replaced by a compact dashboard; unsupported quote/sample/registration/tender/repurchase categories are explicitly marked unavailable rather than shown as false zeroes.
+- Widget coverage includes metric labels, anomaly display, and unsupported-module copy.
+
+Android emulator evidence:
+
+- Device: Pixel 8 AVD (`emulator-5554`), Android API 37.
+- Upgrade: `adb -s emulator-5554 install -r build/app/outputs/flutter-apk/app-debug.apk`; result `Success`, no data clear.
+- Cold launch: `adb -s emulator-5554 shell monkey -p com.snyder.customer 1`; no `FATAL EXCEPTION`, `SQLiteException`, or Drift error in the inspected logcat window.
+- Screenshot captured at `/tmp/customer-stage9c.png` for visual inspection.
+
+Manual-risk boundary: quote/sample/registration/tender/repurchase metrics remain unavailable until their source entities exist; target-device seven-day reminder validation remains a later release gate.
