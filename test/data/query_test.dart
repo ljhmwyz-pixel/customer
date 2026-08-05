@@ -445,6 +445,142 @@ void main() {
       // 逾期在前，今日在后，按计划时间升序。
       expect(open.map((e) => e.plan.id), [overdue, today]);
     });
+
+    test('listOpenOf 排除已完成并按时间、主键稳定排序', () async {
+      final id = await seedCustomer(db);
+      final sameTime = DateTime(2026, 8, 8, 9);
+      final first = await db.planDao.insertPlan(
+        customerId: id,
+        title: '同时间第一条',
+        planAt: sameTime,
+      );
+      final second = await db.planDao.insertPlan(
+        customerId: id,
+        title: '同时间第二条',
+        planAt: sameTime,
+      );
+      final earlier = await db.planDao.insertPlan(
+        customerId: id,
+        title: '更早',
+        planAt: sameTime.subtract(const Duration(days: 1)),
+      );
+      final completed = await db.planDao.insertPlan(
+        customerId: id,
+        title: '已完成',
+        planAt: sameTime.subtract(const Duration(days: 2)),
+      );
+      await db.planDao.markCompleted(completed, at: sameTime);
+
+      final open = await db.planDao.listOpenOf(id);
+      expect(open.map((plan) => plan.id), [earlier, first, second]);
+    });
+  });
+
+  group('客户组合筛选', () {
+    test('关键字、阶段、标签同时生效且可搜索联系人电话', () async {
+      final now = DateTime(2026, 8, 4, 12);
+      final target = await db.customerDao.insertCustomer(
+        name: '目标客户',
+        stage: CustomerStage.intent,
+        now: now,
+      );
+      final wrongStage = await db.customerDao.insertCustomer(
+        name: '阶段不符',
+        stage: CustomerStage.contacted,
+        now: now,
+      );
+      final wrongTag = await db.customerDao.insertCustomer(
+        name: '标签不符',
+        stage: CustomerStage.intent,
+        now: now,
+      );
+      await db.contactDao.insertContact(
+        customerId: target,
+        name: '目标联系人',
+        phone: '010-76543210',
+      );
+      await db.contactDao.insertContact(
+        customerId: wrongStage,
+        name: '其他联系人',
+        phone: '010-76543210',
+      );
+      await db.contactDao.insertContact(
+        customerId: wrongTag,
+        name: '其他联系人',
+        phone: '010-76543210',
+      );
+      final selectedTag = await db.customerDao.ensureTag('重点');
+      final otherTag = await db.customerDao.ensureTag('普通');
+      await db.customerDao.attachTag(target, selectedTag);
+      await db.customerDao.attachTag(wrongStage, selectedTag);
+      await db.customerDao.attachTag(wrongTag, otherTag);
+
+      final rows = await db.customerDao.listFilteredByUrgency(
+        now: now,
+        keyword: '7654',
+        stage: CustomerStage.intent,
+        tagId: selectedTag,
+      );
+      expect(rows.map((row) => row.customer.id), [target]);
+    });
+
+    test(r'关键字把 %、_、\ 当作普通字符', () async {
+      final now = DateTime(2026, 8, 4, 12);
+      final percent = await db.customerDao.insertCustomer(
+        name: '折扣 10% 客户',
+        now: now,
+      );
+      final underscore = await db.customerDao.insertCustomer(
+        name: '编号 A_1',
+        now: now,
+      );
+      final backslash = await db.customerDao.insertCustomer(
+        name: r'路径 C:\CRM',
+        now: now,
+      );
+      await db.customerDao.insertCustomer(name: '折扣 100 客户', now: now);
+      await db.customerDao.insertCustomer(name: '编号 AB1', now: now);
+
+      expect(
+        (await db.customerDao.listFilteredByUrgency(
+          now: now,
+          keyword: '%',
+        )).map((row) => row.customer.id),
+        [percent],
+      );
+      expect(
+        (await db.customerDao.listFilteredByUrgency(
+          now: now,
+          keyword: '_',
+        )).map((row) => row.customer.id),
+        [underscore],
+      );
+      expect(
+        (await db.customerDao.listFilteredByUrgency(
+          now: now,
+          keyword: r'\',
+        )).map((row) => row.customer.id),
+        [backslash],
+      );
+    });
+
+    test('空筛选与默认紧急度查询结果一致', () async {
+      final now = DateTime(2026, 8, 4, 12);
+      final first = await db.customerDao.insertCustomer(name: '甲', now: now);
+      await db.customerDao.insertCustomer(name: '乙', now: now);
+      await db.planDao.insertPlan(
+        customerId: first,
+        title: '待办',
+        planAt: now.subtract(const Duration(days: 1)),
+      );
+
+      final defaultRows = await db.customerDao.listByUrgency(now: now);
+      final filteredRows = await db.customerDao.listFilteredByUrgency(now: now);
+      expect(
+        filteredRows.map((row) => row.customer.id),
+        defaultRows.map((row) => row.customer.id),
+      );
+    });
   });
 
   group('listByUrgency 排序细节', () {

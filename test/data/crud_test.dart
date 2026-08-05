@@ -1,5 +1,6 @@
 import 'package:customer/data/database.dart';
 import 'package:customer/models/enums.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 
 import 'helpers.dart';
@@ -32,7 +33,11 @@ void main() {
       expect(CustomerGrade.fromDb(row.grade), CustomerGrade.a);
       expect(await db.customerDao.countAll(), 1);
 
-      await db.customerDao.updateCustomer(id, name: '张三丰', phone: '139');
+      await db.customerDao.updateCustomer(
+        id,
+        name: '张三丰',
+        phone: const Value('139'),
+      );
       final updated = await db.customerDao.findById(id);
       expect(updated!.name, '张三丰');
       expect(updated.phone, '139');
@@ -62,16 +67,43 @@ void main() {
 
     test('countByStage 覆盖全部阶段且缺失阶段为 0', () async {
       await db.customerDao.insertCustomer(name: 'a');
-      await db.customerDao.insertCustomer(
-        name: 'b',
-        stage: CustomerStage.deal,
-      );
+      await db.customerDao.insertCustomer(name: 'b', stage: CustomerStage.deal);
 
       final counts = await db.customerDao.countByStage();
       expect(counts.length, CustomerStage.values.length);
       expect(counts[CustomerStage.potential], 1);
       expect(counts[CustomerStage.deal], 1);
       expect(counts[CustomerStage.lost], 0);
+    });
+
+    test('可显式清空 nullable 字段', () async {
+      final id = await db.customerDao.insertCustomer(
+        name: '待清空客户',
+        company: '公司',
+        phone: '13800000000',
+        wechat: 'wx',
+        address: '地址',
+        source: '转介绍',
+        note: '备注',
+      );
+
+      await db.customerDao.updateCustomer(
+        id,
+        company: const Value(null),
+        phone: const Value(null),
+        wechat: const Value(null),
+        address: const Value(null),
+        source: const Value(null),
+        note: const Value(null),
+      );
+
+      final row = (await db.customerDao.findById(id))!;
+      expect(row.company, isNull);
+      expect(row.phone, isNull);
+      expect(row.wechat, isNull);
+      expect(row.address, isNull);
+      expect(row.source, isNull);
+      expect(row.note, isNull);
     });
   });
 
@@ -92,11 +124,31 @@ void main() {
       expect((await db.contactDao.listOf(customerId)).length, 1);
       expect(await db.contactDao.countOf(customerId), 1);
 
-      await db.contactDao.updateContact(id, position: '总监');
+      await db.contactDao.updateContact(id, position: const Value('总监'));
       expect((await db.contactDao.findById(id))!.position, '总监');
 
       expect(await db.contactDao.deleteContact(id), 1);
       expect(await db.contactDao.countOf(customerId), 0);
+    });
+
+    test('可显式清空职位和电话', () async {
+      final customerId = await seedCustomer(db);
+      final id = await db.contactDao.insertContact(
+        customerId: customerId,
+        name: '联系人',
+        position: '经理',
+        phone: '010-1234',
+      );
+
+      await db.contactDao.updateContact(
+        id,
+        position: const Value(null),
+        phone: const Value(null),
+      );
+
+      final row = (await db.contactDao.findById(id))!;
+      expect(row.position, isNull);
+      expect(row.phone, isNull);
     });
   });
 
@@ -245,6 +297,28 @@ void main() {
       // 解绑不删标签本身。
       expect((await db.customerDao.allTags()).length, 1);
     });
+
+    test('批量读取标签并保留无标签客户', () async {
+      final first = await seedCustomer(db, name: '甲客户');
+      final second = await seedCustomer(db, name: '乙客户');
+      final withoutTag = await seedCustomer(db, name: '无标签客户');
+      final alpha = await db.customerDao.ensureTag('A 标签');
+      final beta = await db.customerDao.ensureTag('B 标签');
+
+      await db.customerDao.attachTag(first, beta);
+      await db.customerDao.attachTag(first, alpha);
+      await db.customerDao.attachTag(second, beta);
+
+      final result = await db.customerDao.tagsForCustomers([
+        first,
+        second,
+        withoutTag,
+      ]);
+      expect(result[first]!.map((tag) => tag.name), ['A 标签', 'B 标签']);
+      expect(result[second]!.map((tag) => tag.name), ['B 标签']);
+      expect(result[withoutTag], isEmpty);
+      expect(await db.customerDao.tagsForCustomers(const []), isEmpty);
+    });
   });
 
   group('attachments', () {
@@ -294,8 +368,10 @@ void main() {
         sizeBytes: 4096,
       );
 
-      expect((await db.attachmentDao.listOfOrder(orderId)).single.orderId,
-          orderId);
+      expect(
+        (await db.attachmentDao.listOfOrder(orderId)).single.orderId,
+        orderId,
+      );
       expect(await db.attachmentDao.listAll(), hasLength(1));
     });
 

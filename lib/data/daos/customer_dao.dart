@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../models/enums.dart';
 import '../database.dart';
+import '../tables/contacts.dart';
 import '../tables/customers.dart';
 import '../tables/tags.dart';
 
@@ -36,7 +37,7 @@ class CustomerListItem {
 }
 
 /// 客户数据访问。标签的读写也归这里，因为标签只在客户上下文中使用。
-@DriftAccessor(tables: [Customers, Tags, CustomerTags])
+@DriftAccessor(tables: [Customers, Contacts, Tags, CustomerTags])
 class CustomerDao extends DatabaseAccessor<AppDatabase>
     with _$CustomerDaoMixin {
   CustomerDao(super.db);
@@ -86,12 +87,12 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
   Future<int> updateCustomer(
     int id, {
     String? name,
-    String? company,
-    String? phone,
-    String? wechat,
-    String? address,
-    String? source,
-    String? note,
+    Value<String?> company = const Value.absent(),
+    Value<String?> phone = const Value.absent(),
+    Value<String?> wechat = const Value.absent(),
+    Value<String?> address = const Value.absent(),
+    Value<String?> source = const Value.absent(),
+    Value<String?> note = const Value.absent(),
     CustomerStage? stage,
     CustomerGrade? grade,
     DateTime? now,
@@ -100,12 +101,12 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
     return (update(customers)..where((t) => t.id.equals(id))).write(
       CustomersCompanion(
         name: name == null ? const Value.absent() : Value(name),
-        company: company == null ? const Value.absent() : Value(company),
-        phone: phone == null ? const Value.absent() : Value(phone),
-        wechat: wechat == null ? const Value.absent() : Value(wechat),
-        address: address == null ? const Value.absent() : Value(address),
-        source: source == null ? const Value.absent() : Value(source),
-        note: note == null ? const Value.absent() : Value(note),
+        company: company,
+        phone: phone,
+        wechat: wechat,
+        address: address,
+        source: source,
+        note: note,
         stage: stage == null ? const Value.absent() : Value(stage.dbValue),
         grade: grade == null ? const Value.absent() : Value(grade.dbValue),
         updatedAt: Value(ts),
@@ -138,12 +139,70 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
   Future<List<CustomerListItem>> listByUrgency({
     required DateTime now,
     int? limit,
+  }) => listFilteredByUrgency(now: now, limit: limit);
+
+  /// 按紧急度排序，并组合关键字、阶段、标签筛选。
+  Future<List<CustomerListItem>> listFilteredByUrgency({
+    required DateTime now,
+    String keyword = '',
+    CustomerStage? stage,
+    int? tagId,
+    int? limit,
   }) async {
     final nowMs = now.toUtc().millisecondsSinceEpoch;
     // 今日结束时刻，用于区分「今日待办」与「未来待办」。
-    final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59)
-        .toUtc()
-        .millisecondsSinceEpoch;
+    final endOfToday = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      23,
+      59,
+      59,
+    ).toUtc().millisecondsSinceEpoch;
+    final conditions = <String>[];
+    final filterVariables = <Variable<Object>>[];
+    final trimmedKeyword = keyword.trim();
+
+    if (trimmedKeyword.isNotEmpty) {
+      final escaped = trimmedKeyword
+          .replaceAll(r'\', r'\\')
+          .replaceAll('%', r'\%')
+          .replaceAll('_', r'\_');
+      final pattern = '%$escaped%';
+      conditions.add('''
+        (c.name LIKE ? ESCAPE '\\'
+         OR c.phone LIKE ? ESCAPE '\\'
+         OR EXISTS (
+           SELECT 1
+           FROM contacts contact
+           WHERE contact.customer_id = c.id
+             AND contact.phone LIKE ? ESCAPE '\\'
+         ))
+      ''');
+      filterVariables.addAll([
+        Variable.withString(pattern),
+        Variable.withString(pattern),
+        Variable.withString(pattern),
+      ]);
+    }
+    if (stage != null) {
+      conditions.add('c.stage = ?');
+      filterVariables.add(Variable.withString(stage.dbValue));
+    }
+    if (tagId != null) {
+      conditions.add('''
+        EXISTS (
+          SELECT 1
+          FROM customer_tags customer_tag
+          WHERE customer_tag.customer_id = c.id
+            AND customer_tag.tag_id = ?
+        )
+      ''');
+      filterVariables.add(Variable.withInt(tagId));
+    }
+    final whereSql = conditions.isEmpty
+        ? ''
+        : 'WHERE ${conditions.join(' AND ')}';
 
     final rows = await customSelect(
       '''
@@ -166,19 +225,21 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
         WHERE status != 'completed'
         GROUP BY customer_id
       ) p ON p.customer_id = c.id
+      $whereSql
       ORDER BY urgency_bucket ASC,
                CASE WHEN p.next_plan_at IS NULL THEN 0 ELSE p.next_plan_at END ASC,
                grade_weight DESC,
                CASE WHEN c.last_follow_at IS NULL THEN 0 ELSE c.last_follow_at END ASC,
                c.id ASC
-      ${limit == null ? '' : 'LIMIT ?3'}
+      ${limit == null ? '' : 'LIMIT ?'}
       ''',
       variables: [
         Variable.withInt(nowMs),
         Variable.withInt(endOfToday),
+        ...filterVariables,
         if (limit != null) Variable.withInt(limit),
       ],
-      readsFrom: {customers, db.followPlans},
+      readsFrom: {customers, db.followPlans, contacts, customerTags},
     ).get();
 
     return rows.map(_mapListItem).toList();
@@ -201,18 +262,12 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
   ///
   /// 定义：超过 [days] 天无跟进记录，且阶段非已成交、已流失。
   /// 从未跟进过的客户按创建时间判断，否则新建客户永远不会出现在这里。
-  Future<List<CustomerRow>> listStale({
-    required DateTime now,
-    int days = 30,
-  }) {
+  Future<List<CustomerRow>> listStale({required DateTime now, int days = 30}) {
     final cutoff = now
         .subtract(Duration(days: days))
         .toUtc()
         .millisecondsSinceEpoch;
-    final closed = [
-      CustomerStage.deal.dbValue,
-      CustomerStage.lost.dbValue,
-    ];
+    final closed = [CustomerStage.deal.dbValue, CustomerStage.lost.dbValue];
 
     // 「最后活跃时间」= lastFollowAt，没跟进过则退回 createdAt。
     // 用 coalesce 交给 SQL 算，而不是在 Dart 里分支：where 的条件是
@@ -250,15 +305,15 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
   /// 按名称取标签，不存在则创建。标签名唯一，重复调用不会产生副本。
   Future<int> ensureTag(String name, {DateTime? now}) async {
     final trimmed = name.trim();
-    final existing = await (select(tags)
-          ..where((t) => t.name.equals(trimmed)))
-        .getSingleOrNull();
+    final existing = await (select(
+      tags,
+    )..where((t) => t.name.equals(trimmed))).getSingleOrNull();
     if (existing != null) return existing.id;
 
     final ts = (now ?? DateTime.now()).toUtc().millisecondsSinceEpoch;
-    return into(tags).insert(
-      TagsCompanion.insert(name: trimmed, createdAt: ts, updatedAt: ts),
-    );
+    return into(
+      tags,
+    ).insert(TagsCompanion.insert(name: trimmed, createdAt: ts, updatedAt: ts));
   }
 
   Future<List<TagRow>> allTags() =>
@@ -289,6 +344,26 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
       innerJoin(tags, tags.id.equalsExp(customerTags.tagId)),
     ])..where(customerTags.customerId.equals(customerId));
     return q.map((row) => row.readTable(tags)).get();
+  }
+
+  /// 批量读取多个客户的标签，避免列表页逐客户查询。
+  Future<Map<int, List<TagRow>>> tagsForCustomers(
+    Iterable<int> customerIds,
+  ) async {
+    final ids = customerIds.toSet().toList();
+    final result = <int, List<TagRow>>{for (final id in ids) id: <TagRow>[]};
+    if (ids.isEmpty) return result;
+
+    final q =
+        select(
+            customerTags,
+          ).join([innerJoin(tags, tags.id.equalsExp(customerTags.tagId))])
+          ..where(customerTags.customerId.isIn(ids))
+          ..orderBy([OrderingTerm.asc(tags.name), OrderingTerm.asc(tags.id)]);
+    for (final row in await q.get()) {
+      result[row.readTable(customerTags).customerId]!.add(row.readTable(tags));
+    }
+    return result;
   }
 
   /// 按标签筛选客户。

@@ -56,8 +56,8 @@ class ContactDao extends DatabaseAccessor<AppDatabase> with _$ContactDaoMixin {
   Future<int> updateContact(
     int id, {
     String? name,
-    String? position,
-    String? phone,
+    Value<String?> position = const Value.absent(),
+    Value<String?> phone = const Value.absent(),
     bool? isDecisionMaker,
     DateTime? now,
   }) {
@@ -65,8 +65,8 @@ class ContactDao extends DatabaseAccessor<AppDatabase> with _$ContactDaoMixin {
     return (update(contacts)..where((t) => t.id.equals(id))).write(
       ContactsCompanion(
         name: name == null ? const Value.absent() : Value(name),
-        position: position == null ? const Value.absent() : Value(position),
-        phone: phone == null ? const Value.absent() : Value(phone),
+        position: position,
+        phone: phone,
         isDecisionMaker: isDecisionMaker == null
             ? const Value.absent()
             : Value(isDecisionMaker),

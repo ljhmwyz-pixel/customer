@@ -27,7 +27,10 @@ void main() {
 
   test('数据量符合预期', () async {
     expect(await db.customerDao.countAll(), customerCount);
-    expect(await db.followupDao.countAll(), customerCount * followupPerCustomer);
+    expect(
+      await db.followupDao.countAll(),
+      customerCount * followupPerCustomer,
+    );
   });
 
   test('listByUrgency 耗时低于 200ms', () async {
@@ -72,11 +75,7 @@ void main() {
 
     // 逾期项必须占据列表开头的连续区间。
     for (var i = 0; i < overdue.length; i++) {
-      expect(
-        rows[i].nextPlanAt,
-        isNotNull,
-        reason: '第 $i 条应为逾期项但没有计划时间',
-      );
+      expect(rows[i].nextPlanAt, isNotNull, reason: '第 $i 条应为逾期项但没有计划时间');
       expect(rows[i].nextPlanAt!.isBefore(now), isTrue);
     }
 
@@ -86,7 +85,8 @@ void main() {
       expect(
         rows[i].nextPlanAt!.isBefore(rows[i - 1].nextPlanAt!),
         isFalse,
-        reason: '第 $i 条 (${rows[i].nextPlanAt}) 早于第 ${i - 1} 条 '
+        reason:
+            '第 $i 条 (${rows[i].nextPlanAt}) 早于第 ${i - 1} 条 '
             '(${rows[i - 1].nextPlanAt})，逾期排序不是升序',
       );
     }
@@ -104,6 +104,26 @@ void main() {
     final now = DateTime(2026, 8, 4, 12);
     final rows = await db.customerDao.listByUrgency(now: now, limit: 20);
     expect(rows, hasLength(20));
+  });
+
+  test('listFilteredByUrgency 在 500 客户下低于 200ms', () async {
+    final now = DateTime(2026, 8, 4, 12);
+    await db.customerDao.listFilteredByUrgency(
+      now: now,
+      keyword: '客户',
+      stage: CustomerStage.contacted,
+    );
+
+    final sw = Stopwatch()..start();
+    final rows = await db.customerDao.listFilteredByUrgency(
+      now: now,
+      keyword: '客户',
+      stage: CustomerStage.contacted,
+    );
+    sw.stop();
+
+    expect(rows, isNotEmpty);
+    expect(sw.elapsedMicroseconds, lessThan(budget.inMicroseconds));
   });
 
   test('search 在 500 客户下低于 200ms', () async {
@@ -126,7 +146,9 @@ void main() {
     sw.stop();
 
     // ignore: avoid_print
-    print('listStale 耗时 ${sw.elapsedMicroseconds / 1000}ms，命中 ${rows.length} 条');
+    print(
+      'listStale 耗时 ${sw.elapsedMicroseconds / 1000}ms，命中 ${rows.length} 条',
+    );
     expect(sw.elapsedMicroseconds, lessThan(budget.inMicroseconds));
   });
 
@@ -137,10 +159,7 @@ void main() {
     final counts = await db.customerDao.countByStage();
     sw.stop();
 
-    expect(
-      counts.values.reduce((a, b) => a + b),
-      customerCount,
-    );
+    expect(counts.values.reduce((a, b) => a + b), customerCount);
     expect(sw.elapsedMicroseconds, lessThan(budget.inMicroseconds));
   });
 }

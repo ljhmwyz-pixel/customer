@@ -1,10 +1,14 @@
 import 'package:customer/app.dart';
+import 'package:customer/data/database_provider.dart';
+import 'package:customer/router.dart';
 import 'package:customer/theme/semantic_colors.dart';
 import 'package:customer/theme/theme.dart';
 import 'package:customer/theme/tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'data/helpers.dart';
 
 /// WCAG 相对亮度。
 double _luminance(Color c) => c.computeLuminance();
@@ -18,33 +22,56 @@ double _contrast(Color a, Color b) {
   return (hi + 0.05) / (lo + 0.05);
 }
 
+Finder _navigationDestination(String label) =>
+    find.descendant(of: find.byType(NavigationBar), matching: find.text(label));
+
+Future<void> _pumpApp(WidgetTester tester) async {
+  router.go('/');
+  final db = await openTestDb();
+  addTearDown(() async {
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await db.close();
+  });
+
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [databaseProvider.overrideWithValue(db)],
+      child: const CustomerApp(),
+    ),
+  );
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 300));
+}
+
 void main() {
-  group('阶段 0 骨架', () {
+  group('应用骨架', () {
     testWidgets('四个 Tab 均可切换且不崩溃', (tester) async {
-      await tester.pumpWidget(const ProviderScope(child: CustomerApp()));
-      await tester.pumpAndSettle();
+      await _pumpApp(tester);
 
       // 首页
       expect(find.text('今日'), findsWidgets);
 
       for (final label in ['客户', '漏斗', '我的']) {
-        await tester.tap(find.text(label));
-        await tester.pumpAndSettle();
+        await tester.tap(_navigationDestination(label));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
         expect(find.text(label), findsWidgets);
       }
 
       // 回到首页
-      await tester.tap(find.text('今日'));
-      await tester.pumpAndSettle();
+      await tester.tap(_navigationDestination('今日'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
       expect(tester.takeException(), isNull);
     });
 
     testWidgets('空状态在客户页可见', (tester) async {
-      await tester.pumpWidget(const ProviderScope(child: CustomerApp()));
-      await tester.pumpAndSettle();
+      await _pumpApp(tester);
 
-      await tester.tap(find.text('客户'));
-      await tester.pumpAndSettle();
+      await tester.tap(_navigationDestination('客户'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
       expect(find.text('还没有客户'), findsOneWidget);
     });

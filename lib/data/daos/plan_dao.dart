@@ -53,6 +53,20 @@ class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
             ..orderBy([(t) => OrderingTerm.asc(t.planAt)]))
           .get();
 
+  /// 某客户所有未完成计划，按时间和主键稳定排序。
+  Future<List<FollowPlanRow>> listOpenOf(int customerId) =>
+      (select(followPlans)
+            ..where(
+              (t) =>
+                  t.customerId.equals(customerId) &
+                  t.status.isNotValue(PlanStatus.completed.dbValue),
+            )
+            ..orderBy([
+              (t) => OrderingTerm.asc(t.planAt),
+              (t) => OrderingTerm.asc(t.id),
+            ]))
+          .get();
+
   Future<int> countOf(int customerId) async {
     final q = selectOnly(followPlans)
       ..addColumns([followPlans.id.count()])
@@ -66,14 +80,18 @@ class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
   /// 只取 pending：已提醒过的不重复推送，已完成的不再打扰。
   Future<List<PlanWithCustomer>> listDue({required DateTime now}) {
     final nowMs = now.toUtc().millisecondsSinceEpoch;
-    final q = select(followPlans).join([
-      innerJoin(customers, customers.id.equalsExp(followPlans.customerId)),
-    ])
-      ..where(
-        followPlans.status.equals(PlanStatus.pending.dbValue) &
-            followPlans.planAt.isSmallerOrEqualValue(nowMs),
-      )
-      ..orderBy([OrderingTerm.asc(followPlans.planAt)]);
+    final q =
+        select(followPlans).join([
+            innerJoin(
+              customers,
+              customers.id.equalsExp(followPlans.customerId),
+            ),
+          ])
+          ..where(
+            followPlans.status.equals(PlanStatus.pending.dbValue) &
+                followPlans.planAt.isSmallerOrEqualValue(nowMs),
+          )
+          ..orderBy([OrderingTerm.asc(followPlans.planAt)]);
 
     return q
         .map(
@@ -104,12 +122,16 @@ class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
   /// 「已完成」，状态就不再是 notified 了，但那条提醒确实响过。
   /// 状态过滤会漏掉这类记录，让日志显得比实际触发得少。
   Future<List<PlanWithCustomer>> listNotified({int limit = 100}) {
-    final q = select(followPlans).join([
-      innerJoin(customers, customers.id.equalsExp(followPlans.customerId)),
-    ])
-      ..where(followPlans.notifiedAt.isNotNull())
-      ..orderBy([OrderingTerm.desc(followPlans.notifiedAt)])
-      ..limit(limit);
+    final q =
+        select(followPlans).join([
+            innerJoin(
+              customers,
+              customers.id.equalsExp(followPlans.customerId),
+            ),
+          ])
+          ..where(followPlans.notifiedAt.isNotNull())
+          ..orderBy([OrderingTerm.desc(followPlans.notifiedAt)])
+          ..limit(limit);
 
     return q
         .map(
@@ -124,14 +146,18 @@ class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
   /// 今日待办与逾期项，首页用。
   Future<List<PlanWithCustomer>> listOpenUntil({required DateTime until}) {
     final untilMs = until.toUtc().millisecondsSinceEpoch;
-    final q = select(followPlans).join([
-      innerJoin(customers, customers.id.equalsExp(followPlans.customerId)),
-    ])
-      ..where(
-        followPlans.status.isNotValue(PlanStatus.completed.dbValue) &
-            followPlans.planAt.isSmallerOrEqualValue(untilMs),
-      )
-      ..orderBy([OrderingTerm.asc(followPlans.planAt)]);
+    final q =
+        select(followPlans).join([
+            innerJoin(
+              customers,
+              customers.id.equalsExp(followPlans.customerId),
+            ),
+          ])
+          ..where(
+            followPlans.status.isNotValue(PlanStatus.completed.dbValue) &
+                followPlans.planAt.isSmallerOrEqualValue(untilMs),
+          )
+          ..orderBy([OrderingTerm.asc(followPlans.planAt)]);
 
     return q
         .map(
