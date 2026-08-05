@@ -133,7 +133,7 @@ void main() {
   });
 
   group('订单金额统计', () {
-    test('sumAmountByCustomer 排除已取消订单', () async {
+    test('sumAmountByCustomer 仅统计已完成订单', () async {
       final id = await seedCustomer(db);
       await db.orderDao.insertOrder(
         customerId: id,
@@ -157,7 +157,7 @@ void main() {
         status: OrderStatus.cancelled,
       );
 
-      expect(await db.orderDao.sumAmountByCustomer(id), 15000);
+      expect(await db.orderDao.sumAmountByCustomer(id), 5000);
     });
 
     test('无订单时返回 0 而不是抛错', () async {
@@ -175,12 +175,14 @@ void main() {
         orderNo: 'G-1',
         orderedAt: DateTime(2026, 8, 1),
         amountCents: 100,
+        status: OrderStatus.completed,
       );
       await db.orderDao.insertOrder(
         customerId: a,
         orderNo: 'G-2',
         orderedAt: DateTime(2026, 8, 2),
         amountCents: 200,
+        status: OrderStatus.completed,
       );
       await db.orderDao.insertOrder(
         customerId: b,

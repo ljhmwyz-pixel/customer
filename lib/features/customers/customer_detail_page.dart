@@ -7,6 +7,8 @@ import '../../models/enums.dart';
 import '../../theme/semantic_colors.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/empty_state.dart';
+import '../orders/order_form_page.dart';
+import '../orders/order_providers.dart';
 import 'contact_actions.dart';
 import 'customer_providers.dart';
 import 'customer_widgets.dart';
@@ -101,6 +103,7 @@ class CustomerDetailPage extends ConsumerWidget {
                 _CustomerOverview(
                   customer: value.customer,
                   tags: value.tags,
+                  completedAmountCents: value.completedAmountCents,
                   onCall: () => _call(context, ref, value.customer.phone),
                 ),
                 const SizedBox(height: AppTokens.s24),
@@ -132,6 +135,49 @@ class CustomerDetailPage extends ConsumerWidget {
                       onDelete: () => _deleteContact(context, ref, contact),
                     ),
                   ),
+                const SizedBox(height: AppTokens.s24),
+                _SectionHeader(
+                  title: '订单',
+                  count: value.orders.length,
+                  actions: [
+                    IconButton(
+                      tooltip: '新增订单',
+                      onPressed: () =>
+                          context.push('/customers/$id/orders/new'),
+                      icon: const Icon(Icons.add_shopping_cart_outlined),
+                    ),
+                  ],
+                ),
+                if (value.orders.isEmpty)
+                  const _SectionEmpty(message: '暂无订单')
+                else
+                  ...value.orders.map((order) {
+                    final status = OrderStatus.fromDb(order.status);
+                    final nextStatus = status.nextStatus;
+                    final canCancel =
+                        status != OrderStatus.completed &&
+                        status != OrderStatus.cancelled;
+                    return _OrderTile(
+                      order: order,
+                      status: status,
+                      onEdit: () => context.push(
+                        '/customers/$id/orders/${order.id}/edit',
+                      ),
+                      onAdvance: nextStatus == null
+                          ? null
+                          : () => _transitionOrder(
+                              context,
+                              ref,
+                              id,
+                              order,
+                              nextStatus,
+                            ),
+                      onCancel: canCancel
+                          ? () => _cancelOrder(context, ref, id, order)
+                          : null,
+                      onDelete: () => _deleteOrder(context, ref, id, order),
+                    );
+                  }),
                 const SizedBox(height: AppTokens.s24),
                 _SectionHeader(title: '跟进计划', count: value.plans.length),
                 if (value.plans.isEmpty)
@@ -272,10 +318,75 @@ class CustomerDetailPage extends ConsumerWidget {
     }
   }
 
+  Future<void> _transitionOrder(
+    BuildContext context,
+    WidgetRef ref,
+    int customerId,
+    OrderRow order,
+    OrderStatus target,
+  ) async {
+    try {
+      await ref
+          .read(orderServiceProvider)
+          .transitionOrder(customerId, order.id, target);
+      ref.read(customerRevisionProvider.notifier).refresh();
+    } on OrderValidationException catch (error) {
+      if (context.mounted) _showMessage(context, error.message);
+    } catch (_) {
+      if (context.mounted) _showMessage(context, '订单状态更新失败，请重试');
+    }
+  }
+
+  Future<void> _cancelOrder(
+    BuildContext context,
+    WidgetRef ref,
+    int customerId,
+    OrderRow order,
+  ) async {
+    final confirmed = await _confirm(
+      context,
+      title: '取消订单',
+      message: '确定取消订单“${order.orderNo}”吗？',
+      confirmLabel: '确认取消',
+    );
+    if (!confirmed || !context.mounted) return;
+    try {
+      await ref.read(orderServiceProvider).cancelOrder(customerId, order.id);
+      ref.read(customerRevisionProvider.notifier).refresh();
+    } on OrderValidationException catch (error) {
+      if (context.mounted) _showMessage(context, error.message);
+    } catch (_) {
+      if (context.mounted) _showMessage(context, '取消订单失败，请重试');
+    }
+  }
+
+  Future<void> _deleteOrder(
+    BuildContext context,
+    WidgetRef ref,
+    int customerId,
+    OrderRow order,
+  ) async {
+    final confirmed = await _confirm(
+      context,
+      title: '删除订单',
+      message: '确定删除订单“${order.orderNo}”吗？此操作无法撤销。',
+    );
+    if (!confirmed || !context.mounted) return;
+    try {
+      await ref.read(orderServiceProvider).deleteOrder(customerId, order.id);
+      ref.read(customerRevisionProvider.notifier).refresh();
+    } on OrderValidationException catch (error) {
+      if (context.mounted) _showMessage(context, error.message);
+    } catch (_) {
+      if (context.mounted) _showMessage(context, '删除订单失败，请重试');
+    }
+  }
+
   Future<bool> _confirm(
     BuildContext context, {
     required String title,
     required String message,
+    String confirmLabel = '删除',
   }) async =>
       await showDialog<bool>(
         context: context,
@@ -289,7 +400,7 @@ class CustomerDetailPage extends ConsumerWidget {
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('删除'),
+              child: Text(confirmLabel),
             ),
           ],
         ),
@@ -307,11 +418,13 @@ class _CustomerOverview extends StatelessWidget {
   const _CustomerOverview({
     required this.customer,
     required this.tags,
+    required this.completedAmountCents,
     required this.onCall,
   });
 
   final CustomerRow customer;
   final List<TagRow> tags;
+  final int completedAmountCents;
   final VoidCallback onCall;
 
   @override
@@ -365,6 +478,11 @@ class _CustomerOverview extends StatelessWidget {
         ],
         const SizedBox(height: AppTokens.s16),
         const Divider(height: 1),
+        _InfoRow(
+          icon: Icons.account_balance_wallet_outlined,
+          label: '累计成交金额',
+          value: formatAmountCents(completedAmountCents),
+        ),
         ...fields
             .where((field) => field.$3?.trim().isNotEmpty ?? false)
             .map(
@@ -527,6 +645,79 @@ class _ContactTile extends StatelessWidget {
               PopupMenuItem(value: _ContactAction.delete, child: Text('删除')),
             ],
           ),
+        ],
+      ),
+    );
+  }
+}
+
+enum _OrderAction { edit, advance, cancel, delete }
+
+class _OrderTile extends StatelessWidget {
+  const _OrderTile({
+    required this.order,
+    required this.status,
+    required this.onEdit,
+    required this.onAdvance,
+    required this.onCancel,
+    required this.onDelete,
+  });
+
+  final OrderRow order;
+  final OrderStatus status;
+  final VoidCallback onEdit;
+  final VoidCallback? onAdvance;
+  final VoidCallback? onCancel;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final description = order.description?.trim();
+    return ListTile(
+      key: ValueKey('order-${order.id}'),
+      contentPadding: EdgeInsets.zero,
+      leading: const CircleAvatar(child: Icon(Icons.receipt_long_outlined)),
+      title: Text(order.orderNo, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${formatDateTime(localDateTime(order.orderedAt))} · '
+            '${formatAmountCents(order.amountCents)} · ${status.label}',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          if (description != null && description.isNotEmpty)
+            Text(description, maxLines: 2, overflow: TextOverflow.ellipsis),
+        ],
+      ),
+      trailing: PopupMenuButton<_OrderAction>(
+        tooltip: '订单操作',
+        onSelected: (action) {
+          switch (action) {
+            case _OrderAction.edit:
+              onEdit();
+            case _OrderAction.advance:
+              onAdvance?.call();
+            case _OrderAction.cancel:
+              onCancel?.call();
+            case _OrderAction.delete:
+              onDelete();
+          }
+        },
+        itemBuilder: (context) => [
+          const PopupMenuItem(value: _OrderAction.edit, child: Text('编辑')),
+          if (onAdvance != null)
+            PopupMenuItem(
+              value: _OrderAction.advance,
+              child: Text('推进至${status.nextStatus!.label}'),
+            ),
+          if (onCancel != null)
+            const PopupMenuItem(
+              value: _OrderAction.cancel,
+              child: Text('取消订单'),
+            ),
+          const PopupMenuItem(value: _OrderAction.delete, child: Text('删除')),
         ],
       ),
     );

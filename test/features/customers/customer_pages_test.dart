@@ -6,6 +6,7 @@ import 'package:customer/features/customers/customer_form_page.dart';
 import 'package:customer/features/customers/customer_providers.dart';
 import 'package:customer/features/customers/customers_page.dart';
 import 'package:customer/features/customers/followup_form_page.dart';
+import 'package:customer/features/orders/order_form_page.dart';
 import 'package:customer/models/enums.dart';
 import 'package:customer/services/reminder_scheduler.dart';
 import 'package:customer/services/service_providers.dart';
@@ -188,6 +189,177 @@ void main() {
     expect(actions.calledPhone, phone);
   });
 
+  testWidgets('CustomerDetailPage creates an order through the form', (
+    tester,
+  ) async {
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '新增订单客户');
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: CustomerDetailPage(customerId: customerId),
+    );
+    addTearDown(() => harness.dispose(tester));
+
+    await harness.pump(tester);
+    await tester.tap(find.byTooltip('新增订单'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('order-no')),
+      'ORDER-CREATE-001',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('order-amount')),
+      '123.45',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('order-description')),
+      '年度服务套餐',
+    );
+    await tester.tap(find.byKey(const ValueKey('save-order')));
+    await tester.pumpAndSettle();
+
+    final orders = await db.orderDao.listOf(customerId);
+    expect(orders, hasLength(1));
+    expect(orders.single.orderNo, 'ORDER-CREATE-001');
+    expect(orders.single.amountCents, 12345);
+    expect(orders.single.description, '年度服务套餐');
+    expect(find.text('ORDER-CREATE-001'), findsOneWidget);
+    expect(find.textContaining('¥123.45'), findsOneWidget);
+  });
+
+  testWidgets('CustomerDetailPage edits an existing order', (tester) async {
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '编辑订单客户');
+    final orderId = await db.orderDao.insertOrder(
+      customerId: customerId,
+      orderNo: 'ORDER-OLD',
+      orderedAt: DateTime(2026, 8, 5),
+      amountCents: 100,
+      description: '旧描述',
+    );
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: CustomerDetailPage(customerId: customerId),
+    );
+    addTearDown(() => harness.dispose(tester));
+
+    await harness.pump(tester);
+    await _selectOrderAction(tester, orderId, '编辑');
+    await tester.enterText(
+      find.byKey(const ValueKey('order-no')),
+      'ORDER-EDITED',
+    );
+    await tester.enterText(find.byKey(const ValueKey('order-amount')), '88.80');
+    await tester.enterText(
+      find.byKey(const ValueKey('order-description')),
+      '更新后的服务内容',
+    );
+    await tester.tap(find.byKey(const ValueKey('save-order')));
+    await tester.pumpAndSettle();
+
+    final order = await db.orderDao.findById(orderId);
+    expect(order?.orderNo, 'ORDER-EDITED');
+    expect(order?.amountCents, 8880);
+    expect(order?.description, '更新后的服务内容');
+    expect(find.text('ORDER-EDITED'), findsOneWidget);
+  });
+
+  testWidgets('CustomerDetailPage advances an order and refreshes revenue', (
+    tester,
+  ) async {
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '订单流转客户');
+    final orderId = await db.orderDao.insertOrder(
+      customerId: customerId,
+      orderNo: 'ORDER-FLOW',
+      orderedAt: DateTime(2026, 8, 5),
+      amountCents: 12345,
+    );
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: CustomerDetailPage(customerId: customerId),
+    );
+    addTearDown(() => harness.dispose(tester));
+
+    await harness.pump(tester);
+    expect(find.text('¥0.00'), findsOneWidget);
+
+    await _selectOrderAction(tester, orderId, '推进至已发货');
+    expect(
+      (await db.orderDao.findById(orderId))?.status,
+      OrderStatus.shipped.dbValue,
+    );
+    await _selectOrderAction(tester, orderId, '推进至已收款');
+    expect(
+      (await db.orderDao.findById(orderId))?.status,
+      OrderStatus.paid.dbValue,
+    );
+    await _selectOrderAction(tester, orderId, '推进至已完成');
+
+    expect(
+      (await db.orderDao.findById(orderId))?.status,
+      OrderStatus.completed.dbValue,
+    );
+    await tester.scrollUntilVisible(
+      find.text('¥123.45'),
+      -200,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    expect(find.text('¥123.45'), findsOneWidget);
+    expect(find.textContaining('已完成'), findsOneWidget);
+  });
+
+  testWidgets('CustomerDetailPage confirms cancellation and deletion', (
+    tester,
+  ) async {
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '订单终止客户');
+    final cancelledOrderId = await db.orderDao.insertOrder(
+      customerId: customerId,
+      orderNo: 'ORDER-CANCEL',
+      orderedAt: DateTime(2026, 8, 5),
+      amountCents: 200,
+    );
+    final deletedOrderId = await db.orderDao.insertOrder(
+      customerId: customerId,
+      orderNo: 'ORDER-DELETE',
+      orderedAt: DateTime(2026, 8, 5),
+      amountCents: 300,
+    );
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: CustomerDetailPage(customerId: customerId),
+    );
+    addTearDown(() => harness.dispose(tester));
+
+    await harness.pump(tester);
+    await _selectOrderAction(tester, cancelledOrderId, '取消订单');
+    expect(find.text('确定取消订单“ORDER-CANCEL”吗？'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, '确认取消'));
+    await tester.pumpAndSettle();
+    expect(
+      (await db.orderDao.findById(cancelledOrderId))?.status,
+      OrderStatus.cancelled.dbValue,
+    );
+    expect(find.textContaining('已取消'), findsOneWidget);
+
+    await _selectOrderAction(tester, deletedOrderId, '删除');
+    expect(find.text('删除订单'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, '删除'));
+    await tester.pumpAndSettle();
+    expect(await db.orderDao.findById(deletedOrderId), isNull);
+    expect(find.text('ORDER-DELETE'), findsNothing);
+  });
+
   testWidgets('CustomerDetailPage handles a narrow dark viewport', (
     tester,
   ) async {
@@ -199,6 +371,13 @@ void main() {
     final customerId = await seedCustomer(
       db,
       name: '这是一个用于验证窄屏布局不会溢出的特别特别长的客户名称',
+    );
+    await db.orderDao.insertOrder(
+      customerId: customerId,
+      orderNo: List.filled(50, 'X').join(),
+      orderedAt: DateTime(2026, 8, 5),
+      amountCents: 12345,
+      description: '这是一段用于验证订单列表窄屏显示的特别特别长的商品和服务描述内容',
     );
     final harness = _TestHarness(
       db: db,
@@ -241,14 +420,30 @@ class _TestHarness {
         ),
         GoRoute(
           path: '/customers/:id',
-          builder: (_, state) =>
-              Scaffold(body: Text('客户 ${state.pathParameters['id']}')),
-        ),
-        GoRoute(
-          path: '/customers/:id/followups/new',
-          builder: (_, state) => FollowupFormPage(
-            customerId: int.parse(state.pathParameters['id']!),
+          builder: (_, state) => CustomerDetailPage(
+            customerId: int.tryParse(state.pathParameters['id'] ?? ''),
           ),
+          routes: [
+            GoRoute(
+              path: 'followups/new',
+              builder: (_, state) => FollowupFormPage(
+                customerId: int.parse(state.pathParameters['id']!),
+              ),
+            ),
+            GoRoute(
+              path: 'orders/new',
+              builder: (_, state) => OrderFormPage(
+                customerId: int.parse(state.pathParameters['id']!),
+              ),
+            ),
+            GoRoute(
+              path: 'orders/:orderId/edit',
+              builder: (_, state) => OrderFormPage(
+                customerId: int.parse(state.pathParameters['id']!),
+                orderId: int.parse(state.pathParameters['orderId']!),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -293,6 +488,24 @@ class _TestHarness {
     container.dispose();
     await db.close();
   }
+}
+
+Future<void> _selectOrderAction(
+  WidgetTester tester,
+  int orderId,
+  String action,
+) async {
+  final tile = find.byKey(ValueKey('order-$orderId'));
+  final actionButton = find.descendant(
+    of: tile,
+    matching: find.byTooltip('订单操作'),
+  );
+  await tester.ensureVisible(actionButton);
+  await tester.pumpAndSettle();
+  await tester.tap(actionButton);
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(action).last);
+  await tester.pumpAndSettle();
 }
 
 class _FakeContactActions implements ContactActions {

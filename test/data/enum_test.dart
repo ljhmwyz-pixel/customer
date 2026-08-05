@@ -40,14 +40,43 @@ void main() {
     expect(PlanStatus.completed.isOpen, isFalse);
   });
 
-  test('OrderStatus 往返一致，仅取消不计入成交额', () {
+  test('OrderStatus 往返一致，仅已完成计入成交额', () {
     for (final v in OrderStatus.values) {
       expect(OrderStatus.fromDb(v.dbValue), v);
     }
-    expect(OrderStatus.cancelled.countsTowardRevenue, isFalse);
-    for (final v in OrderStatus.values.where((e) => e != OrderStatus.cancelled)) {
-      expect(v.countsTowardRevenue, isTrue);
+    expect(OrderStatus.completed.countsTowardRevenue, isTrue);
+    for (final v in OrderStatus.values.where(
+      (e) => e != OrderStatus.completed,
+    )) {
+      expect(v.countsTowardRevenue, isFalse);
     }
+  });
+
+  test('OrderStatus 仅允许顺序推进，前三态可取消', () {
+    expect(OrderStatus.pending.nextStatus, OrderStatus.shipped);
+    expect(OrderStatus.shipped.nextStatus, OrderStatus.paid);
+    expect(OrderStatus.paid.nextStatus, OrderStatus.completed);
+    expect(OrderStatus.completed.nextStatus, isNull);
+    expect(OrderStatus.cancelled.nextStatus, isNull);
+
+    expect(OrderStatus.pending.canTransitionTo(OrderStatus.shipped), isTrue);
+    expect(OrderStatus.shipped.canTransitionTo(OrderStatus.paid), isTrue);
+    expect(OrderStatus.paid.canTransitionTo(OrderStatus.completed), isTrue);
+    for (final status in [
+      OrderStatus.pending,
+      OrderStatus.shipped,
+      OrderStatus.paid,
+    ]) {
+      expect(status.canTransitionTo(OrderStatus.cancelled), isTrue);
+    }
+
+    expect(OrderStatus.pending.canTransitionTo(OrderStatus.paid), isFalse);
+    expect(OrderStatus.shipped.canTransitionTo(OrderStatus.completed), isFalse);
+    expect(
+      OrderStatus.completed.canTransitionTo(OrderStatus.cancelled),
+      isFalse,
+    );
+    expect(OrderStatus.cancelled.canTransitionTo(OrderStatus.pending), isFalse);
   });
 
   test('非法值一律抛 InvalidEnumValueException', () {
@@ -87,14 +116,22 @@ void main() {
       }
     }
 
-    checkUnique('CustomerStage',
-        CustomerStage.values.map((e) => e.dbValue).toList());
-    checkUnique('CustomerGrade',
-        CustomerGrade.values.map((e) => e.dbValue).toList());
-    checkUnique('FollowMethod',
-        FollowMethod.values.map((e) => e.dbValue).toList());
+    checkUnique(
+      'CustomerStage',
+      CustomerStage.values.map((e) => e.dbValue).toList(),
+    );
+    checkUnique(
+      'CustomerGrade',
+      CustomerGrade.values.map((e) => e.dbValue).toList(),
+    );
+    checkUnique(
+      'FollowMethod',
+      FollowMethod.values.map((e) => e.dbValue).toList(),
+    );
     checkUnique('PlanStatus', PlanStatus.values.map((e) => e.dbValue).toList());
-    checkUnique('OrderStatus',
-        OrderStatus.values.map((e) => e.dbValue).toList());
+    checkUnique(
+      'OrderStatus',
+      OrderStatus.values.map((e) => e.dbValue).toList(),
+    );
   });
 }

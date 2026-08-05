@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../models/enums.dart';
 import '../../theme/tokens.dart';
 import '../customers/customer_providers.dart';
 import '../customers/customer_widgets.dart';
@@ -53,6 +54,7 @@ class OrderFormPage extends ConsumerStatefulWidget {
 class _OrderFormPageState extends ConsumerState<OrderFormPage> {
   final _formKey = GlobalKey<FormState>();
   final _orderNoController = TextEditingController();
+  final _dateController = TextEditingController();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
 
@@ -67,6 +69,7 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
   @override
   void initState() {
     super.initState();
+    _dateController.text = formatDateTime(_orderedAt);
     _load();
   }
 
@@ -97,7 +100,8 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
         _amountController.text = _editableAmount(order.amountCents);
         _descriptionController.text = order.description ?? '';
         _orderedAt = localDateTime(order.orderedAt);
-        _statusLabel = order.status;
+        _dateController.text = formatDateTime(_orderedAt);
+        _statusLabel = OrderStatus.fromDb(order.status).label;
       }
       _finishLoading();
     } catch (_) {
@@ -124,6 +128,7 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
   @override
   void dispose() {
     _orderNoController.dispose();
+    _dateController.dispose();
     _amountController.dispose();
     _descriptionController.dispose();
     super.dispose();
@@ -145,6 +150,7 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
         _orderedAt.hour,
         _orderedAt.minute,
       );
+      _dateController.text = formatDateTime(_orderedAt);
     });
   }
 
@@ -226,9 +232,9 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
           const SizedBox(height: AppTokens.s12),
           TextFormField(
             key: const ValueKey('order-date'),
+            controller: _dateController,
             readOnly: true,
             onTap: _pickDate,
-            initialValue: formatDateTime(_orderedAt),
             decoration: const InputDecoration(
               labelText: '下单日期',
               suffixIcon: Icon(Icons.calendar_today_outlined),

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'features/customers/customer_detail_page.dart';
@@ -6,6 +7,7 @@ import 'features/customers/customers_page.dart';
 import 'features/customers/followup_form_page.dart';
 import 'features/funnel/funnel_page.dart';
 import 'features/home/home_page.dart';
+import 'features/orders/order_form_page.dart';
 import 'features/reminders/permission_page.dart';
 import 'features/reminders/reminder_log_page.dart';
 import 'features/reminders/reminder_test_page.dart';
@@ -87,6 +89,39 @@ final router = GoRouter(
                         return FollowupFormPage(customerId: customerId);
                       },
                     ),
+                    GoRoute(
+                      path: 'orders/new',
+                      builder: (context, state) {
+                        final customerId = int.tryParse(
+                          state.pathParameters['id'] ?? '',
+                        );
+                        if (customerId == null) {
+                          return const _RouteErrorPage(message: '客户编号无效');
+                        }
+                        return OrderFormPage(customerId: customerId);
+                      },
+                    ),
+                    GoRoute(
+                      path: 'orders/:orderId/edit',
+                      builder: (context, state) {
+                        final customerId = int.tryParse(
+                          state.pathParameters['id'] ?? '',
+                        );
+                        if (customerId == null) {
+                          return const _RouteErrorPage(message: '客户编号无效');
+                        }
+                        final orderId = int.tryParse(
+                          state.pathParameters['orderId'] ?? '',
+                        );
+                        if (orderId == null) {
+                          return const _RouteErrorPage(message: '订单编号无效');
+                        }
+                        return OrderFormPage(
+                          customerId: customerId,
+                          orderId: orderId,
+                        );
+                      },
+                    ),
                   ],
                 ),
               ],
@@ -127,3 +162,15 @@ final router = GoRouter(
     ),
   ],
 );
+
+class _RouteErrorPage extends StatelessWidget {
+  const _RouteErrorPage({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('无法打开页面')),
+    body: Center(child: Text(message)),
+  );
+}
