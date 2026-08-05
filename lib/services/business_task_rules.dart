@@ -17,9 +17,18 @@ class BusinessTaskRules {
     if (customer == null) return [];
     final quoteRows = await _db.quoteDao.listVersions(opportunityId);
     final sampleRows = await _db.sampleDao.listOf(opportunityId);
+    final registrationRows = await _db.registrationDao.listOf(opportunityId);
+    final tenderRows = await _db.tenderDao.listOf(opportunityId);
+    final orderRows = await _db.orderDao.listOf(customer.id);
     final candidates = <_Candidate>[
       for (final quote in quoteRows) ..._quoteCandidates(quote, now),
       for (final sample in sampleRows) ..._sampleCandidates(sample, now),
+      for (final registration in registrationRows)
+        ..._registrationCandidates(registration),
+      for (final tender in tenderRows) ..._tenderCandidates(tender),
+      for (final order in orderRows)
+        if (order.opportunityId == opportunityId)
+          ..._repurchaseCandidates(order),
     ];
     final created = <int>[];
     for (final candidate in candidates) {
@@ -170,6 +179,86 @@ class BusinessTaskRules {
         .toList();
   }
 
+  List<_Candidate> _registrationCandidates(RegistrationRow registration) {
+    if ({
+      RegistrationStatus.completed.dbValue,
+      RegistrationStatus.cancelled.dbValue,
+    }.contains(registration.status)) {
+      return [];
+    }
+    final result = <_Candidate>[];
+    if (registration.expectedCompletedAt != null) {
+      result.add(
+        _registration(
+          registration,
+          'expected-completion',
+          _local(registration.expectedCompletedAt!),
+          '确认注册进度和预计完成时间',
+        ),
+      );
+    }
+    if (registration.documentDueAt != null) {
+      result.add(
+        _registration(
+          registration,
+          'document-due',
+          _local(registration.documentDueAt!),
+          '确认注册资料已按期准备完成',
+        ),
+      );
+    }
+    if (registration.milestoneAt != null) {
+      final title = registration.milestoneTitle?.trim();
+      result.add(
+        _registration(
+          registration,
+          'user-milestone',
+          _local(registration.milestoneAt!),
+          title == null || title.isEmpty ? '跟进注册里程碑' : title,
+        ),
+      );
+    }
+    return result;
+  }
+
+  List<_Candidate> _tenderCandidates(TenderRow tender) {
+    if (tender.status != TenderStatus.open.dbValue ||
+        tender.deadlineAt == null) {
+      return [];
+    }
+    final deadline = _local(tender.deadlineAt!);
+    return [
+      for (final days in [30, 14, 7, 3, 1])
+        _Candidate(
+          TaskSourceType.tender,
+          tender.id,
+          'deadline-${days}d',
+          deadline.subtract(Duration(days: days)),
+          '招标截止提醒',
+          '确认招标资料、资质、报价和投标准备进度',
+          '距招标截止还有 $days 天，确认投标准备进度',
+        ),
+    ];
+  }
+
+  List<_Candidate> _repurchaseCandidates(OrderRow order) {
+    if (order.orderResult != OrderResult.completed.dbValue ||
+        order.estimatedRepurchaseAt == null) {
+      return [];
+    }
+    return [
+      _Candidate(
+        TaskSourceType.repurchase,
+        order.id,
+        'repurchase-30d',
+        _local(order.estimatedRepurchaseAt!).subtract(const Duration(days: 30)),
+        '复购跟进',
+        '确认客户库存、使用反馈和下一批采购计划',
+        '预计复购前 30 天联系客户',
+      ),
+    ];
+  }
+
   _Candidate _quote(QuoteRow q, String key, DateTime at, String action) =>
       _Candidate(
         TaskSourceType.quote,
@@ -190,10 +279,25 @@ class BusinessTaskRules {
         '确认物流、签收、测试负责人和结果',
         action,
       );
+  _Candidate _registration(
+    RegistrationRow registration,
+    String key,
+    DateTime at,
+    String action,
+  ) => _Candidate(
+    TaskSourceType.registration,
+    registration.id,
+    key,
+    at,
+    '注册跟进',
+    '确认注册资料、进度、阻碍和下一步行动',
+    action,
+  );
 
   bool _isClosed(OpportunityRow value) =>
       OpportunityStatus.fromDb(value.status).isClosed ||
       {
+        OpportunityStage.won.dbValue,
         OpportunityStage.lost.dbValue,
         OpportunityStage.paused.dbValue,
       }.contains(value.stage);
