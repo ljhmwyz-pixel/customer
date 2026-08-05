@@ -9,6 +9,7 @@ import '../../theme/tokens.dart';
 import '../../widgets/empty_state.dart';
 import '../orders/order_form_page.dart';
 import '../orders/order_providers.dart';
+import '../opportunities/opportunity_providers.dart';
 import 'contact_actions.dart';
 import 'customer_providers.dart';
 import 'customer_widgets.dart';
@@ -133,6 +134,32 @@ class CustomerDetailPage extends ConsumerWidget {
                       onEdit: () =>
                           _editContact(context, ref, id, contact: contact),
                       onDelete: () => _deleteContact(context, ref, contact),
+                    ),
+                  ),
+                const SizedBox(height: AppTokens.s24),
+                _SectionHeader(
+                  title: '项目',
+                  count: value.opportunities.length,
+                  actions: [
+                    IconButton(
+                      tooltip: '新增项目',
+                      onPressed: () =>
+                          context.push('/customers/$id/opportunities/new'),
+                      icon: const Icon(Icons.add_business_outlined),
+                    ),
+                  ],
+                ),
+                if (value.opportunities.isEmpty)
+                  const _SectionEmpty(message: '暂无项目')
+                else
+                  ...value.opportunities.map(
+                    (opportunity) => _OpportunityTile(
+                      opportunity: opportunity,
+                      onEdit: () => context.push(
+                        '/customers/$id/opportunities/${opportunity.id}/edit',
+                      ),
+                      onDelete: () =>
+                          _deleteOpportunity(context, ref, id, opportunity),
                     ),
                   ),
                 const SizedBox(height: AppTokens.s24),
@@ -334,6 +361,30 @@ class CustomerDetailPage extends ConsumerWidget {
       if (context.mounted) _showMessage(context, error.message);
     } catch (_) {
       if (context.mounted) _showMessage(context, '订单状态更新失败，请重试');
+    }
+  }
+
+  Future<void> _deleteOpportunity(
+    BuildContext context,
+    WidgetRef ref,
+    int customerId,
+    OpportunityRow opportunity,
+  ) async {
+    final confirmed = await _confirm(
+      context,
+      title: '删除项目',
+      message: '确定删除项目“${opportunity.name}”吗？有关联业务记录的项目不能删除。',
+    );
+    if (!confirmed || !context.mounted) return;
+    try {
+      await ref
+          .read(opportunityServiceProvider)
+          .deleteOpportunity(customerId, opportunity.id);
+      ref.read(customerRevisionProvider.notifier).refresh();
+    } on OpportunityValidationException catch (error) {
+      if (context.mounted) _showMessage(context, error.message);
+    } catch (_) {
+      if (context.mounted) _showMessage(context, '删除项目失败，请重试');
     }
   }
 
@@ -652,6 +703,89 @@ class _ContactTile extends StatelessWidget {
 }
 
 enum _OrderAction { edit, advance, cancel, delete }
+
+enum _OpportunityAction { edit, delete }
+
+class _OpportunityTile extends StatelessWidget {
+  const _OpportunityTile({
+    required this.opportunity,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final OpportunityRow opportunity;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  String _money(int value) {
+    final whole = value ~/ 100;
+    final fraction = value.remainder(100).abs().toString().padLeft(2, '0');
+    return '${opportunity.currency} $whole.$fraction';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final stage = OpportunityStage.fromDb(opportunity.stage);
+    final status = OpportunityStatus.fromDb(opportunity.status);
+    final product = [
+      opportunity.productCategory?.trim(),
+      opportunity.productModel?.trim(),
+    ].whereType<String>().where((value) => value.isNotEmpty).join(' · ');
+    final amount = opportunity.forecastAmountMinor;
+    final probability = opportunity.probabilityPercent;
+    final weighted = amount == null || probability == null
+        ? null
+        : amount * probability ~/ 100;
+    final nextAction = opportunity.nextAction?.trim();
+    return ListTile(
+      key: ValueKey('opportunity-${opportunity.id}'),
+      contentPadding: EdgeInsets.zero,
+      leading: const CircleAvatar(child: Icon(Icons.work_outline)),
+      title: Text(
+        opportunity.name,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (product.isNotEmpty)
+            Text(product, maxLines: 1, overflow: TextOverflow.ellipsis),
+          Text('${stage.label} · ${status.label}'),
+          if (amount != null)
+            Text(
+              weighted == null
+                  ? '预计 ${_money(amount)}'
+                  : '预计 ${_money(amount)} · 加权 ${_money(weighted)}',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          if (nextAction != null && nextAction.isNotEmpty)
+            Text(
+              '下一步：$nextAction',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+        ],
+      ),
+      trailing: PopupMenuButton<_OpportunityAction>(
+        tooltip: '项目操作',
+        onSelected: (action) {
+          switch (action) {
+            case _OpportunityAction.edit:
+              onEdit();
+            case _OpportunityAction.delete:
+              onDelete();
+          }
+        },
+        itemBuilder: (context) => const [
+          PopupMenuItem(value: _OpportunityAction.edit, child: Text('编辑')),
+          PopupMenuItem(value: _OpportunityAction.delete, child: Text('删除')),
+        ],
+      ),
+    );
+  }
+}
 
 class _OrderTile extends StatelessWidget {
   const _OrderTile({

@@ -124,6 +124,7 @@ class CustomerDetailData {
     required this.customer,
     required this.tags,
     required this.contacts,
+    required this.opportunities,
     required this.plans,
     required this.followups,
     required this.orders,
@@ -133,6 +134,7 @@ class CustomerDetailData {
   final CustomerRow customer;
   final List<TagRow> tags;
   final List<ContactRow> contacts;
+  final List<OpportunityRow> opportunities;
   final List<FollowPlanRow> plans;
   final List<FollowupRow> followups;
   final List<OrderRow> orders;
@@ -445,6 +447,7 @@ final customerDetailProvider = FutureProvider.family<CustomerDetailData?, int>((
   final values = await Future.wait<Object>([
     db.customerDao.tagsOf(id),
     db.contactDao.listOf(id),
+    db.opportunityDao.listOfCustomer(id),
     db.planDao.listOf(id),
     db.followupDao.listOf(id),
     db.orderDao.listOf(id),
@@ -454,10 +457,11 @@ final customerDetailProvider = FutureProvider.family<CustomerDetailData?, int>((
     customer: customer,
     tags: values[0] as List<TagRow>,
     contacts: values[1] as List<ContactRow>,
-    plans: values[2] as List<FollowPlanRow>,
-    followups: values[3] as List<FollowupRow>,
-    orders: values[4] as List<OrderRow>,
-    completedAmountCents: values[5] as int,
+    opportunities: values[2] as List<OpportunityRow>,
+    plans: values[3] as List<FollowPlanRow>,
+    followups: values[4] as List<FollowupRow>,
+    orders: values[5] as List<OrderRow>,
+    completedAmountCents: values[6] as int,
   );
 });
 

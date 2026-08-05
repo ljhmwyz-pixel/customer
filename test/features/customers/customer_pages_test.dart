@@ -7,6 +7,7 @@ import 'package:customer/features/customers/customer_providers.dart';
 import 'package:customer/features/customers/customers_page.dart';
 import 'package:customer/features/customers/followup_form_page.dart';
 import 'package:customer/features/orders/order_form_page.dart';
+import 'package:customer/features/opportunities/opportunity_form_page.dart';
 import 'package:customer/models/enums.dart';
 import 'package:customer/services/reminder_scheduler.dart';
 import 'package:customer/services/service_providers.dart';
@@ -229,6 +230,83 @@ void main() {
     expect(find.textContaining('¥123.45'), findsOneWidget);
   });
 
+  testWidgets('CustomerDetailPage creates and displays a project', (
+    tester,
+  ) async {
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '新增项目客户');
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: CustomerDetailPage(customerId: customerId),
+    );
+    addTearDown(() => harness.dispose(tester));
+
+    await harness.pump(tester);
+    await tester.tap(find.byTooltip('新增项目'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('opportunity-name')),
+      'CT 注射器项目',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('opportunity-forecastAmount')),
+      '1000.50',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('opportunity-probabilityPercent')),
+      '40',
+    );
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('save-opportunity')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(const ValueKey('save-opportunity')));
+    await tester.pumpAndSettle();
+
+    final values = await db.opportunityDao.listOfCustomer(customerId);
+    expect(values, hasLength(1));
+    expect(values.single.name, 'CT 注射器项目');
+    expect(values.single.forecastAmountMinor, 100050);
+    expect(find.text('CT 注射器项目'), findsOneWidget);
+    expect(find.textContaining('加权 USD 400.20'), findsOneWidget);
+  });
+
+  testWidgets('CustomerDetailPage edits an existing project', (tester) async {
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '编辑项目客户');
+    final opportunityId = await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '旧项目名',
+    );
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: CustomerDetailPage(customerId: customerId),
+    );
+    addTearDown(() => harness.dispose(tester));
+
+    await harness.pump(tester);
+    await _selectOpportunityAction(tester, opportunityId, '编辑');
+    await tester.enterText(
+      find.byKey(const ValueKey('opportunity-name')),
+      '更新后的项目',
+    );
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('save-opportunity')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(const ValueKey('save-opportunity')));
+    await tester.pumpAndSettle();
+
+    expect((await db.opportunityDao.findById(opportunityId))?.name, '更新后的项目');
+    expect(find.text('更新后的项目'), findsOneWidget);
+  });
+
   testWidgets('CustomerDetailPage edits an existing order', (tester) async {
     final db = await openTestDb();
     final customerId = await seedCustomer(db, name: '编辑订单客户');
@@ -431,6 +509,21 @@ class _TestHarness {
               ),
             ),
             GoRoute(
+              path: 'opportunities/new',
+              builder: (_, state) => OpportunityFormPage(
+                customerId: int.parse(state.pathParameters['id']!),
+              ),
+            ),
+            GoRoute(
+              path: 'opportunities/:opportunityId/edit',
+              builder: (_, state) => OpportunityFormPage(
+                customerId: int.parse(state.pathParameters['id']!),
+                opportunityId: int.parse(
+                  state.pathParameters['opportunityId']!,
+                ),
+              ),
+            ),
+            GoRoute(
               path: 'orders/new',
               builder: (_, state) => OrderFormPage(
                 customerId: int.parse(state.pathParameters['id']!),
@@ -496,9 +589,37 @@ Future<void> _selectOrderAction(
   String action,
 ) async {
   final tile = find.byKey(ValueKey('order-$orderId'));
+  await tester.scrollUntilVisible(
+    tile,
+    300,
+    scrollable: find.byType(Scrollable).first,
+  );
   final actionButton = find.descendant(
     of: tile,
     matching: find.byTooltip('订单操作'),
+  );
+  await tester.ensureVisible(actionButton);
+  await tester.pumpAndSettle();
+  await tester.tap(actionButton);
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(action).last);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _selectOpportunityAction(
+  WidgetTester tester,
+  int opportunityId,
+  String action,
+) async {
+  final tile = find.byKey(ValueKey('opportunity-$opportunityId'));
+  await tester.scrollUntilVisible(
+    tile,
+    300,
+    scrollable: find.byType(Scrollable).first,
+  );
+  final actionButton = find.descendant(
+    of: tile,
+    matching: find.byTooltip('项目操作'),
   );
   await tester.ensureVisible(actionButton);
   await tester.pumpAndSettle();

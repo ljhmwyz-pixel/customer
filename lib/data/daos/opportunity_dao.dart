@@ -3,12 +3,17 @@ import 'package:drift/drift.dart';
 import '../../models/enums.dart';
 import '../database.dart';
 import '../tables/customers.dart';
+import '../tables/follow_plans.dart';
+import '../tables/followups.dart';
 import '../tables/opportunities.dart';
+import '../tables/orders.dart';
 
 part 'opportunity_dao.g.dart';
 
 /// 客户项目的数据访问层。业务模块通过项目关联报价、样品、跟进与订单。
-@DriftAccessor(tables: [Opportunities, Customers])
+@DriftAccessor(
+  tables: [Opportunities, Customers, Followups, FollowPlans, Orders],
+)
 class OpportunityDao extends DatabaseAccessor<AppDatabase>
     with _$OpportunityDaoMixin {
   OpportunityDao(super.db);
@@ -93,6 +98,88 @@ class OpportunityDao extends DatabaseAccessor<AppDatabase>
     opportunities,
   )..where((table) => table.id.equals(id))).getSingleOrNull();
 
+  Future<int> updateOpportunity(
+    int id, {
+    required String name,
+    required String currency,
+    required OpportunityStage stage,
+    required OpportunityStatus status,
+    Value<String?> productCategory = const Value.absent(),
+    Value<String?> productModel = const Value.absent(),
+    Value<String?> equipmentBrand = const Value.absent(),
+    Value<String?> equipmentModel = const Value.absent(),
+    Value<int?> estimatedAnnualVolume = const Value.absent(),
+    Value<int?> forecastAmountMinor = const Value.absent(),
+    Value<int?> probabilityPercent = const Value.absent(),
+    Value<DateTime?> expectedCloseAt = const Value.absent(),
+    Value<String?> currentSupplier = const Value.absent(),
+    Value<String?> currentPurchaseBrand = const Value.absent(),
+    Value<int?> currentPurchasePriceMinor = const Value.absent(),
+    Value<String?> supplierStability = const Value.absent(),
+    Value<String?> supplierProblem = const Value.absent(),
+    Value<String?> changeWillingness = const Value.absent(),
+    Value<String?> substitutionDifficulty = const Value.absent(),
+    Value<int?> latestQuoteMinor = const Value.absent(),
+    Value<int?> targetPriceMinor = const Value.absent(),
+    Value<String?> entryPoint = const Value.absent(),
+    Value<String?> investmentAdvice = const Value.absent(),
+    bool? needsSample,
+    bool? needsRegistration,
+    bool? needsAuthorization,
+    Value<String?> latestFeedback = const Value.absent(),
+    Value<String?> currentObstacle = const Value.absent(),
+    Value<String?> nextAction = const Value.absent(),
+    Value<DateTime?> nextFollowAt = const Value.absent(),
+    DateTime? now,
+  }) {
+    final ts = (now ?? DateTime.now()).toUtc().millisecondsSinceEpoch;
+    return (update(opportunities)..where((table) => table.id.equals(id))).write(
+      OpportunitiesCompanion(
+        name: Value(name),
+        productCategory: productCategory,
+        productModel: productModel,
+        equipmentBrand: equipmentBrand,
+        equipmentModel: equipmentModel,
+        estimatedAnnualVolume: estimatedAnnualVolume,
+        forecastAmountMinor: forecastAmountMinor,
+        currency: Value(currency),
+        probabilityPercent: probabilityPercent,
+        expectedCloseAt: expectedCloseAt.present
+            ? Value(expectedCloseAt.value?.toUtc().millisecondsSinceEpoch)
+            : const Value.absent(),
+        currentSupplier: currentSupplier,
+        currentPurchaseBrand: currentPurchaseBrand,
+        currentPurchasePriceMinor: currentPurchasePriceMinor,
+        supplierStability: supplierStability,
+        supplierProblem: supplierProblem,
+        changeWillingness: changeWillingness,
+        substitutionDifficulty: substitutionDifficulty,
+        latestQuoteMinor: latestQuoteMinor,
+        targetPriceMinor: targetPriceMinor,
+        entryPoint: entryPoint,
+        investmentAdvice: investmentAdvice,
+        needsSample: needsSample == null
+            ? const Value.absent()
+            : Value(needsSample),
+        needsRegistration: needsRegistration == null
+            ? const Value.absent()
+            : Value(needsRegistration),
+        needsAuthorization: needsAuthorization == null
+            ? const Value.absent()
+            : Value(needsAuthorization),
+        stage: Value(stage.dbValue),
+        status: Value(status.dbValue),
+        latestFeedback: latestFeedback,
+        currentObstacle: currentObstacle,
+        nextAction: nextAction,
+        nextFollowAt: nextFollowAt.present
+            ? Value(nextFollowAt.value?.toUtc().millisecondsSinceEpoch)
+            : const Value.absent(),
+        updatedAt: Value(ts),
+      ),
+    );
+  }
+
   Future<List<OpportunityRow>> listOfCustomer(int customerId) =>
       (select(opportunities)
             ..where((table) => table.customerId.equals(customerId))
@@ -169,6 +256,28 @@ class OpportunityDao extends DatabaseAccessor<AppDatabase>
     final query = selectOnly(opportunities)..addColumns([count]);
     final row = await query.getSingle();
     return row.read(count) ?? 0;
+  }
+
+  Future<bool> hasLinkedBusinessRecords(int id) async {
+    final row = await customSelect(
+      '''
+        SELECT EXISTS (
+          SELECT 1 FROM followups WHERE opportunity_id = ?
+          UNION ALL
+          SELECT 1 FROM follow_plans WHERE opportunity_id = ?
+          UNION ALL
+          SELECT 1 FROM orders WHERE opportunity_id = ?
+          LIMIT 1
+        ) AS has_records
+      ''',
+      variables: [
+        Variable.withInt(id),
+        Variable.withInt(id),
+        Variable.withInt(id),
+      ],
+      readsFrom: {followups, followPlans, orders},
+    ).getSingle();
+    return row.read<int>('has_records') == 1;
   }
 
   Future<int> deleteOpportunity(int id) =>

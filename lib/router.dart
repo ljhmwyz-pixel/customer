@@ -8,6 +8,7 @@ import 'features/customers/followup_form_page.dart';
 import 'features/funnel/funnel_page.dart';
 import 'features/home/home_page.dart';
 import 'features/orders/order_form_page.dart';
+import 'features/opportunities/opportunity_form_page.dart';
 import 'features/reminders/permission_page.dart';
 import 'features/reminders/reminder_log_page.dart';
 import 'features/reminders/reminder_test_page.dart';
@@ -87,6 +88,36 @@ final router = GoRouter(
                           return const CustomerDetailPage(customerId: null);
                         }
                         return FollowupFormPage(customerId: customerId);
+                      },
+                    ),
+                    GoRoute(
+                      path: 'opportunities/new',
+                      builder: (context, state) {
+                        final customerId = int.tryParse(
+                          state.pathParameters['id'] ?? '',
+                        );
+                        if (customerId == null) {
+                          return const _RouteErrorPage(message: '客户编号无效');
+                        }
+                        return OpportunityFormPage(customerId: customerId);
+                      },
+                    ),
+                    GoRoute(
+                      path: 'opportunities/:opportunityId/edit',
+                      builder: (context, state) {
+                        final customerId = int.tryParse(
+                          state.pathParameters['id'] ?? '',
+                        );
+                        final opportunityId = int.tryParse(
+                          state.pathParameters['opportunityId'] ?? '',
+                        );
+                        if (customerId == null || opportunityId == null) {
+                          return const _RouteErrorPage(message: '项目编号无效');
+                        }
+                        return OpportunityFormPage(
+                          customerId: customerId,
+                          opportunityId: opportunityId,
+                        );
                       },
                     ),
                     GoRoute(
