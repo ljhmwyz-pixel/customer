@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'features/customers/customer_detail_page.dart';
+import 'features/business/quote_form_page.dart';
+import 'features/business/sample_form_page.dart';
 import 'features/customers/customer_form_page.dart';
 import 'features/customers/customers_page.dart';
 import 'features/customers/followup_form_page.dart';
@@ -131,6 +133,24 @@ final router = GoRouter(
                         }
                         return OrderFormPage(customerId: customerId);
                       },
+                    ),
+                    GoRoute(
+                      path: 'opportunities/:opportunityId/quotes/new',
+                      builder: (context, state) => QuoteFormPage(
+                        customerId: int.parse(state.pathParameters['id']!),
+                        opportunityId: int.parse(
+                          state.pathParameters['opportunityId']!,
+                        ),
+                      ),
+                    ),
+                    GoRoute(
+                      path: 'opportunities/:opportunityId/samples/new',
+                      builder: (context, state) => SampleFormPage(
+                        customerId: int.parse(state.pathParameters['id']!),
+                        opportunityId: int.parse(
+                          state.pathParameters['opportunityId']!,
+                        ),
+                      ),
                     ),
                     GoRoute(
                       path: 'orders/:orderId/edit',

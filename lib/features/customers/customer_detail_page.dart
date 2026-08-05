@@ -154,6 +154,7 @@ class CustomerDetailPage extends ConsumerWidget {
                 else
                   ...value.opportunities.map(
                     (opportunity) => _OpportunityTile(
+                      customerId: id,
                       opportunity: opportunity,
                       onEdit: () => context.push(
                         '/customers/$id/opportunities/${opportunity.id}/edit',
@@ -708,12 +709,14 @@ enum _OpportunityAction { edit, delete }
 
 class _OpportunityTile extends StatelessWidget {
   const _OpportunityTile({
+    required this.customerId,
     required this.opportunity,
     required this.onEdit,
     required this.onDelete,
   });
 
   final OpportunityRow opportunity;
+  final int customerId;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
@@ -768,19 +771,41 @@ class _OpportunityTile extends StatelessWidget {
             ),
         ],
       ),
-      trailing: PopupMenuButton<_OpportunityAction>(
-        tooltip: '项目操作',
-        onSelected: (action) {
-          switch (action) {
-            case _OpportunityAction.edit:
-              onEdit();
-            case _OpportunityAction.delete:
-              onDelete();
-          }
-        },
-        itemBuilder: (context) => const [
-          PopupMenuItem(value: _OpportunityAction.edit, child: Text('编辑')),
-          PopupMenuItem(value: _OpportunityAction.delete, child: Text('删除')),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: '新增报价',
+            onPressed: () => context.push(
+              '/customers/$customerId/opportunities/${opportunity.id}/quotes/new',
+            ),
+            icon: const Icon(Icons.request_quote_outlined),
+          ),
+          IconButton(
+            tooltip: '新增样品',
+            onPressed: () => context.push(
+              '/customers/$customerId/opportunities/${opportunity.id}/samples/new',
+            ),
+            icon: const Icon(Icons.inventory_2_outlined),
+          ),
+          PopupMenuButton<_OpportunityAction>(
+            tooltip: '项目操作',
+            onSelected: (action) {
+              switch (action) {
+                case _OpportunityAction.edit:
+                  onEdit();
+                case _OpportunityAction.delete:
+                  onDelete();
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(value: _OpportunityAction.edit, child: Text('编辑')),
+              PopupMenuItem(
+                value: _OpportunityAction.delete,
+                child: Text('删除'),
+              ),
+            ],
+          ),
         ],
       ),
     );
