@@ -1,6 +1,4 @@
 import 'package:customer/data/database.dart';
-import 'package:customer/data/tables/quotes.dart';
-import 'package:customer/data/tables/samples.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 

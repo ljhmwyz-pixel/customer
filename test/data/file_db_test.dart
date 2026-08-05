@@ -30,7 +30,7 @@ void main() {
     }
   });
 
-  test('落盘库初始化后文件真实存在且九张表建成', () async {
+  test('落盘库初始化后文件真实存在且十一张表建成', () async {
     final tables = await db
         .customSelect(
           "SELECT name FROM sqlite_master WHERE type = 'table' "
@@ -39,7 +39,7 @@ void main() {
         .get();
 
     expect(await dbFile.exists(), isTrue);
-    expect(tables, hasLength(9));
+    expect(tables, hasLength(11));
     expect(await dbFile.length(), greaterThan(0));
   });
 
@@ -72,9 +72,9 @@ void main() {
 
     expect(rows, hasLength(1));
     expect(rows.single.name, '持久化客户');
-    // 重开后 user_version 仍是 4，不会重跑 onCreate。
+    // 重开后 user_version 仍是 5，不会重跑 onCreate。
     final v = await db.customSelect('PRAGMA user_version').getSingle();
-    expect(v.data.values.first, 4);
+    expect(v.data.values.first, 5);
   });
 
   test('落盘库在 500 客户 + 5000 跟进下排序仍低于 200ms', () async {

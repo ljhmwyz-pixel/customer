@@ -148,3 +148,32 @@ Android emulator evidence:
 - Screenshot captured at `/tmp/customer-stage9c.png` for visual inspection.
 
 Manual-risk boundary: quote/sample/registration/tender/repurchase metrics remain unavailable until their source entities exist; target-device seven-day reminder validation remains a later release gate.
+
+## Stage D: Quote, Sample, and Automatic Task Rules
+
+Date: 2026-08-05
+
+Fresh automated evidence:
+
+- `dart run build_runner build --delete-conflicting-outputs`: exit 0; installed build_runner reports the legacy flag is ignored.
+- `flutter analyze`: `No issues found!`.
+- `flutter test`: 210 tests passed, zero failures.
+- `flutter build apk --debug`: generated `build/app/outputs/flutter-apk/app-debug.apk`.
+- `git diff --check`: passed with no whitespace errors.
+
+Delivered scope:
+
+- v4-to-v5 additive migration with quote-version and sample-lifecycle tables, constraints, indexes, and preservation of legacy business rows.
+- Quote DAO/service supports immutable versions, latest lookup, amount/date validation, and opportunity ownership checks.
+- Sample DAO/service preserves sent/delivered/testing/result milestones and validates lifecycle dates.
+- Quote/sample automatic tasks use source/rule identity, weekday-aware quote milestones, sample milestone rules, closed-project suppression, and reminder scheduling after persistence.
+- Customer project entries open compact quote/sample forms with stable test keys and provider invalidation.
+
+Android emulator evidence:
+
+- Device: Pixel 8 AVD (`emulator-5554`), Android API 37.
+- Upgrade: `adb -s emulator-5554 install -r build/app/outputs/flutter-apk/app-debug.apk`; result `Success`, no data clear.
+- Cold launch: `adb -s emulator-5554 shell monkey -p com.snyder.customer 1`; no `FATAL EXCEPTION`, `SQLiteException`, or Drift error in the inspected logcat window.
+- Screenshot captured at `/tmp/customer-stageD.png`.
+
+Manual-risk boundary: quote/sample forms currently provide core creation and milestone persistence; full history timeline presentation and Phase E registration/tender/order decomposition/repurchase remain later work.

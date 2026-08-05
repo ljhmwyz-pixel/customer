@@ -1,8 +1,6 @@
 import 'package:customer/features/business/business_providers.dart';
 import 'package:customer/data/database.dart';
 import 'package:customer/features/customers/customer_providers.dart';
-import 'package:customer/models/enums.dart';
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../data/helpers.dart';
