@@ -13,6 +13,8 @@ import 'daos/followup_dao.dart';
 import 'daos/order_dao.dart';
 import 'daos/opportunity_dao.dart';
 import 'daos/plan_dao.dart';
+import 'daos/quote_dao.dart';
+import 'daos/sample_dao.dart';
 import 'tables/attachments.dart';
 import 'tables/contacts.dart';
 import 'tables/customers.dart';
@@ -48,6 +50,8 @@ part 'database.g.dart';
     OrderDao,
     OpportunityDao,
     AttachmentDao,
+    QuoteDao,
+    SampleDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {

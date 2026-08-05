@@ -154,6 +154,25 @@ enum OpportunityImportance {
   );
 }
 
+enum SampleStatus {
+  preparing('preparing', '准备中'),
+  sent('sent', '已寄出'),
+  delivered('delivered', '已签收'),
+  testing('testing', '测试中'),
+  passed('passed', '测试通过'),
+  failed('failed', '测试未通过'),
+  cancelled('cancelled', '已取消');
+
+  const SampleStatus(this.dbValue, this.label);
+  final String dbValue;
+  final String label;
+
+  static SampleStatus fromDb(String value) => values.firstWhere(
+    (status) => status.dbValue == value,
+    orElse: () => throw InvalidEnumValueException('SampleStatus', value),
+  );
+}
+
 /// 跟进方式。
 enum FollowMethod {
   phone('phone', '电话'),
