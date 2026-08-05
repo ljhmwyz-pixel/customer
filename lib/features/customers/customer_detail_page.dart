@@ -705,7 +705,7 @@ class _ContactTile extends StatelessWidget {
 
 enum _OrderAction { edit, advance, cancel, delete }
 
-enum _OpportunityAction { edit, delete }
+enum _OpportunityAction { registration, tender, edit, delete }
 
 class _OpportunityTile extends StatelessWidget {
   const _OpportunityTile({
@@ -792,6 +792,14 @@ class _OpportunityTile extends StatelessWidget {
             tooltip: '项目操作',
             onSelected: (action) {
               switch (action) {
+                case _OpportunityAction.registration:
+                  context.push(
+                    '/customers/$customerId/opportunities/${opportunity.id}/registrations/new',
+                  );
+                case _OpportunityAction.tender:
+                  context.push(
+                    '/customers/$customerId/opportunities/${opportunity.id}/tenders/new',
+                  );
                 case _OpportunityAction.edit:
                   onEdit();
                 case _OpportunityAction.delete:
@@ -799,6 +807,14 @@ class _OpportunityTile extends StatelessWidget {
               }
             },
             itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: _OpportunityAction.registration,
+                child: Text('新增注册'),
+              ),
+              PopupMenuItem(
+                value: _OpportunityAction.tender,
+                child: Text('新增招标'),
+              ),
               PopupMenuItem(value: _OpportunityAction.edit, child: Text('编辑')),
               PopupMenuItem(
                 value: _OpportunityAction.delete,

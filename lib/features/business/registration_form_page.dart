@@ -1,0 +1,271 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../models/enums.dart';
+import '../../theme/tokens.dart';
+import '../customers/customer_providers.dart';
+import 'business_providers.dart';
+
+class RegistrationFormPage extends ConsumerStatefulWidget {
+  const RegistrationFormPage({
+    required this.customerId,
+    required this.opportunityId,
+    super.key,
+  });
+
+  final int customerId;
+  final int opportunityId;
+
+  @override
+  ConsumerState<RegistrationFormPage> createState() =>
+      _RegistrationFormPageState();
+}
+
+class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
+  final _country = TextEditingController();
+  final _requirements = TextEditingController();
+  final _documentChecklist = TextEditingController();
+  final _costBearer = TextEditingController();
+  final _currentObstacle = TextEditingController();
+  final _nextAction = TextEditingController();
+  final _milestoneTitle = TextEditingController();
+
+  RegistrationDocumentStatus _documentStatus =
+      RegistrationDocumentStatus.pending;
+  RegistrationStatus _status = RegistrationStatus.preparing;
+  DateTime? _submittedAt;
+  DateTime? _expectedCompletedAt;
+  DateTime? _actualCompletedAt;
+  DateTime? _documentDueAt;
+  DateTime? _milestoneAt;
+  bool _saving = false;
+
+  @override
+  void dispose() {
+    _country.dispose();
+    _requirements.dispose();
+    _documentChecklist.dispose();
+    _costBearer.dispose();
+    _currentObstacle.dispose();
+    _nextAction.dispose();
+    _milestoneTitle.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    try {
+      await ref
+          .read(businessServiceProvider)
+          .createRegistration(
+            customerId: widget.customerId,
+            opportunityId: widget.opportunityId,
+            country: _country.text,
+            requirements: _requirements.text,
+            documentChecklist: _documentChecklist.text,
+            documentStatus: _documentStatus,
+            submittedAt: _submittedAt,
+            expectedCompletedAt: _expectedCompletedAt,
+            actualCompletedAt: _actualCompletedAt,
+            costBearer: _costBearer.text,
+            status: _status,
+            currentObstacle: _currentObstacle.text,
+            nextAction: _nextAction.text,
+            documentDueAt: _documentDueAt,
+            milestoneAt: _milestoneAt,
+            milestoneTitle: _milestoneTitle.text,
+          );
+      ref.read(customerRevisionProvider.notifier).refresh();
+      if (mounted) context.pop();
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$error')));
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('新增注册')),
+    body: SingleChildScrollView(
+      padding: const EdgeInsets.all(AppTokens.s16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _textField(
+            key: 'registration-country',
+            controller: _country,
+            label: '注册国家/地区',
+          ),
+          _textField(
+            key: 'registration-requirements',
+            controller: _requirements,
+            label: '注册要求',
+            maxLines: 3,
+          ),
+          _textField(
+            key: 'registration-document-checklist',
+            controller: _documentChecklist,
+            label: '资料清单',
+            maxLines: 3,
+          ),
+          DropdownButtonFormField<RegistrationDocumentStatus>(
+            key: const ValueKey('registration-document-status'),
+            initialValue: _documentStatus,
+            decoration: const InputDecoration(labelText: '资料状态'),
+            items: RegistrationDocumentStatus.values
+                .map(
+                  (value) =>
+                      DropdownMenuItem(value: value, child: Text(value.label)),
+                )
+                .toList(),
+            onChanged: (value) {
+              if (value != null) setState(() => _documentStatus = value);
+            },
+          ),
+          _DateField(
+            key: const ValueKey('registration-submitted-at'),
+            label: '提交日期',
+            value: _submittedAt,
+            onChanged: (value) => setState(() => _submittedAt = value),
+          ),
+          _DateField(
+            key: const ValueKey('registration-expected-completed-at'),
+            label: '预计完成日期',
+            value: _expectedCompletedAt,
+            onChanged: (value) => setState(() => _expectedCompletedAt = value),
+          ),
+          _DateField(
+            key: const ValueKey('registration-actual-completed-at'),
+            label: '实际完成日期',
+            value: _actualCompletedAt,
+            onChanged: (value) => setState(() => _actualCompletedAt = value),
+          ),
+          _textField(
+            key: 'registration-cost-bearer',
+            controller: _costBearer,
+            label: '费用承担方',
+          ),
+          DropdownButtonFormField<RegistrationStatus>(
+            key: const ValueKey('registration-status'),
+            initialValue: _status,
+            decoration: const InputDecoration(labelText: '注册状态'),
+            items: RegistrationStatus.values
+                .map(
+                  (value) =>
+                      DropdownMenuItem(value: value, child: Text(value.label)),
+                )
+                .toList(),
+            onChanged: (value) {
+              if (value != null) setState(() => _status = value);
+            },
+          ),
+          _textField(
+            key: 'registration-current-obstacle',
+            controller: _currentObstacle,
+            label: '当前障碍',
+            maxLines: 2,
+          ),
+          _textField(
+            key: 'registration-next-action',
+            controller: _nextAction,
+            label: '下一步行动',
+            maxLines: 2,
+          ),
+          _DateField(
+            key: const ValueKey('registration-document-due-at'),
+            label: '资料截止日期',
+            value: _documentDueAt,
+            onChanged: (value) => setState(() => _documentDueAt = value),
+          ),
+          _DateField(
+            key: const ValueKey('registration-milestone-at'),
+            label: '里程碑日期',
+            value: _milestoneAt,
+            onChanged: (value) => setState(() => _milestoneAt = value),
+          ),
+          _textField(
+            key: 'registration-milestone-title',
+            controller: _milestoneTitle,
+            label: '里程碑标题',
+          ),
+          const SizedBox(height: AppTokens.s24),
+          FilledButton(
+            key: const ValueKey('registration-save'),
+            onPressed: _saving ? null : _save,
+            child: const Text('保存注册'),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _textField({
+    required String key,
+    required TextEditingController controller,
+    required String label,
+    int maxLines = 1,
+  }) => Padding(
+    padding: const EdgeInsets.only(bottom: AppTokens.s12),
+    child: TextField(
+      key: ValueKey(key),
+      controller: controller,
+      maxLines: maxLines,
+      decoration: InputDecoration(labelText: label),
+    ),
+  );
+}
+
+class _DateField extends StatelessWidget {
+  const _DateField({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    super.key,
+  });
+
+  final String label;
+  final DateTime? value;
+  final ValueChanged<DateTime?> onChanged;
+
+  Future<void> _pick(BuildContext context) async {
+    final today = DateUtils.dateOnly(DateTime.now());
+    final selected = await showDatePicker(
+      context: context,
+      initialDate: value ?? today,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (selected != null) onChanged(selected);
+  }
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: AppTokens.s12),
+    child: InkWell(
+      onTap: () => _pick(context),
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          suffixIcon: value == null
+              ? const Icon(Icons.calendar_today_outlined)
+              : IconButton(
+                  tooltip: '清除日期',
+                  onPressed: () => onChanged(null),
+                  icon: const Icon(Icons.clear),
+                ),
+        ),
+        child: Text(
+          value == null
+              ? '请选择'
+              : '${value!.year}-${value!.month.toString().padLeft(2, '0')}-${value!.day.toString().padLeft(2, '0')}',
+        ),
+      ),
+    ),
+  );
+}

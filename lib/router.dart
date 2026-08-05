@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 
 import 'features/customers/customer_detail_page.dart';
 import 'features/business/quote_form_page.dart';
+import 'features/business/registration_form_page.dart';
 import 'features/business/sample_form_page.dart';
+import 'features/business/tender_form_page.dart';
 import 'features/customers/customer_form_page.dart';
 import 'features/customers/customers_page.dart';
 import 'features/customers/followup_form_page.dart';
@@ -151,6 +153,42 @@ final router = GoRouter(
                           state.pathParameters['opportunityId']!,
                         ),
                       ),
+                    ),
+                    GoRoute(
+                      path: 'opportunities/:opportunityId/registrations/new',
+                      builder: (context, state) {
+                        final customerId = int.tryParse(
+                          state.pathParameters['id'] ?? '',
+                        );
+                        final opportunityId = int.tryParse(
+                          state.pathParameters['opportunityId'] ?? '',
+                        );
+                        if (customerId == null || opportunityId == null) {
+                          return const _RouteErrorPage(message: '项目编号无效');
+                        }
+                        return RegistrationFormPage(
+                          customerId: customerId,
+                          opportunityId: opportunityId,
+                        );
+                      },
+                    ),
+                    GoRoute(
+                      path: 'opportunities/:opportunityId/tenders/new',
+                      builder: (context, state) {
+                        final customerId = int.tryParse(
+                          state.pathParameters['id'] ?? '',
+                        );
+                        final opportunityId = int.tryParse(
+                          state.pathParameters['opportunityId'] ?? '',
+                        );
+                        if (customerId == null || opportunityId == null) {
+                          return const _RouteErrorPage(message: '项目编号无效');
+                        }
+                        return TenderFormPage(
+                          customerId: customerId,
+                          opportunityId: opportunityId,
+                        );
+                      },
                     ),
                     GoRoute(
                       path: 'orders/:orderId/edit',
