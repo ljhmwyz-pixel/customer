@@ -7,16 +7,16 @@ import 'package:sqlite3/sqlite3.dart' as sqlite;
 
 import 'helpers.dart';
 
-/// v2 数据库初始化与 v1 真库升级。
+/// v3 数据库初始化与 v1/v2 真库升级。
 void main() {
   late AppDatabase db;
 
-  group('v2 新库', () {
+  group('v3 新库', () {
     setUp(() async => db = await openTestDb());
     tearDown(() async => db.close());
 
-    test('schemaVersion 为 2', () {
-      expect(db.schemaVersion, 2);
+    test('schemaVersion 为 3', () {
+      expect(db.schemaVersion, 3);
     });
 
     test('空库初始化后九张表全部建成', () async {
@@ -70,11 +70,28 @@ void main() {
       });
     });
 
-    test('user_version 写入为 2', () async {
+    test('跟进快照与项目最后跟进字段已建成', () async {
+      expect(
+        await _columnNames(db, 'followups'),
+        containsAll({
+          'feedback',
+          'stage',
+          'next_action',
+          'next_follow_at',
+          'pause_reason',
+        }),
+      );
+      expect(
+        await _columnNames(db, 'opportunities'),
+        contains('last_follow_at'),
+      );
+    });
+
+    test('user_version 写入为 3', () async {
       // drift 用 SQLite 的 user_version 记录 schema 版本，
       // 这个值不对的话后续 onUpgrade 会走错分支。
       final row = await db.customSelect('PRAGMA user_version').getSingle();
-      expect(row.data.values.first, 2);
+      expect(row.data.values.first, 3);
     });
 
     test('外键约束在 beforeOpen 后处于开启状态', () async {
@@ -145,7 +162,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 2);
+      expect(version.data.values.first, 3);
 
       final opportunities = await migrated.customSelect('''
             SELECT customer_id, name, stage, status, is_legacy_default
@@ -196,6 +213,22 @@ void main() {
       expect(customers.read<int>('count'), 5);
       expect(attachments.read<int>('count'), 2);
 
+      final migratedFollowup = await migrated.customSelect('''
+            SELECT feedback, stage, next_action, next_follow_at, pause_reason
+            FROM followups
+            WHERE id = 1
+          ''').getSingle();
+      expect(migratedFollowup.read<String>('feedback'), '旧跟进');
+      expect(migratedFollowup.read<String>('stage'), 'new_lead');
+      expect(migratedFollowup.read<String>('next_action'), '历史跟进（未记录下一步行动）');
+      expect(migratedFollowup.read<int?>('next_follow_at'), isNull);
+      expect(migratedFollowup.read<String?>('pause_reason'), isNull);
+
+      final projectLastFollowAt = await migrated.customSelect('''
+            SELECT last_follow_at FROM opportunities WHERE customer_id = 1
+          ''').getSingle();
+      expect(projectLastFollowAt.read<int>('last_follow_at'), 1785888000000);
+
       final foreignKeyErrors = await migrated
           .customSelect('PRAGMA foreign_key_check')
           .get();
@@ -205,6 +238,86 @@ void main() {
       await directory.delete(recursive: true);
     }
   });
+
+  test('v2 真库升级后无损回填快照与项目最后跟进时间', () async {
+    final directory = await Directory.systemTemp.createTemp('customer-v2-');
+    final file = File('${directory.path}/customer.sqlite');
+    final raw = sqlite.sqlite3.open(file.path);
+    try {
+      _createV1Schema(raw);
+      _seedV1Data(raw);
+      _upgradeFixtureToV2(raw);
+    } finally {
+      raw.close();
+    }
+
+    final migrated = AppDatabase.forTesting(NativeDatabase(file));
+    try {
+      await migrated.customSelect('SELECT 1').getSingle();
+
+      final version = await migrated
+          .customSelect('PRAGMA user_version')
+          .getSingle();
+      expect(version.data.values.first, 3);
+
+      final followup = await migrated.customSelect('''
+            SELECT opportunity_id, content, conclusion, feedback, stage,
+                   next_action, next_follow_at, pause_reason
+            FROM followups
+            WHERE id = 1
+          ''').getSingle();
+      expect(followup.read<int>('opportunity_id'), 1);
+      expect(followup.read<String>('content'), '旧跟进');
+      expect(followup.read<String>('conclusion'), '旧结论');
+      expect(followup.read<String>('feedback'), '旧结论');
+      expect(followup.read<String>('stage'), 'quoted');
+      expect(followup.read<String>('next_action'), '发送修订报价');
+      expect(followup.read<int?>('next_follow_at'), isNull);
+      expect(followup.read<String?>('pause_reason'), isNull);
+
+      final opportunity = await migrated.customSelect('''
+            SELECT stage, latest_feedback, next_action, next_follow_at,
+                   last_follow_at
+            FROM opportunities
+            WHERE id = 1
+          ''').getSingle();
+      expect(opportunity.read<String>('stage'), 'quoted');
+      expect(opportunity.read<String>('latest_feedback'), '原项目反馈');
+      expect(opportunity.read<String>('next_action'), '发送修订报价');
+      expect(opportunity.read<int>('next_follow_at'), 1786492800000);
+      expect(opportunity.read<int>('last_follow_at'), 1785888000000);
+
+      for (final table in [
+        'customers',
+        'opportunities',
+        'followups',
+        'follow_plans',
+        'orders',
+      ]) {
+        final count = await migrated
+            .customSelect('SELECT COUNT(*) AS count FROM $table')
+            .getSingle();
+        expect(count.read<int>('count'), isPositive, reason: table);
+      }
+      final attachments = await migrated
+          .customSelect('SELECT COUNT(*) AS count FROM attachments')
+          .getSingle();
+      expect(attachments.read<int>('count'), 2);
+
+      final foreignKeyErrors = await migrated
+          .customSelect('PRAGMA foreign_key_check')
+          .get();
+      expect(foreignKeyErrors, isEmpty);
+    } finally {
+      await migrated.close();
+      await directory.delete(recursive: true);
+    }
+  });
+}
+
+Future<Set<String>> _columnNames(AppDatabase db, String table) async {
+  final rows = await db.customSelect('PRAGMA table_info($table)').get();
+  return rows.map((row) => row.read<String>('name')).toSet();
 }
 
 void _createV1Schema(sqlite.Database db) {
@@ -352,4 +465,62 @@ void _seedV1Data(sqlite.Database db) {
        created_at, updated_at)
     VALUES (1, 'attachments/o.pdf', 'o.pdf', 'application/pdf', 200, $now, $now)
   ''');
+}
+
+void _upgradeFixtureToV2(sqlite.Database db) {
+  db.execute('''
+    CREATE TABLE opportunities (
+      id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      customer_id INTEGER NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      product_category TEXT,
+      product_model TEXT,
+      equipment_brand TEXT,
+      equipment_model TEXT,
+      estimated_annual_volume INTEGER,
+      forecast_amount_minor INTEGER,
+      currency TEXT NOT NULL DEFAULT 'USD',
+      probability_percent INTEGER,
+      expected_close_at INTEGER,
+      current_supplier TEXT,
+      current_purchase_brand TEXT,
+      current_purchase_price_minor INTEGER,
+      supplier_stability TEXT,
+      supplier_problem TEXT,
+      change_willingness TEXT,
+      substitution_difficulty TEXT,
+      latest_quote_minor INTEGER,
+      target_price_minor INTEGER,
+      entry_point TEXT,
+      investment_advice TEXT,
+      needs_sample INTEGER NOT NULL DEFAULT 0,
+      needs_registration INTEGER NOT NULL DEFAULT 0,
+      needs_authorization INTEGER NOT NULL DEFAULT 0,
+      stage TEXT NOT NULL DEFAULT 'new_lead',
+      status TEXT NOT NULL DEFAULT 'active',
+      latest_feedback TEXT,
+      current_obstacle TEXT,
+      next_action TEXT,
+      next_follow_at INTEGER,
+      is_legacy_default INTEGER NOT NULL DEFAULT 0,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    )
+  ''');
+  db.execute('ALTER TABLE followups ADD COLUMN opportunity_id INTEGER');
+  db.execute('ALTER TABLE follow_plans ADD COLUMN opportunity_id INTEGER');
+  db.execute('ALTER TABLE orders ADD COLUMN opportunity_id INTEGER');
+  db.execute('''
+    INSERT INTO opportunities (
+      customer_id, name, stage, status, latest_feedback, next_action,
+      next_follow_at, is_legacy_default, created_at, updated_at
+    ) VALUES (
+      1, 'CT 注射器', 'quoted', 'active', '原项目反馈', '发送修订报价',
+      1786492800000, 0, 1785888000000, 1785888000000
+    )
+  ''');
+  db.execute("UPDATE followups SET opportunity_id = 1, conclusion = '旧结论'");
+  db.execute('UPDATE follow_plans SET opportunity_id = 1');
+  db.execute('UPDATE orders SET opportunity_id = 1');
+  db.execute('PRAGMA user_version = 2');
 }

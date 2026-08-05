@@ -27,8 +27,13 @@ class FollowupDao extends DatabaseAccessor<AppDatabase>
     required FollowMethod method,
     required String content,
     String? conclusion,
+    String? feedback,
+    OpportunityStage? stage,
+    String? nextAction,
+    DateTime? nextFollowAt,
+    String? pauseReason,
     DateTime? now,
-  }) {
+  }) async {
     final ts = (now ?? DateTime.now()).toUtc().millisecondsSinceEpoch;
     final occurredMs = occurredAt.toUtc().millisecondsSinceEpoch;
 
@@ -41,6 +46,11 @@ class FollowupDao extends DatabaseAccessor<AppDatabase>
           method: method.dbValue,
           content: content,
           conclusion: Value(conclusion),
+          feedback: Value(feedback),
+          stage: Value(stage?.dbValue),
+          nextAction: Value(nextAction),
+          nextFollowAt: Value(nextFollowAt?.toUtc().millisecondsSinceEpoch),
+          pauseReason: Value(pauseReason),
           createdAt: ts,
           updatedAt: ts,
         ),

@@ -956,6 +956,12 @@ class _TimelineEntry extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final feedback = followup.feedback?.trim();
+    final stage = followup.stage == null
+        ? null
+        : OpportunityStage.fromDb(followup.stage!).label;
+    final nextAction = followup.nextAction?.trim();
+    final pauseReason = followup.pauseReason?.trim();
     final conclusion = followup.conclusion?.trim();
     return IntrinsicHeight(
       child: Row(
@@ -1015,8 +1021,31 @@ class _TimelineEntry extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: AppTokens.s8),
-                  Text(followup.content),
-                  if (conclusion != null && conclusion.isNotEmpty) ...[
+                  if (feedback != null && feedback.isNotEmpty) ...[
+                    Text('客户反馈：$feedback'),
+                    if (stage != null) ...[
+                      const SizedBox(height: AppTokens.s4),
+                      Text('项目阶段：$stage'),
+                    ],
+                    if (nextAction != null && nextAction.isNotEmpty) ...[
+                      const SizedBox(height: AppTokens.s4),
+                      Text('下一步行动：$nextAction'),
+                    ],
+                    if (pauseReason != null && pauseReason.isNotEmpty) ...[
+                      const SizedBox(height: AppTokens.s4),
+                      Text('暂不跟进：$pauseReason'),
+                    ] else if (followup.nextFollowAt != null) ...[
+                      const SizedBox(height: AppTokens.s4),
+                      Text(
+                        '下次跟进：${formatDateTime(localDateTime(followup.nextFollowAt!))}',
+                      ),
+                    ],
+                  ] else ...[
+                    Text(followup.content),
+                  ],
+                  if ((feedback == null || feedback.isEmpty) &&
+                      conclusion != null &&
+                      conclusion.isNotEmpty) ...[
                     const SizedBox(height: AppTokens.s8),
                     Text(
                       '结论：$conclusion',

@@ -1130,6 +1130,17 @@ class $OpportunitiesTable extends Opportunities
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _lastFollowAtMeta = const VerificationMeta(
+    'lastFollowAt',
+  );
+  @override
+  late final GeneratedColumn<int> lastFollowAt = GeneratedColumn<int>(
+    'last_follow_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _isLegacyDefaultMeta = const VerificationMeta(
     'isLegacyDefault',
   );
@@ -1201,6 +1212,7 @@ class $OpportunitiesTable extends Opportunities
     currentObstacle,
     nextAction,
     nextFollowAt,
+    lastFollowAt,
     isLegacyDefault,
     createdAt,
     updatedAt,
@@ -1482,6 +1494,15 @@ class $OpportunitiesTable extends Opportunities
         ),
       );
     }
+    if (data.containsKey('last_follow_at')) {
+      context.handle(
+        _lastFollowAtMeta,
+        lastFollowAt.isAcceptableOrUnknown(
+          data['last_follow_at']!,
+          _lastFollowAtMeta,
+        ),
+      );
+    }
     if (data.containsKey('is_legacy_default')) {
       context.handle(
         _isLegacyDefaultMeta,
@@ -1644,6 +1665,10 @@ class $OpportunitiesTable extends Opportunities
         DriftSqlType.int,
         data['${effectivePrefix}next_follow_at'],
       ),
+      lastFollowAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_follow_at'],
+      ),
       isLegacyDefault: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_legacy_default'],
@@ -1705,6 +1730,9 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
   final String? nextAction;
   final int? nextFollowAt;
 
+  /// 最近一次同步到项目状态的跟进发生时间。
+  final int? lastFollowAt;
+
   /// v1 升级时为每个客户创建的历史承接项目。
   final bool isLegacyDefault;
   final int createdAt;
@@ -1742,6 +1770,7 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
     this.currentObstacle,
     this.nextAction,
     this.nextFollowAt,
+    this.lastFollowAt,
     required this.isLegacyDefault,
     required this.createdAt,
     required this.updatedAt,
@@ -1828,6 +1857,9 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
     }
     if (!nullToAbsent || nextFollowAt != null) {
       map['next_follow_at'] = Variable<int>(nextFollowAt);
+    }
+    if (!nullToAbsent || lastFollowAt != null) {
+      map['last_follow_at'] = Variable<int>(lastFollowAt);
     }
     map['is_legacy_default'] = Variable<bool>(isLegacyDefault);
     map['created_at'] = Variable<int>(createdAt);
@@ -1916,6 +1948,9 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
       nextFollowAt: nextFollowAt == null && nullToAbsent
           ? const Value.absent()
           : Value(nextFollowAt),
+      lastFollowAt: lastFollowAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastFollowAt),
       isLegacyDefault: Value(isLegacyDefault),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -1974,6 +2009,7 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
       currentObstacle: serializer.fromJson<String?>(json['currentObstacle']),
       nextAction: serializer.fromJson<String?>(json['nextAction']),
       nextFollowAt: serializer.fromJson<int?>(json['nextFollowAt']),
+      lastFollowAt: serializer.fromJson<int?>(json['lastFollowAt']),
       isLegacyDefault: serializer.fromJson<bool>(json['isLegacyDefault']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
@@ -2019,6 +2055,7 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
       'currentObstacle': serializer.toJson<String?>(currentObstacle),
       'nextAction': serializer.toJson<String?>(nextAction),
       'nextFollowAt': serializer.toJson<int?>(nextFollowAt),
+      'lastFollowAt': serializer.toJson<int?>(lastFollowAt),
       'isLegacyDefault': serializer.toJson<bool>(isLegacyDefault),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
@@ -2058,6 +2095,7 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
     Value<String?> currentObstacle = const Value.absent(),
     Value<String?> nextAction = const Value.absent(),
     Value<int?> nextFollowAt = const Value.absent(),
+    Value<int?> lastFollowAt = const Value.absent(),
     bool? isLegacyDefault,
     int? createdAt,
     int? updatedAt,
@@ -2132,6 +2170,7 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
         : this.currentObstacle,
     nextAction: nextAction.present ? nextAction.value : this.nextAction,
     nextFollowAt: nextFollowAt.present ? nextFollowAt.value : this.nextFollowAt,
+    lastFollowAt: lastFollowAt.present ? lastFollowAt.value : this.lastFollowAt,
     isLegacyDefault: isLegacyDefault ?? this.isLegacyDefault,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -2224,6 +2263,9 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
       nextFollowAt: data.nextFollowAt.present
           ? data.nextFollowAt.value
           : this.nextFollowAt,
+      lastFollowAt: data.lastFollowAt.present
+          ? data.lastFollowAt.value
+          : this.lastFollowAt,
       isLegacyDefault: data.isLegacyDefault.present
           ? data.isLegacyDefault.value
           : this.isLegacyDefault,
@@ -2267,6 +2309,7 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
           ..write('currentObstacle: $currentObstacle, ')
           ..write('nextAction: $nextAction, ')
           ..write('nextFollowAt: $nextFollowAt, ')
+          ..write('lastFollowAt: $lastFollowAt, ')
           ..write('isLegacyDefault: $isLegacyDefault, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -2308,6 +2351,7 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
     currentObstacle,
     nextAction,
     nextFollowAt,
+    lastFollowAt,
     isLegacyDefault,
     createdAt,
     updatedAt,
@@ -2348,6 +2392,7 @@ class OpportunityRow extends DataClass implements Insertable<OpportunityRow> {
           other.currentObstacle == this.currentObstacle &&
           other.nextAction == this.nextAction &&
           other.nextFollowAt == this.nextFollowAt &&
+          other.lastFollowAt == this.lastFollowAt &&
           other.isLegacyDefault == this.isLegacyDefault &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -2386,6 +2431,7 @@ class OpportunitiesCompanion extends UpdateCompanion<OpportunityRow> {
   final Value<String?> currentObstacle;
   final Value<String?> nextAction;
   final Value<int?> nextFollowAt;
+  final Value<int?> lastFollowAt;
   final Value<bool> isLegacyDefault;
   final Value<int> createdAt;
   final Value<int> updatedAt;
@@ -2422,6 +2468,7 @@ class OpportunitiesCompanion extends UpdateCompanion<OpportunityRow> {
     this.currentObstacle = const Value.absent(),
     this.nextAction = const Value.absent(),
     this.nextFollowAt = const Value.absent(),
+    this.lastFollowAt = const Value.absent(),
     this.isLegacyDefault = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -2459,6 +2506,7 @@ class OpportunitiesCompanion extends UpdateCompanion<OpportunityRow> {
     this.currentObstacle = const Value.absent(),
     this.nextAction = const Value.absent(),
     this.nextFollowAt = const Value.absent(),
+    this.lastFollowAt = const Value.absent(),
     this.isLegacyDefault = const Value.absent(),
     required int createdAt,
     required int updatedAt,
@@ -2499,6 +2547,7 @@ class OpportunitiesCompanion extends UpdateCompanion<OpportunityRow> {
     Expression<String>? currentObstacle,
     Expression<String>? nextAction,
     Expression<int>? nextFollowAt,
+    Expression<int>? lastFollowAt,
     Expression<bool>? isLegacyDefault,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
@@ -2541,6 +2590,7 @@ class OpportunitiesCompanion extends UpdateCompanion<OpportunityRow> {
       if (currentObstacle != null) 'current_obstacle': currentObstacle,
       if (nextAction != null) 'next_action': nextAction,
       if (nextFollowAt != null) 'next_follow_at': nextFollowAt,
+      if (lastFollowAt != null) 'last_follow_at': lastFollowAt,
       if (isLegacyDefault != null) 'is_legacy_default': isLegacyDefault,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -2580,6 +2630,7 @@ class OpportunitiesCompanion extends UpdateCompanion<OpportunityRow> {
     Value<String?>? currentObstacle,
     Value<String?>? nextAction,
     Value<int?>? nextFollowAt,
+    Value<int?>? lastFollowAt,
     Value<bool>? isLegacyDefault,
     Value<int>? createdAt,
     Value<int>? updatedAt,
@@ -2620,6 +2671,7 @@ class OpportunitiesCompanion extends UpdateCompanion<OpportunityRow> {
       currentObstacle: currentObstacle ?? this.currentObstacle,
       nextAction: nextAction ?? this.nextAction,
       nextFollowAt: nextFollowAt ?? this.nextFollowAt,
+      lastFollowAt: lastFollowAt ?? this.lastFollowAt,
       isLegacyDefault: isLegacyDefault ?? this.isLegacyDefault,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -2733,6 +2785,9 @@ class OpportunitiesCompanion extends UpdateCompanion<OpportunityRow> {
     if (nextFollowAt.present) {
       map['next_follow_at'] = Variable<int>(nextFollowAt.value);
     }
+    if (lastFollowAt.present) {
+      map['last_follow_at'] = Variable<int>(lastFollowAt.value);
+    }
     if (isLegacyDefault.present) {
       map['is_legacy_default'] = Variable<bool>(isLegacyDefault.value);
     }
@@ -2780,6 +2835,7 @@ class OpportunitiesCompanion extends UpdateCompanion<OpportunityRow> {
           ..write('currentObstacle: $currentObstacle, ')
           ..write('nextAction: $nextAction, ')
           ..write('nextFollowAt: $nextFollowAt, ')
+          ..write('lastFollowAt: $lastFollowAt, ')
           ..write('isLegacyDefault: $isLegacyDefault, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -3394,6 +3450,59 @@ class $FollowupsTable extends Followups
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _feedbackMeta = const VerificationMeta(
+    'feedback',
+  );
+  @override
+  late final GeneratedColumn<String> feedback = GeneratedColumn<String>(
+    'feedback',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _stageMeta = const VerificationMeta('stage');
+  @override
+  late final GeneratedColumn<String> stage = GeneratedColumn<String>(
+    'stage',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nextActionMeta = const VerificationMeta(
+    'nextAction',
+  );
+  @override
+  late final GeneratedColumn<String> nextAction = GeneratedColumn<String>(
+    'next_action',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nextFollowAtMeta = const VerificationMeta(
+    'nextFollowAt',
+  );
+  @override
+  late final GeneratedColumn<int> nextFollowAt = GeneratedColumn<int>(
+    'next_follow_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _pauseReasonMeta = const VerificationMeta(
+    'pauseReason',
+  );
+  @override
+  late final GeneratedColumn<String> pauseReason = GeneratedColumn<String>(
+    'pause_reason',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -3425,6 +3534,11 @@ class $FollowupsTable extends Followups
     method,
     content,
     conclusion,
+    feedback,
+    stage,
+    nextAction,
+    nextFollowAt,
+    pauseReason,
     createdAt,
     updatedAt,
   ];
@@ -3490,6 +3604,42 @@ class $FollowupsTable extends Followups
         conclusion.isAcceptableOrUnknown(data['conclusion']!, _conclusionMeta),
       );
     }
+    if (data.containsKey('feedback')) {
+      context.handle(
+        _feedbackMeta,
+        feedback.isAcceptableOrUnknown(data['feedback']!, _feedbackMeta),
+      );
+    }
+    if (data.containsKey('stage')) {
+      context.handle(
+        _stageMeta,
+        stage.isAcceptableOrUnknown(data['stage']!, _stageMeta),
+      );
+    }
+    if (data.containsKey('next_action')) {
+      context.handle(
+        _nextActionMeta,
+        nextAction.isAcceptableOrUnknown(data['next_action']!, _nextActionMeta),
+      );
+    }
+    if (data.containsKey('next_follow_at')) {
+      context.handle(
+        _nextFollowAtMeta,
+        nextFollowAt.isAcceptableOrUnknown(
+          data['next_follow_at']!,
+          _nextFollowAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('pause_reason')) {
+      context.handle(
+        _pauseReasonMeta,
+        pauseReason.isAcceptableOrUnknown(
+          data['pause_reason']!,
+          _pauseReasonMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -3543,6 +3693,26 @@ class $FollowupsTable extends Followups
         DriftSqlType.string,
         data['${effectivePrefix}conclusion'],
       ),
+      feedback: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}feedback'],
+      ),
+      stage: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}stage'],
+      ),
+      nextAction: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}next_action'],
+      ),
+      nextFollowAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}next_follow_at'],
+      ),
+      pauseReason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pause_reason'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
@@ -3578,6 +3748,17 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
 
   /// 本次结论。可空，不是每次跟进都有明确结论。
   final String? conclusion;
+
+  /// v3 五字段跟进快照。保持可空以兼容历史记录与无损增量迁移。
+  final String? feedback;
+
+  /// 保存跟进发生时的项目阶段，不随后续项目更新而变化。
+  final String? stage;
+  final String? nextAction;
+  final int? nextFollowAt;
+
+  /// 选择暂不跟进时的原因，与 [nextFollowAt] 互斥。
+  final String? pauseReason;
   final int createdAt;
   final int updatedAt;
   const FollowupRow({
@@ -3588,6 +3769,11 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     required this.method,
     required this.content,
     this.conclusion,
+    this.feedback,
+    this.stage,
+    this.nextAction,
+    this.nextFollowAt,
+    this.pauseReason,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -3604,6 +3790,21 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     map['content'] = Variable<String>(content);
     if (!nullToAbsent || conclusion != null) {
       map['conclusion'] = Variable<String>(conclusion);
+    }
+    if (!nullToAbsent || feedback != null) {
+      map['feedback'] = Variable<String>(feedback);
+    }
+    if (!nullToAbsent || stage != null) {
+      map['stage'] = Variable<String>(stage);
+    }
+    if (!nullToAbsent || nextAction != null) {
+      map['next_action'] = Variable<String>(nextAction);
+    }
+    if (!nullToAbsent || nextFollowAt != null) {
+      map['next_follow_at'] = Variable<int>(nextFollowAt);
+    }
+    if (!nullToAbsent || pauseReason != null) {
+      map['pause_reason'] = Variable<String>(pauseReason);
     }
     map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
@@ -3623,6 +3824,21 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
       conclusion: conclusion == null && nullToAbsent
           ? const Value.absent()
           : Value(conclusion),
+      feedback: feedback == null && nullToAbsent
+          ? const Value.absent()
+          : Value(feedback),
+      stage: stage == null && nullToAbsent
+          ? const Value.absent()
+          : Value(stage),
+      nextAction: nextAction == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextAction),
+      nextFollowAt: nextFollowAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextFollowAt),
+      pauseReason: pauseReason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pauseReason),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -3641,6 +3857,11 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
       method: serializer.fromJson<String>(json['method']),
       content: serializer.fromJson<String>(json['content']),
       conclusion: serializer.fromJson<String?>(json['conclusion']),
+      feedback: serializer.fromJson<String?>(json['feedback']),
+      stage: serializer.fromJson<String?>(json['stage']),
+      nextAction: serializer.fromJson<String?>(json['nextAction']),
+      nextFollowAt: serializer.fromJson<int?>(json['nextFollowAt']),
+      pauseReason: serializer.fromJson<String?>(json['pauseReason']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
     );
@@ -3656,6 +3877,11 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
       'method': serializer.toJson<String>(method),
       'content': serializer.toJson<String>(content),
       'conclusion': serializer.toJson<String?>(conclusion),
+      'feedback': serializer.toJson<String?>(feedback),
+      'stage': serializer.toJson<String?>(stage),
+      'nextAction': serializer.toJson<String?>(nextAction),
+      'nextFollowAt': serializer.toJson<int?>(nextFollowAt),
+      'pauseReason': serializer.toJson<String?>(pauseReason),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
     };
@@ -3669,6 +3895,11 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     String? method,
     String? content,
     Value<String?> conclusion = const Value.absent(),
+    Value<String?> feedback = const Value.absent(),
+    Value<String?> stage = const Value.absent(),
+    Value<String?> nextAction = const Value.absent(),
+    Value<int?> nextFollowAt = const Value.absent(),
+    Value<String?> pauseReason = const Value.absent(),
     int? createdAt,
     int? updatedAt,
   }) => FollowupRow(
@@ -3681,6 +3912,11 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     method: method ?? this.method,
     content: content ?? this.content,
     conclusion: conclusion.present ? conclusion.value : this.conclusion,
+    feedback: feedback.present ? feedback.value : this.feedback,
+    stage: stage.present ? stage.value : this.stage,
+    nextAction: nextAction.present ? nextAction.value : this.nextAction,
+    nextFollowAt: nextFollowAt.present ? nextFollowAt.value : this.nextFollowAt,
+    pauseReason: pauseReason.present ? pauseReason.value : this.pauseReason,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -3701,6 +3937,17 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
       conclusion: data.conclusion.present
           ? data.conclusion.value
           : this.conclusion,
+      feedback: data.feedback.present ? data.feedback.value : this.feedback,
+      stage: data.stage.present ? data.stage.value : this.stage,
+      nextAction: data.nextAction.present
+          ? data.nextAction.value
+          : this.nextAction,
+      nextFollowAt: data.nextFollowAt.present
+          ? data.nextFollowAt.value
+          : this.nextFollowAt,
+      pauseReason: data.pauseReason.present
+          ? data.pauseReason.value
+          : this.pauseReason,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -3716,6 +3963,11 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
           ..write('method: $method, ')
           ..write('content: $content, ')
           ..write('conclusion: $conclusion, ')
+          ..write('feedback: $feedback, ')
+          ..write('stage: $stage, ')
+          ..write('nextAction: $nextAction, ')
+          ..write('nextFollowAt: $nextFollowAt, ')
+          ..write('pauseReason: $pauseReason, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -3731,6 +3983,11 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     method,
     content,
     conclusion,
+    feedback,
+    stage,
+    nextAction,
+    nextFollowAt,
+    pauseReason,
     createdAt,
     updatedAt,
   );
@@ -3745,6 +4002,11 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
           other.method == this.method &&
           other.content == this.content &&
           other.conclusion == this.conclusion &&
+          other.feedback == this.feedback &&
+          other.stage == this.stage &&
+          other.nextAction == this.nextAction &&
+          other.nextFollowAt == this.nextFollowAt &&
+          other.pauseReason == this.pauseReason &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -3757,6 +4019,11 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
   final Value<String> method;
   final Value<String> content;
   final Value<String?> conclusion;
+  final Value<String?> feedback;
+  final Value<String?> stage;
+  final Value<String?> nextAction;
+  final Value<int?> nextFollowAt;
+  final Value<String?> pauseReason;
   final Value<int> createdAt;
   final Value<int> updatedAt;
   const FollowupsCompanion({
@@ -3767,6 +4034,11 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     this.method = const Value.absent(),
     this.content = const Value.absent(),
     this.conclusion = const Value.absent(),
+    this.feedback = const Value.absent(),
+    this.stage = const Value.absent(),
+    this.nextAction = const Value.absent(),
+    this.nextFollowAt = const Value.absent(),
+    this.pauseReason = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
@@ -3778,6 +4050,11 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     required String method,
     required String content,
     this.conclusion = const Value.absent(),
+    this.feedback = const Value.absent(),
+    this.stage = const Value.absent(),
+    this.nextAction = const Value.absent(),
+    this.nextFollowAt = const Value.absent(),
+    this.pauseReason = const Value.absent(),
     required int createdAt,
     required int updatedAt,
   }) : customerId = Value(customerId),
@@ -3794,6 +4071,11 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     Expression<String>? method,
     Expression<String>? content,
     Expression<String>? conclusion,
+    Expression<String>? feedback,
+    Expression<String>? stage,
+    Expression<String>? nextAction,
+    Expression<int>? nextFollowAt,
+    Expression<String>? pauseReason,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
   }) {
@@ -3805,6 +4087,11 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
       if (method != null) 'method': method,
       if (content != null) 'content': content,
       if (conclusion != null) 'conclusion': conclusion,
+      if (feedback != null) 'feedback': feedback,
+      if (stage != null) 'stage': stage,
+      if (nextAction != null) 'next_action': nextAction,
+      if (nextFollowAt != null) 'next_follow_at': nextFollowAt,
+      if (pauseReason != null) 'pause_reason': pauseReason,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
@@ -3818,6 +4105,11 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     Value<String>? method,
     Value<String>? content,
     Value<String?>? conclusion,
+    Value<String?>? feedback,
+    Value<String?>? stage,
+    Value<String?>? nextAction,
+    Value<int?>? nextFollowAt,
+    Value<String?>? pauseReason,
     Value<int>? createdAt,
     Value<int>? updatedAt,
   }) {
@@ -3829,6 +4121,11 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
       method: method ?? this.method,
       content: content ?? this.content,
       conclusion: conclusion ?? this.conclusion,
+      feedback: feedback ?? this.feedback,
+      stage: stage ?? this.stage,
+      nextAction: nextAction ?? this.nextAction,
+      nextFollowAt: nextFollowAt ?? this.nextFollowAt,
+      pauseReason: pauseReason ?? this.pauseReason,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -3858,6 +4155,21 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     if (conclusion.present) {
       map['conclusion'] = Variable<String>(conclusion.value);
     }
+    if (feedback.present) {
+      map['feedback'] = Variable<String>(feedback.value);
+    }
+    if (stage.present) {
+      map['stage'] = Variable<String>(stage.value);
+    }
+    if (nextAction.present) {
+      map['next_action'] = Variable<String>(nextAction.value);
+    }
+    if (nextFollowAt.present) {
+      map['next_follow_at'] = Variable<int>(nextFollowAt.value);
+    }
+    if (pauseReason.present) {
+      map['pause_reason'] = Variable<String>(pauseReason.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<int>(createdAt.value);
     }
@@ -3877,6 +4189,11 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
           ..write('method: $method, ')
           ..write('content: $content, ')
           ..write('conclusion: $conclusion, ')
+          ..write('feedback: $feedback, ')
+          ..write('stage: $stage, ')
+          ..write('nextAction: $nextAction, ')
+          ..write('nextFollowAt: $nextFollowAt, ')
+          ..write('pauseReason: $pauseReason, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -7387,6 +7704,7 @@ typedef $$OpportunitiesTableCreateCompanionBuilder =
       Value<String?> currentObstacle,
       Value<String?> nextAction,
       Value<int?> nextFollowAt,
+      Value<int?> lastFollowAt,
       Value<bool> isLegacyDefault,
       required int createdAt,
       required int updatedAt,
@@ -7425,6 +7743,7 @@ typedef $$OpportunitiesTableUpdateCompanionBuilder =
       Value<String?> currentObstacle,
       Value<String?> nextAction,
       Value<int?> nextFollowAt,
+      Value<int?> lastFollowAt,
       Value<bool> isLegacyDefault,
       Value<int> createdAt,
       Value<int> updatedAt,
@@ -7672,6 +7991,11 @@ class $$OpportunitiesTableFilterComposer
 
   ColumnFilters<int> get nextFollowAt => $composableBuilder(
     column: $table.nextFollowAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastFollowAt => $composableBuilder(
+    column: $table.lastFollowAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7953,6 +8277,11 @@ class $$OpportunitiesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get lastFollowAt => $composableBuilder(
+    column: $table.lastFollowAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isLegacyDefault => $composableBuilder(
     column: $table.isLegacyDefault,
     builder: (column) => ColumnOrderings(column),
@@ -8146,6 +8475,11 @@ class $$OpportunitiesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get lastFollowAt => $composableBuilder(
+    column: $table.lastFollowAt,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get isLegacyDefault => $composableBuilder(
     column: $table.isLegacyDefault,
     builder: (column) => column,
@@ -8321,6 +8655,7 @@ class $$OpportunitiesTableTableManager
                 Value<String?> currentObstacle = const Value.absent(),
                 Value<String?> nextAction = const Value.absent(),
                 Value<int?> nextFollowAt = const Value.absent(),
+                Value<int?> lastFollowAt = const Value.absent(),
                 Value<bool> isLegacyDefault = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
@@ -8357,6 +8692,7 @@ class $$OpportunitiesTableTableManager
                 currentObstacle: currentObstacle,
                 nextAction: nextAction,
                 nextFollowAt: nextFollowAt,
+                lastFollowAt: lastFollowAt,
                 isLegacyDefault: isLegacyDefault,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -8395,6 +8731,7 @@ class $$OpportunitiesTableTableManager
                 Value<String?> currentObstacle = const Value.absent(),
                 Value<String?> nextAction = const Value.absent(),
                 Value<int?> nextFollowAt = const Value.absent(),
+                Value<int?> lastFollowAt = const Value.absent(),
                 Value<bool> isLegacyDefault = const Value.absent(),
                 required int createdAt,
                 required int updatedAt,
@@ -8431,6 +8768,7 @@ class $$OpportunitiesTableTableManager
                 currentObstacle: currentObstacle,
                 nextAction: nextAction,
                 nextFollowAt: nextFollowAt,
+                lastFollowAt: lastFollowAt,
                 isLegacyDefault: isLegacyDefault,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -8962,6 +9300,11 @@ typedef $$FollowupsTableCreateCompanionBuilder =
       required String method,
       required String content,
       Value<String?> conclusion,
+      Value<String?> feedback,
+      Value<String?> stage,
+      Value<String?> nextAction,
+      Value<int?> nextFollowAt,
+      Value<String?> pauseReason,
       required int createdAt,
       required int updatedAt,
     });
@@ -8974,6 +9317,11 @@ typedef $$FollowupsTableUpdateCompanionBuilder =
       Value<String> method,
       Value<String> content,
       Value<String?> conclusion,
+      Value<String?> feedback,
+      Value<String?> stage,
+      Value<String?> nextAction,
+      Value<int?> nextFollowAt,
+      Value<String?> pauseReason,
       Value<int> createdAt,
       Value<int> updatedAt,
     });
@@ -9067,6 +9415,31 @@ class $$FollowupsTableFilterComposer
 
   ColumnFilters<String> get conclusion => $composableBuilder(
     column: $table.conclusion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get feedback => $composableBuilder(
+    column: $table.feedback,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get stage => $composableBuilder(
+    column: $table.stage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nextAction => $composableBuilder(
+    column: $table.nextAction,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get nextFollowAt => $composableBuilder(
+    column: $table.nextFollowAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pauseReason => $composableBuilder(
+    column: $table.pauseReason,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9186,6 +9559,31 @@ class $$FollowupsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get feedback => $composableBuilder(
+    column: $table.feedback,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get stage => $composableBuilder(
+    column: $table.stage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nextAction => $composableBuilder(
+    column: $table.nextAction,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get nextFollowAt => $composableBuilder(
+    column: $table.nextFollowAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pauseReason => $composableBuilder(
+    column: $table.pauseReason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -9268,6 +9666,27 @@ class $$FollowupsTableAnnotationComposer
 
   GeneratedColumn<String> get conclusion => $composableBuilder(
     column: $table.conclusion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get feedback =>
+      $composableBuilder(column: $table.feedback, builder: (column) => column);
+
+  GeneratedColumn<String> get stage =>
+      $composableBuilder(column: $table.stage, builder: (column) => column);
+
+  GeneratedColumn<String> get nextAction => $composableBuilder(
+    column: $table.nextAction,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get nextFollowAt => $composableBuilder(
+    column: $table.nextFollowAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get pauseReason => $composableBuilder(
+    column: $table.pauseReason,
     builder: (column) => column,
   );
 
@@ -9388,6 +9807,11 @@ class $$FollowupsTableTableManager
                 Value<String> method = const Value.absent(),
                 Value<String> content = const Value.absent(),
                 Value<String?> conclusion = const Value.absent(),
+                Value<String?> feedback = const Value.absent(),
+                Value<String?> stage = const Value.absent(),
+                Value<String?> nextAction = const Value.absent(),
+                Value<int?> nextFollowAt = const Value.absent(),
+                Value<String?> pauseReason = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
               }) => FollowupsCompanion(
@@ -9398,6 +9822,11 @@ class $$FollowupsTableTableManager
                 method: method,
                 content: content,
                 conclusion: conclusion,
+                feedback: feedback,
+                stage: stage,
+                nextAction: nextAction,
+                nextFollowAt: nextFollowAt,
+                pauseReason: pauseReason,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),
@@ -9410,6 +9839,11 @@ class $$FollowupsTableTableManager
                 required String method,
                 required String content,
                 Value<String?> conclusion = const Value.absent(),
+                Value<String?> feedback = const Value.absent(),
+                Value<String?> stage = const Value.absent(),
+                Value<String?> nextAction = const Value.absent(),
+                Value<int?> nextFollowAt = const Value.absent(),
+                Value<String?> pauseReason = const Value.absent(),
                 required int createdAt,
                 required int updatedAt,
               }) => FollowupsCompanion.insert(
@@ -9420,6 +9854,11 @@ class $$FollowupsTableTableManager
                 method: method,
                 content: content,
                 conclusion: conclusion,
+                feedback: feedback,
+                stage: stage,
+                nextAction: nextAction,
+                nextFollowAt: nextFollowAt,
+                pauseReason: pauseReason,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),

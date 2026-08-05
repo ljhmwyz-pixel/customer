@@ -32,6 +32,19 @@ class Followups extends Table {
   /// 本次结论。可空，不是每次跟进都有明确结论。
   TextColumn get conclusion => text().nullable()();
 
+  /// v3 五字段跟进快照。保持可空以兼容历史记录与无损增量迁移。
+  TextColumn get feedback => text().nullable()();
+
+  /// 保存跟进发生时的项目阶段，不随后续项目更新而变化。
+  TextColumn get stage => text().nullable()();
+
+  TextColumn get nextAction => text().nullable()();
+
+  IntColumn get nextFollowAt => integer().nullable()();
+
+  /// 选择暂不跟进时的原因，与 [nextFollowAt] 互斥。
+  TextColumn get pauseReason => text().nullable()();
+
   IntColumn get createdAt => integer()();
 
   IntColumn get updatedAt => integer()();

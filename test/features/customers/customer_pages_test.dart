@@ -84,9 +84,158 @@ void main() {
     expect(find.text('客户 C'), findsNothing);
   });
 
-  testWidgets('FollowupFormPage can save without a next plan', (tester) async {
+  testWidgets(
+    'FollowupFormPage defaults the only project and saves five fields',
+    (tester) async {
+      final db = await openTestDb();
+      final customerId = await seedCustomer(db, name: '待跟进客户');
+      final opportunityId = await db.opportunityDao.insertOpportunity(
+        customerId: customerId,
+        name: 'CT 注射器',
+        stage: OpportunityStage.quoted,
+      );
+      final harness = _TestHarness(
+        db: db,
+        scheduler: _FakeReminderScheduler(),
+        contactActions: _FakeContactActions(),
+        home: FollowupFormPage(customerId: customerId),
+      );
+      addTearDown(() => harness.dispose(tester));
+
+      await harness.pump(tester);
+      expect(find.text('项目：CT 注射器'), findsOneWidget);
+      expect(find.byKey(const ValueKey('followup-opportunity')), findsNothing);
+      expect(
+        tester
+            .widget<DropdownButtonFormField<OpportunityStage>>(
+              find.byKey(const ValueKey('followup-stage')),
+            )
+            .initialValue,
+        OpportunityStage.quoted,
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('followup-feedback')),
+        ' 客户认可方案 ',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('followup-next-action')),
+        ' 发送正式报价 ',
+      );
+      final pageScrollable = find.byType(Scrollable).first;
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('save-followup')),
+        200,
+        scrollable: pageScrollable,
+      );
+      await tester.tap(find.byKey(const ValueKey('save-followup')));
+      await tester.pumpAndSettle();
+
+      final followup = (await db.followupDao.listOf(customerId)).single;
+      expect(followup.opportunityId, opportunityId);
+      expect(followup.feedback, '客户认可方案');
+      expect(followup.stage, OpportunityStage.quoted.dbValue);
+      expect(followup.nextAction, '发送正式报价');
+      expect(followup.nextFollowAt, isNotNull);
+      expect(followup.pauseReason, isNull);
+      final plan = (await db.planDao.listOf(customerId)).single;
+      expect(plan.opportunityId, opportunityId);
+      expect(plan.title, '发送正式报价');
+    },
+  );
+
+  testWidgets('FollowupFormPage selects a project and resets its stage', (
+    tester,
+  ) async {
     final db = await openTestDb();
-    final customerId = await seedCustomer(db, name: '待跟进客户');
+    final customerId = await seedCustomer(db, name: '多项目客户');
+    await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '项目 A',
+      stage: OpportunityStage.quoted,
+      now: DateTime.utc(2026, 8, 5, 9),
+    );
+    await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '项目 B',
+      stage: OpportunityStage.needsConfirmed,
+      now: DateTime.utc(2026, 8, 5, 10),
+    );
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: FollowupFormPage(customerId: customerId),
+    );
+    addTearDown(() => harness.dispose(tester));
+
+    await harness.pump(tester);
+    expect(find.byKey(const ValueKey('followup-opportunity')), findsOneWidget);
+    expect(
+      tester
+          .widget<DropdownButtonFormField<OpportunityStage>>(
+            find.byKey(const ValueKey('followup-stage')),
+          )
+          .initialValue,
+      OpportunityStage.needsConfirmed,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('followup-opportunity')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('项目 A').last);
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<DropdownButtonFormField<OpportunityStage>>(
+            find.byKey(const ValueKey('followup-stage')),
+          )
+          .initialValue,
+      OpportunityStage.quoted,
+    );
+  });
+
+  testWidgets('FollowupFormPage validates required five-field inputs', (
+    tester,
+  ) async {
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '校验客户');
+    await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '校验项目',
+    );
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: FollowupFormPage(customerId: customerId),
+    );
+    addTearDown(() => harness.dispose(tester));
+
+    await harness.pump(tester);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('save-followup')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    tester
+        .widget<FilledButton>(find.byKey(const ValueKey('save-followup')))
+        .onPressed!();
+    await tester.pump();
+
+    expect(find.text('客户反馈不能为空'), findsOneWidget);
+    expect(find.text('下一步行动不能为空'), findsOneWidget);
+    expect(await db.followupDao.countOf(customerId), 0);
+  });
+
+  testWidgets('FollowupFormPage requires a reason when follow-up is paused', (
+    tester,
+  ) async {
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '暂停客户');
+    await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '暂停项目',
+    );
     final harness = _TestHarness(
       db: db,
       scheduler: _FakeReminderScheduler(),
@@ -97,44 +246,139 @@ void main() {
 
     await harness.pump(tester);
     await tester.enterText(
-      find.byKey(const ValueKey('followup-content')),
-      '已发送产品资料',
+      find.byKey(const ValueKey('followup-feedback')),
+      '客户暂缓项目',
     );
-    final pageScrollable = find.byType(Scrollable).first;
+    await tester.enterText(
+      find.byKey(const ValueKey('followup-next-action')),
+      '等待客户预算确认',
+    );
     await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('next-plan-title')),
+      find.text('暂不跟进'),
       200,
-      scrollable: pageScrollable,
-    );
-    await tester.enterText(find.byKey(const ValueKey('next-plan-title')), '');
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('save-followup')),
-      200,
-      scrollable: pageScrollable,
-    );
-    await tester.tap(find.byKey(const ValueKey('save-followup')));
-    await tester.pump();
-    expect(find.text('计划标题不能为空'), findsOneWidget);
-
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('followup-next-choice')),
-      -200,
-      scrollable: pageScrollable,
+      scrollable: find.byType(Scrollable).first,
     );
     await tester.tap(find.text('暂不跟进'));
     await tester.pump();
-    expect(find.byKey(const ValueKey('next-plan-title')), findsNothing);
+    expect(find.byKey(const ValueKey('followup-pause-reason')), findsOneWidget);
+
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('save-followup')),
-      200,
-      scrollable: pageScrollable,
+      300,
+      scrollable: find.byType(Scrollable).first,
     );
-    await tester.tap(find.byKey(const ValueKey('save-followup')));
+    await tester.ensureVisible(find.byKey(const ValueKey('save-followup')));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
+    tester
+        .widget<FilledButton>(find.byKey(const ValueKey('save-followup')))
+        .onPressed!();
+    await tester.pump();
+    expect(find.text('暂停原因不能为空'), findsOneWidget);
 
-    expect(await db.followupDao.countOf(customerId), 1);
+    await tester.enterText(
+      find.byKey(const ValueKey('followup-pause-reason')),
+      ' 预算冻结 ',
+    );
+    await tester.ensureVisible(find.byKey(const ValueKey('save-followup')));
+    await tester.pump();
+    tester
+        .widget<FilledButton>(find.byKey(const ValueKey('save-followup')))
+        .onPressed!();
+    await tester.pumpAndSettle();
+
+    final followup = (await db.followupDao.listOf(customerId)).single;
+    expect(followup.pauseReason, '预算冻结');
+    expect(followup.nextFollowAt, isNull);
     expect(await db.planDao.listOf(customerId), isEmpty);
+  });
+
+  testWidgets('FollowupFormPage handles a narrow dark viewport', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 700);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '窄屏客户');
+    await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '特别特别长的医疗器械出口项目名称',
+    );
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: FollowupFormPage(customerId: customerId),
+      themeMode: ThemeMode.dark,
+    );
+    addTearDown(() => harness.dispose(tester));
+
+    await harness.pump(tester);
+
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('CustomerDetailPage keeps independent follow-up snapshots', (
+    tester,
+  ) async {
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '历史客户');
+    final opportunityId = await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '输注项目',
+    );
+    await db.followupDao.insertAndTouchCustomer(
+      customerId: customerId,
+      opportunityId: opportunityId,
+      occurredAt: DateTime.utc(2026, 8, 3, 9),
+      method: FollowMethod.phone,
+      content: '第一次补充记录',
+      feedback: '首次确认参数',
+      stage: OpportunityStage.quoted,
+      nextAction: '发送正式报价',
+      nextFollowAt: DateTime.utc(2026, 8, 6, 9),
+    );
+    await db.followupDao.insertAndTouchCustomer(
+      customerId: customerId,
+      opportunityId: opportunityId,
+      occurredAt: DateTime.utc(2026, 8, 4, 9),
+      method: FollowMethod.wechat,
+      content: '第二次补充记录',
+      feedback: '客户要求调整价格',
+      stage: OpportunityStage.priceNegotiation,
+      nextAction: '确认目标价格',
+      pauseReason: '客户团队休假',
+    );
+    await db.followupDao.insertAndTouchCustomer(
+      customerId: customerId,
+      occurredAt: DateTime.utc(2026, 8, 2, 9),
+      method: FollowMethod.meeting,
+      content: '历史正文',
+      conclusion: '历史结论',
+    );
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: CustomerDetailPage(customerId: customerId),
+    );
+    addTearDown(() => harness.dispose(tester));
+
+    await harness.pump(tester);
+    await tester.fling(find.byType(ListView), const Offset(0, -2000), 2000);
+    await tester.pumpAndSettle();
+
+    expect(find.text('客户反馈：首次确认参数'), findsOneWidget);
+    expect(find.text('项目阶段：已报价'), findsOneWidget);
+    expect(find.text('下一步行动：发送正式报价'), findsOneWidget);
+    expect(find.textContaining('下次跟进：'), findsOneWidget);
+    expect(find.text('客户反馈：客户要求调整价格'), findsOneWidget);
+    expect(find.text('项目阶段：价格谈判'), findsOneWidget);
+    expect(find.text('下一步行动：确认目标价格'), findsOneWidget);
+    expect(find.text('暂不跟进：客户团队休假'), findsOneWidget);
+    expect(find.text('历史正文'), findsOneWidget);
+    expect(find.text('结论：历史结论'), findsOneWidget);
   });
 
   testWidgets('CustomerDetailPage reports an invalid customer id', (

@@ -58,20 +58,26 @@ class PlanDraft {
 
 class FollowupDraft {
   const FollowupDraft({
+    required this.opportunityId,
     required this.occurredAt,
     required this.method,
-    required this.content,
-    this.conclusion,
-    this.nextPlan,
-    this.skipNextPlan = false,
+    required this.feedback,
+    required this.stage,
+    required this.nextAction,
+    this.content,
+    this.nextFollowAt,
+    this.pauseReason,
   });
 
+  final int opportunityId;
   final DateTime occurredAt;
   final FollowMethod method;
-  final String content;
-  final String? conclusion;
-  final PlanDraft? nextPlan;
-  final bool skipNextPlan;
+  final String feedback;
+  final OpportunityStage stage;
+  final String nextAction;
+  final String? content;
+  final DateTime? nextFollowAt;
+  final String? pauseReason;
 }
 
 class WriteResult<T> {
@@ -244,37 +250,50 @@ class CustomerService {
     FollowupDraft draft,
   ) async {
     final customer = await _requireCustomer(customerId);
-    final content = _required(draft.content, '跟进内容', 10000);
-    final conclusion = _optional(draft.conclusion);
-    if ((draft.nextPlan == null) == !draft.skipNextPlan) {
-      throw const CustomerValidationException('请选择下一次跟进计划，或明确暂不跟进');
+    final opportunity = await _db.opportunityDao.findById(draft.opportunityId);
+    if (opportunity == null || opportunity.customerId != customerId) {
+      throw const CustomerValidationException('项目不存在或不属于当前客户');
     }
-    final nextPlan = draft.nextPlan == null
-        ? null
-        : _normalizePlan(draft.nextPlan!);
-    final opportunityId = await _db.opportunityDao
-        .ensureLegacyDefaultForCustomer(
-          customerId,
-          legacyStage: CustomerStage.fromDb(customer.stage),
-        );
+
+    final feedback = _required(draft.feedback, '客户反馈', 10000);
+    final nextAction = _required(draft.nextAction, '下一步行动', 100);
+    final pauseReason = _optional(draft.pauseReason);
+    final content = _optional(draft.content) ?? feedback;
+    final hasNextFollowAt = draft.nextFollowAt != null;
+    final hasPauseReason = pauseReason != null;
+    if (hasNextFollowAt == hasPauseReason) {
+      throw const CustomerValidationException('请选择下一次跟进时间，或填写暂不跟进原因');
+    }
 
     late int followupId;
     int? planId;
     await _db.transaction(() async {
       followupId = await _db.followupDao.insertAndTouchCustomer(
         customerId: customerId,
-        opportunityId: opportunityId,
+        opportunityId: draft.opportunityId,
         occurredAt: draft.occurredAt,
         method: draft.method,
         content: content,
-        conclusion: conclusion,
+        feedback: feedback,
+        stage: draft.stage,
+        nextAction: nextAction,
+        nextFollowAt: draft.nextFollowAt,
+        pauseReason: pauseReason,
       );
-      if (nextPlan != null) {
+      await _db.opportunityDao.syncLatestFollowup(
+        opportunityId: draft.opportunityId,
+        occurredAt: draft.occurredAt,
+        feedback: feedback,
+        stage: draft.stage,
+        nextAction: nextAction,
+        nextFollowAt: draft.nextFollowAt,
+      );
+      if (draft.nextFollowAt != null) {
         planId = await _db.planDao.insertPlan(
           customerId: customerId,
-          opportunityId: opportunityId,
-          title: nextPlan.title,
-          planAt: nextPlan.planAt,
+          opportunityId: draft.opportunityId,
+          title: nextAction,
+          planAt: draft.nextFollowAt!,
         );
       }
     });

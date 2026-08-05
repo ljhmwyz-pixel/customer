@@ -56,7 +56,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -67,6 +67,9 @@ class AppDatabase extends _$AppDatabase {
     onUpgrade: (m, from, to) async {
       if (from < 2) {
         await _migrateV1ToV2(m);
+      }
+      if (from < 3) {
+        await _migrateV2ToV3(m, addOpportunityLastFollowAt: from >= 2);
       }
     },
     beforeOpen: (details) async {
@@ -205,6 +208,52 @@ class AppDatabase extends _$AppDatabase {
     }
 
     await _createIndexes();
+  }
+
+  /// 为跟进记录增加不可变五字段快照，并记录项目最近同步的跟进时间。
+  ///
+  /// 全部操作都是增加可空列与原位回填，不重建业务表，也不会触碰附件关系。
+  Future<void> _migrateV2ToV3(
+    Migrator m, {
+    required bool addOpportunityLastFollowAt,
+  }) async {
+    await m.addColumn(followups, followups.feedback);
+    await m.addColumn(followups, followups.stage);
+    await m.addColumn(followups, followups.nextAction);
+    await m.addColumn(followups, followups.nextFollowAt);
+    await m.addColumn(followups, followups.pauseReason);
+    // v1 升级时 opportunities 会直接按当前 v3 表定义创建，已经包含此列；
+    // 只有真实 v2 数据库需要执行 ALTER TABLE。
+    if (addOpportunityLastFollowAt) {
+      await m.addColumn(opportunities, opportunities.lastFollowAt);
+    }
+
+    await customStatement('''
+      UPDATE followups
+      SET feedback = COALESCE(NULLIF(TRIM(conclusion), ''), content),
+          stage = (
+            SELECT opportunity.stage
+            FROM opportunities opportunity
+            WHERE opportunity.id = followups.opportunity_id
+          ),
+          next_action = COALESCE(
+            (
+              SELECT NULLIF(TRIM(opportunity.next_action), '')
+              FROM opportunities opportunity
+              WHERE opportunity.id = followups.opportunity_id
+            ),
+            '历史跟进（未记录下一步行动）'
+          )
+    ''');
+
+    await customStatement('''
+      UPDATE opportunities
+      SET last_follow_at = (
+        SELECT MAX(followup.occurred_at)
+        FROM followups followup
+        WHERE followup.opportunity_id = opportunities.id
+      )
+    ''');
   }
 }
 

@@ -75,6 +75,9 @@ class Opportunities extends Table {
 
   IntColumn get nextFollowAt => integer().nullable()();
 
+  /// 最近一次同步到项目状态的跟进发生时间。
+  IntColumn get lastFollowAt => integer().nullable()();
+
   /// v1 升级时为每个客户创建的历史承接项目。
   BoolColumn get isLegacyDefault =>
       boolean().withDefault(const Constant(false))();

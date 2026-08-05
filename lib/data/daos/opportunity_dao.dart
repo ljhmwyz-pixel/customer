@@ -98,6 +98,40 @@ class OpportunityDao extends DatabaseAccessor<AppDatabase>
     opportunities,
   )..where((table) => table.id.equals(id))).getSingleOrNull();
 
+  /// 仅用时间严格较新的跟进快照刷新项目现状，补录和同时间记录不覆盖。
+  Future<bool> syncLatestFollowup({
+    required int opportunityId,
+    required DateTime occurredAt,
+    required String feedback,
+    required OpportunityStage stage,
+    required String nextAction,
+    DateTime? nextFollowAt,
+    DateTime? now,
+  }) async {
+    final ts = (now ?? DateTime.now()).toUtc().millisecondsSinceEpoch;
+    final occurredMs = occurredAt.toUtc().millisecondsSinceEpoch;
+    final affected =
+        await (update(opportunities)..where(
+              (table) =>
+                  table.id.equals(opportunityId) &
+                  (table.lastFollowAt.isNull() |
+                      table.lastFollowAt.isSmallerThanValue(occurredMs)),
+            ))
+            .write(
+              OpportunitiesCompanion(
+                lastFollowAt: Value(occurredMs),
+                latestFeedback: Value(feedback),
+                stage: Value(stage.dbValue),
+                nextAction: Value(nextAction),
+                nextFollowAt: Value(
+                  nextFollowAt?.toUtc().millisecondsSinceEpoch,
+                ),
+                updatedAt: Value(ts),
+              ),
+            );
+    return affected > 0;
+  }
+
   Future<int> updateOpportunity(
     int id, {
     required String name,

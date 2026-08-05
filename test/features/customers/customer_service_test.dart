@@ -6,6 +6,43 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../data/helpers.dart';
 
+const _defaultNextFollowAt = Object();
+
+Future<int> _seedOpportunity(
+  AppDatabase db,
+  int customerId, {
+  required String name,
+  OpportunityStage stage = OpportunityStage.newLead,
+}) => db.opportunityDao.insertOpportunity(
+  customerId: customerId,
+  name: name,
+  stage: stage,
+);
+
+FollowupDraft _followupDraft({
+  required int opportunityId,
+  DateTime? occurredAt,
+  FollowMethod method = FollowMethod.phone,
+  String feedback = '认可技术方案',
+  OpportunityStage stage = OpportunityStage.needsConfirmed,
+  String nextAction = '发送正式报价',
+  String? content,
+  Object? nextFollowAt = _defaultNextFollowAt,
+  String? pauseReason,
+}) => FollowupDraft(
+  opportunityId: opportunityId,
+  occurredAt: occurredAt ?? DateTime.utc(2026, 8, 5, 10),
+  method: method,
+  feedback: feedback,
+  stage: stage,
+  nextAction: nextAction,
+  content: content,
+  nextFollowAt: identical(nextFollowAt, _defaultNextFollowAt)
+      ? DateTime.utc(2026, 8, 8, 10)
+      : nextFollowAt as DateTime?,
+  pauseReason: pauseReason,
+);
+
 void main() {
   late AppDatabase db;
   late _FakeReminderScheduler scheduler;
@@ -152,76 +189,306 @@ void main() {
   });
 
   group('跟进与提醒', () {
-    test('必须创建下一计划或明确暂不跟进', () async {
+    test('项目必须存在且属于当前客户', () async {
       final customerId = await seedCustomer(db);
-      final base = FollowupDraft(
-        occurredAt: DateTime(2026, 8, 4),
-        method: FollowMethod.phone,
-        content: '沟通报价',
+      final otherCustomerId = await seedCustomer(db, name: '其他客户');
+      final otherOpportunityId = await _seedOpportunity(
+        db,
+        otherCustomerId,
+        name: '其他项目',
       );
 
       expect(
-        () => service.addFollowup(customerId, base),
+        () => service.addFollowup(
+          customerId,
+          _followupDraft(opportunityId: 999999),
+        ),
         throwsA(isA<CustomerValidationException>()),
       );
       expect(
         () => service.addFollowup(
           customerId,
-          FollowupDraft(
-            occurredAt: base.occurredAt,
-            method: base.method,
-            content: base.content,
-            nextPlan: PlanDraft(title: '再次联系', planAt: DateTime(2026, 8, 5)),
-            skipNextPlan: true,
-          ),
+          _followupDraft(opportunityId: otherOpportunityId),
         ),
         throwsA(isA<CustomerValidationException>()),
       );
+      expect(await db.followupDao.listOf(customerId), isEmpty);
     });
 
-    test('明确暂不跟进时只写入跟进记录', () async {
+    test('反馈、下一步行动和后续方式必须填写完整', () async {
       final customerId = await seedCustomer(db);
+      final opportunityId = await _seedOpportunity(
+        db,
+        customerId,
+        name: '密封件项目',
+      );
+
+      for (final draft in [
+        _followupDraft(opportunityId: opportunityId, feedback: '  '),
+        _followupDraft(opportunityId: opportunityId, nextAction: '\n'),
+        _followupDraft(
+          opportunityId: opportunityId,
+          nextFollowAt: null,
+          pauseReason: null,
+        ),
+        _followupDraft(opportunityId: opportunityId, pauseReason: '暂缓采购'),
+        _followupDraft(
+          opportunityId: opportunityId,
+          nextFollowAt: null,
+          pauseReason: '   ',
+        ),
+      ]) {
+        await expectLater(
+          service.addFollowup(customerId, draft),
+          throwsA(isA<CustomerValidationException>()),
+        );
+      }
+      expect(await db.followupDao.listOf(customerId), isEmpty);
+    });
+
+    test('保存不可变五字段快照，并同步所选项目和下一计划', () async {
+      final customerId = await seedCustomer(db, name: '远山公司');
+      final opportunityId = await _seedOpportunity(
+        db,
+        customerId,
+        name: '密封件项目',
+        stage: OpportunityStage.contactEstablished,
+      );
+      final occurredAt = DateTime.utc(2026, 8, 5, 10);
+      final nextFollowAt = DateTime.utc(2026, 8, 8, 10);
 
       final result = await service.addFollowup(
         customerId,
-        FollowupDraft(
-          occurredAt: DateTime(2026, 8, 4),
-          method: FollowMethod.wechat,
-          content: '  已发送产品资料  ',
-          skipNextPlan: true,
+        _followupDraft(
+          opportunityId: opportunityId,
+          occurredAt: occurredAt,
+          feedback: '  认可技术方案  ',
+          stage: OpportunityStage.needsConfirmed,
+          nextAction: '  发送正式报价  ',
+          nextFollowAt: nextFollowAt,
         ),
       );
 
       expect(result.hasWarning, isFalse);
       final followup = (await db.followupDao.listOf(customerId)).single;
-      expect(followup.content, '已发送产品资料');
-      expect(followup.opportunityId, isNotNull);
-      expect(
-        followup.opportunityId,
-        (await db.opportunityDao.findLegacyDefaultOfCustomer(customerId))?.id,
-      );
-      expect(await db.planDao.listOf(customerId), isEmpty);
-      expect(scheduler.scheduledPlanIds, isEmpty);
+      expect(followup.opportunityId, opportunityId);
+      expect(followup.feedback, '认可技术方案');
+      expect(followup.content, '认可技术方案');
+      expect(followup.stage, OpportunityStage.needsConfirmed.dbValue);
+      expect(followup.nextAction, '发送正式报价');
+      expect(followup.nextFollowAt, nextFollowAt.millisecondsSinceEpoch);
+      expect(followup.pauseReason, isNull);
+
+      final opportunity = await db.opportunityDao.findById(opportunityId);
+      expect(opportunity?.lastFollowAt, occurredAt.millisecondsSinceEpoch);
+      expect(opportunity?.latestFeedback, '认可技术方案');
+      expect(opportunity?.stage, OpportunityStage.needsConfirmed.dbValue);
+      expect(opportunity?.nextAction, '发送正式报价');
+      expect(opportunity?.nextFollowAt, nextFollowAt.millisecondsSinceEpoch);
+      expect(opportunity?.status, OpportunityStatus.active.dbValue);
+
+      final plan = (await db.planDao.listOf(customerId)).single;
+      expect(plan.opportunityId, opportunityId);
+      expect(plan.title, '发送正式报价');
+      expect(plan.planAt, nextFollowAt.millisecondsSinceEpoch);
+      expect(scheduler.scheduledPlanIds, [plan.id]);
+      expect(scheduler.scheduledCustomerNames, ['远山公司']);
     });
 
-    test('提醒排期失败不回滚跟进和下一计划', () async {
+    test('自定义沟通内容会清理空格并独立于客户反馈保存', () async {
+      final customerId = await seedCustomer(db);
+      final opportunityId = await _seedOpportunity(
+        db,
+        customerId,
+        name: '过滤器项目',
+      );
+
+      await service.addFollowup(
+        customerId,
+        _followupDraft(
+          opportunityId: opportunityId,
+          feedback: '需要内部评估',
+          content: '  讨论了安装空间和交期  ',
+        ),
+      );
+
+      final followup = (await db.followupDao.listOf(customerId)).single;
+      expect(followup.feedback, '需要内部评估');
+      expect(followup.content, '讨论了安装空间和交期');
+    });
+
+    test('同一客户的多个项目互不污染', () async {
+      final customerId = await seedCustomer(db);
+      final firstId = await _seedOpportunity(
+        db,
+        customerId,
+        name: '项目 A',
+        stage: OpportunityStage.contactEstablished,
+      );
+      final secondId = await _seedOpportunity(
+        db,
+        customerId,
+        name: '项目 B',
+        stage: OpportunityStage.quoted,
+      );
+
+      await service.addFollowup(
+        customerId,
+        _followupDraft(
+          opportunityId: secondId,
+          feedback: 'B 项目反馈',
+          stage: OpportunityStage.priceNegotiation,
+          nextAction: 'B 项目行动',
+        ),
+      );
+
+      final first = await db.opportunityDao.findById(firstId);
+      final second = await db.opportunityDao.findById(secondId);
+      expect(first?.stage, OpportunityStage.contactEstablished.dbValue);
+      expect(first?.latestFeedback, isNull);
+      expect(first?.nextAction, isNull);
+      expect(first?.lastFollowAt, isNull);
+      expect(second?.stage, OpportunityStage.priceNegotiation.dbValue);
+      expect(second?.latestFeedback, 'B 项目反馈');
+      expect(second?.nextAction, 'B 项目行动');
+      expect(
+        (await db.followupDao.listOf(customerId)).single.opportunityId,
+        secondId,
+      );
+    });
+
+    test('旧补录不倒退客户时间，也不覆盖项目较新状态', () async {
+      final customerId = await seedCustomer(db);
+      final opportunityId = await _seedOpportunity(
+        db,
+        customerId,
+        name: '项目 A',
+      );
+      final recentAt = DateTime.utc(2026, 8, 5, 10);
+      final oldAt = DateTime.utc(2026, 8, 4, 10);
+
+      await service.addFollowup(
+        customerId,
+        _followupDraft(
+          opportunityId: opportunityId,
+          occurredAt: recentAt,
+          feedback: '较新反馈',
+          stage: OpportunityStage.quoted,
+          nextAction: '较新行动',
+        ),
+      );
+      await service.addFollowup(
+        customerId,
+        _followupDraft(
+          opportunityId: opportunityId,
+          occurredAt: oldAt,
+          feedback: '补录旧反馈',
+          stage: OpportunityStage.newLead,
+          nextAction: '补录旧行动',
+          nextFollowAt: null,
+          pauseReason: '历史记录',
+        ),
+      );
+
+      final customer = await db.customerDao.findById(customerId);
+      final opportunity = await db.opportunityDao.findById(opportunityId);
+      expect(customer?.lastFollowAt, recentAt.millisecondsSinceEpoch);
+      expect(opportunity?.lastFollowAt, recentAt.millisecondsSinceEpoch);
+      expect(opportunity?.latestFeedback, '较新反馈');
+      expect(opportunity?.stage, OpportunityStage.quoted.dbValue);
+      expect(opportunity?.nextAction, '较新行动');
+      expect(await db.followupDao.listOf(customerId), hasLength(2));
+    });
+
+    test('发生时间相同时也不覆盖已经同步的项目状态', () async {
+      final customerId = await seedCustomer(db);
+      final opportunityId = await _seedOpportunity(
+        db,
+        customerId,
+        name: '项目 A',
+      );
+      final occurredAt = DateTime.utc(2026, 8, 5, 10);
+
+      await service.addFollowup(
+        customerId,
+        _followupDraft(
+          opportunityId: opportunityId,
+          occurredAt: occurredAt,
+          feedback: '第一次反馈',
+          nextAction: '第一次行动',
+        ),
+      );
+      await service.addFollowup(
+        customerId,
+        _followupDraft(
+          opportunityId: opportunityId,
+          occurredAt: occurredAt,
+          feedback: '第二次反馈',
+          stage: OpportunityStage.lost,
+          nextAction: '第二次行动',
+          nextFollowAt: null,
+          pauseReason: '同时间补录',
+        ),
+      );
+
+      final opportunity = await db.opportunityDao.findById(opportunityId);
+      expect(opportunity?.latestFeedback, '第一次反馈');
+      expect(opportunity?.stage, OpportunityStage.needsConfirmed.dbValue);
+      expect(opportunity?.nextAction, '第一次行动');
+      expect(opportunity?.status, OpportunityStatus.active.dbValue);
+    });
+
+    test('暂不跟进会保存原因且不创建计划', () async {
+      final customerId = await seedCustomer(db);
+      final opportunityId = await _seedOpportunity(
+        db,
+        customerId,
+        name: '项目 A',
+      );
+
+      await service.addFollowup(
+        customerId,
+        _followupDraft(
+          opportunityId: opportunityId,
+          nextFollowAt: null,
+          pauseReason: '  等待客户预算释放  ',
+        ),
+      );
+
+      final followup = (await db.followupDao.listOf(customerId)).single;
+      final opportunity = await db.opportunityDao.findById(opportunityId);
+      expect(followup.pauseReason, '等待客户预算释放');
+      expect(followup.nextFollowAt, isNull);
+      expect(opportunity?.nextFollowAt, isNull);
+      expect(await db.planDao.listOf(customerId), isEmpty);
+      expect(scheduler.scheduleAttempts, isEmpty);
+    });
+
+    test('提醒排期失败不回滚跟进、项目同步和下一计划', () async {
       final customerId = await seedCustomer(db, name: '远山公司');
+      final opportunityId = await _seedOpportunity(
+        db,
+        customerId,
+        name: '项目 A',
+      );
       scheduler.throwOnSchedule = true;
 
       final result = await service.addFollowup(
         customerId,
-        FollowupDraft(
-          occurredAt: DateTime(2026, 8, 4),
-          method: FollowMethod.meeting,
-          content: '确认需求',
-          nextPlan: PlanDraft(title: ' 提交方案 ', planAt: DateTime(2026, 8, 7, 9)),
+        _followupDraft(
+          opportunityId: opportunityId,
+          feedback: '确认需求',
+          nextAction: '提交方案',
         ),
       );
 
       expect(result.warning, contains('计划已保存'));
       expect(await db.followupDao.listOf(customerId), hasLength(1));
+      final opportunity = await db.opportunityDao.findById(opportunityId);
+      expect(opportunity?.latestFeedback, '确认需求');
       final plans = await db.planDao.listOf(customerId);
       expect(plans.single.title, '提交方案');
+      expect(plans.single.opportunityId, opportunityId);
       expect(scheduler.scheduleAttempts, [plans.single.id]);
     });
 
