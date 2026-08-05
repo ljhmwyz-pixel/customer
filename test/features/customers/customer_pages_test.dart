@@ -439,6 +439,10 @@ void main() {
   ) async {
     final db = await openTestDb();
     final customerId = await seedCustomer(db, name: '新增订单客户');
+    final opportunityId = await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '订单项目',
+    );
     final harness = _TestHarness(
       db: db,
       scheduler: _FakeReminderScheduler(),
@@ -448,7 +452,15 @@ void main() {
     addTearDown(() => harness.dispose(tester));
 
     await harness.pump(tester);
-    await tester.tap(find.byTooltip('新增订单'));
+    final addOrderButton = find.byTooltip('新增订单');
+    await tester.scrollUntilVisible(
+      addOrderButton,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -100));
+    await tester.pumpAndSettle();
+    await tester.tap(addOrderButton);
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const ValueKey('order-no')),
@@ -470,6 +482,7 @@ void main() {
     expect(orders.single.orderNo, 'ORDER-CREATE-001');
     expect(orders.single.amountCents, 12345);
     expect(orders.single.description, '年度服务套餐');
+    expect(orders.single.opportunityId, opportunityId);
     expect(find.text('ORDER-CREATE-001'), findsOneWidget);
     expect(find.textContaining('¥123.45'), findsOneWidget);
   });
@@ -554,8 +567,13 @@ void main() {
   testWidgets('CustomerDetailPage edits an existing order', (tester) async {
     final db = await openTestDb();
     final customerId = await seedCustomer(db, name: '编辑订单客户');
+    final opportunityId = await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '编辑订单项目',
+    );
     final orderId = await db.orderDao.insertOrder(
       customerId: customerId,
+      opportunityId: opportunityId,
       orderNo: 'ORDER-OLD',
       orderedAt: DateTime(2026, 8, 5),
       amountCents: 100,

@@ -7,6 +7,7 @@ mixin _$OrderDaoMixin on DatabaseAccessor<AppDatabase> {
   $CustomersTable get customers => attachedDatabase.customers;
   $OpportunitiesTable get opportunities => attachedDatabase.opportunities;
   $OrdersTable get orders => attachedDatabase.orders;
+  $FollowPlansTable get followPlans => attachedDatabase.followPlans;
   OrderDaoManager get managers => OrderDaoManager(this);
 }
 
@@ -19,4 +20,6 @@ class OrderDaoManager {
       $$OpportunitiesTableTableManager(_db.attachedDatabase, _db.opportunities);
   $$OrdersTableTableManager get orders =>
       $$OrdersTableTableManager(_db.attachedDatabase, _db.orders);
+  $$FollowPlansTableTableManager get followPlans =>
+      $$FollowPlansTableTableManager(_db.attachedDatabase, _db.followPlans);
 }

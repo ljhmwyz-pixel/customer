@@ -47,14 +47,36 @@ void main() {
       content: '本周跟进',
       now: now,
     );
-    await db.orderDao.insertOrder(
+    final completedOrderId = await db.orderDao.insertOrder(
       customerId: a,
       opportunityId: opportunity,
       orderNo: 'D-1',
       orderedAt: now,
       amountCents: 88000,
-      status: OrderStatus.completed,
+      orderResult: OrderResult.completed,
       now: now,
+    );
+    await db.orderDao.insertOrder(
+      customerId: a,
+      opportunityId: opportunity,
+      orderNo: 'D-PAID',
+      orderedAt: now,
+      amountCents: 77000,
+      paymentStatus: PaymentStatus.paid,
+      now: now,
+    );
+    await db.orderDao.insertOrder(
+      customerId: a,
+      opportunityId: opportunity,
+      orderNo: 'D-SHIPPED',
+      orderedAt: now,
+      amountCents: 66000,
+      shippingStatus: ShippingStatus.shipped,
+      now: now,
+    );
+    expect(
+      (await db.orderDao.findById(completedOrderId))?.status,
+      OrderStatus.completed.dbValue,
     );
 
     final metrics = await db.customerDao.dashboardMetrics(now: now);

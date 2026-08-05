@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../data/database.dart';
+import '../../data/database_provider.dart';
 import '../../models/enums.dart';
 import '../../theme/tokens.dart';
 import '../customers/customer_providers.dart';
@@ -59,6 +61,8 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
   final _descriptionController = TextEditingController();
 
   DateTime _orderedAt = DateTime.now();
+  List<OpportunityRow> _opportunities = [];
+  int? _selectedOpportunityId;
   String? _statusLabel;
   String? _loadError;
   bool _loading = true;
@@ -83,10 +87,17 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
         return;
       }
 
+      final opportunities = await ref
+          .read(databaseProvider)
+          .opportunityDao
+          .listOfCustomer(widget.customerId);
       final service = ref.read(orderServiceProvider);
       final orderId = widget.orderId;
       if (orderId == null) {
         _orderNoController.text = await service.nextOrderNo();
+        _selectedOpportunityId = opportunities.length == 1
+            ? opportunities.single.id
+            : null;
       } else {
         final order = await service.findOrderForCustomer(
           widget.customerId,
@@ -102,7 +113,15 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
         _orderedAt = localDateTime(order.orderedAt);
         _dateController.text = formatDateTime(_orderedAt);
         _statusLabel = OrderStatus.fromDb(order.status).label;
+        final currentOpportunityId = order.opportunityId;
+        _selectedOpportunityId =
+            opportunities.any((item) => item.id == currentOpportunityId)
+            ? currentOpportunityId
+            : opportunities.length == 1
+            ? opportunities.single.id
+            : null;
       }
+      _opportunities = opportunities;
       _finishLoading();
     } catch (_) {
       _finishLoading(error: '加载失败，请重试');
@@ -164,10 +183,16 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
   }
 
   Future<void> _save() async {
-    if (_saving || !_formKey.currentState!.validate()) return;
+    final opportunityId = _selectedOpportunityId;
+    if (_saving ||
+        opportunityId == null ||
+        !_formKey.currentState!.validate()) {
+      return;
+    }
     setState(() => _saving = true);
     try {
       final draft = OrderDraft(
+        opportunityId: opportunityId,
         orderNo: _orderNoController.text,
         orderedAt: _orderedAt,
         amountCents: parseAmountCents(_amountController.text),
@@ -221,6 +246,34 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
       child: ListView(
         padding: const EdgeInsets.all(AppTokens.s16),
         children: [
+          if (_opportunities.isEmpty)
+            const _NoOpportunityMessage()
+          else if (_opportunities.length == 1)
+            TextFormField(
+              key: const ValueKey('order-opportunity'),
+              readOnly: true,
+              initialValue: _opportunities.single.name,
+              decoration: const InputDecoration(labelText: '项目'),
+            )
+          else
+            DropdownButtonFormField<int>(
+              key: const ValueKey('order-opportunity'),
+              initialValue: _selectedOpportunityId,
+              decoration: const InputDecoration(labelText: '项目'),
+              items: _opportunities
+                  .map(
+                    (item) => DropdownMenuItem<int>(
+                      value: item.id,
+                      child: Text(item.name),
+                    ),
+                  )
+                  .toList(growable: false),
+              onChanged: _saving
+                  ? null
+                  : (value) => setState(() => _selectedOpportunityId = value),
+              validator: (value) => value == null ? '请选择关联项目' : null,
+            ),
+          const SizedBox(height: AppTokens.s12),
           TextFormField(
             key: const ValueKey('order-no'),
             controller: _orderNoController,
@@ -271,7 +324,7 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
           const SizedBox(height: AppTokens.s24),
           FilledButton.icon(
             key: const ValueKey('save-order'),
-            onPressed: _saving ? null : _save,
+            onPressed: _saving || _selectedOpportunityId == null ? null : _save,
             icon: _saving
                 ? const SizedBox.square(
                     dimension: AppTokens.s16,
@@ -284,4 +337,27 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
       ),
     );
   }
+}
+
+class _NoOpportunityMessage extends StatelessWidget {
+  const _NoOpportunityMessage();
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.errorContainer,
+      borderRadius: BorderRadius.circular(AppTokens.s8),
+    ),
+    child: const Padding(
+      padding: EdgeInsets.all(AppTokens.s12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline),
+          SizedBox(width: AppTokens.s8),
+          Expanded(child: Text('当前客户暂无项目，请先创建项目后再新增订单。')),
+        ],
+      ),
+    ),
+  );
 }
