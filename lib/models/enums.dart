@@ -15,8 +15,7 @@ class InvalidEnumValueException implements Exception {
   final String value;
 
   @override
-  String toString() =>
-      'InvalidEnumValueException: "$value" 不是合法的 $enumName 值';
+  String toString() => 'InvalidEnumValueException: "$value" 不是合法的 $enumName 值';
 }
 
 /// 客户阶段。五档固定，不做自定义。
@@ -152,6 +151,21 @@ enum OrderStatus {
     orElse: () => throw InvalidEnumValueException('OrderStatus', value),
   );
 
-  /// 是否计入成交金额。已取消的订单不计入。
-  bool get countsTowardRevenue => this != cancelled;
+  /// 是否计入成交金额。只有完成的订单形成最终成交额。
+  bool get countsTowardRevenue => this == completed;
+
+  /// 正常流程中的下一状态。终态没有下一状态。
+  OrderStatus? get nextStatus => switch (this) {
+    pending => shipped,
+    shipped => paid,
+    paid => completed,
+    completed || cancelled => null,
+  };
+
+  /// 是否允许从当前状态流转到 [target]。
+  bool canTransitionTo(OrderStatus target) {
+    if (target == nextStatus) return true;
+    return target == cancelled &&
+        (this == pending || this == shipped || this == paid);
+  }
 }

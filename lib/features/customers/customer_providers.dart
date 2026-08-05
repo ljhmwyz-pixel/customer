@@ -126,6 +126,8 @@ class CustomerDetailData {
     required this.contacts,
     required this.plans,
     required this.followups,
+    required this.orders,
+    required this.completedAmountCents,
   });
 
   final CustomerRow customer;
@@ -133,6 +135,8 @@ class CustomerDetailData {
   final List<ContactRow> contacts;
   final List<FollowPlanRow> plans;
   final List<FollowupRow> followups;
+  final List<OrderRow> orders;
+  final int completedAmountCents;
 }
 
 class CustomerService {
@@ -425,6 +429,8 @@ final customerDetailProvider = FutureProvider.family<CustomerDetailData?, int>((
     db.contactDao.listOf(id),
     db.planDao.listOf(id),
     db.followupDao.listOf(id),
+    db.orderDao.listOf(id),
+    db.orderDao.sumAmountByCustomer(id),
   ]);
   return CustomerDetailData(
     customer: customer,
@@ -432,6 +438,8 @@ final customerDetailProvider = FutureProvider.family<CustomerDetailData?, int>((
     contacts: values[1] as List<ContactRow>,
     plans: values[2] as List<FollowPlanRow>,
     followups: values[3] as List<FollowupRow>,
+    orders: values[4] as List<OrderRow>,
+    completedAmountCents: values[5] as int,
   );
 });
 

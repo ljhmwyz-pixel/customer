@@ -38,9 +38,9 @@ class OrderDao extends DatabaseAccessor<AppDatabase> with _$OrderDaoMixin {
   Future<OrderRow?> findById(int id) =>
       (select(orders)..where((t) => t.id.equals(id))).getSingleOrNull();
 
-  Future<OrderRow?> findByOrderNo(String orderNo) =>
-      (select(orders)..where((t) => t.orderNo.equals(orderNo)))
-          .getSingleOrNull();
+  Future<OrderRow?> findByOrderNo(String orderNo) => (select(
+    orders,
+  )..where((t) => t.orderNo.equals(orderNo))).getSingleOrNull();
 
   /// 某客户的订单，下单时间倒序。
   Future<List<OrderRow>> listOf(int customerId) =>
@@ -62,7 +62,7 @@ class OrderDao extends DatabaseAccessor<AppDatabase> with _$OrderDaoMixin {
 
   /// 客户累计成交金额，单位分。
   ///
-  /// 排除 cancelled：取消的订单不算业绩。这里在 SQL 层过滤而不是取回全部
+  /// 只有 completed 订单计入业绩。这里在 SQL 层过滤而不是取回全部
   /// 订单再在 Dart 里筛，客户订单多起来后差别明显。
   Future<int> sumAmountByCustomer(int customerId) async {
     final sum = orders.amountCents.sum();
@@ -70,7 +70,7 @@ class OrderDao extends DatabaseAccessor<AppDatabase> with _$OrderDaoMixin {
       ..addColumns([sum])
       ..where(
         orders.customerId.equals(customerId) &
-            orders.status.isNotValue(OrderStatus.cancelled.dbValue),
+            orders.status.equals(OrderStatus.completed.dbValue),
       );
     final row = await q.getSingle();
     return row.read(sum) ?? 0;
@@ -83,13 +83,12 @@ class OrderDao extends DatabaseAccessor<AppDatabase> with _$OrderDaoMixin {
     final sum = orders.amountCents.sum();
     final q = selectOnly(orders)
       ..addColumns([orders.customerId, sum])
-      ..where(orders.status.isNotValue(OrderStatus.cancelled.dbValue))
+      ..where(orders.status.equals(OrderStatus.completed.dbValue))
       ..groupBy([orders.customerId]);
 
     final rows = await q.get();
     return {
-      for (final row in rows)
-        row.read(orders.customerId)!: row.read(sum) ?? 0,
+      for (final row in rows) row.read(orders.customerId)!: row.read(sum) ?? 0,
     };
   }
 
@@ -128,7 +127,7 @@ class OrderDao extends DatabaseAccessor<AppDatabase> with _$OrderDaoMixin {
     String? orderNo,
     DateTime? orderedAt,
     int? amountCents,
-    String? description,
+    Value<String?> description = const Value.absent(),
     OrderStatus? status,
     DateTime? now,
   }) {
@@ -142,9 +141,7 @@ class OrderDao extends DatabaseAccessor<AppDatabase> with _$OrderDaoMixin {
         amountCents: amountCents == null
             ? const Value.absent()
             : Value(amountCents),
-        description: description == null
-            ? const Value.absent()
-            : Value(description),
+        description: description,
         status: status == null ? const Value.absent() : Value(status.dbValue),
         updatedAt: Value(ts),
       ),
