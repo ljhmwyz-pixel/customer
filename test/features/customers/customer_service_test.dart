@@ -1,5 +1,6 @@
 import 'package:customer/data/database.dart';
 import 'package:customer/features/customers/customer_providers.dart';
+import 'package:customer/features/opportunities/supplier_substitution.dart';
 import 'package:customer/models/enums.dart';
 import 'package:customer/services/reminder_scheduler.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,10 +14,14 @@ Future<int> _seedOpportunity(
   int customerId, {
   required String name,
   OpportunityStage stage = OpportunityStage.newLead,
+  String? supplierProblem,
+  int? estimatedAnnualVolume,
 }) => db.opportunityDao.insertOpportunity(
   customerId: customerId,
   name: name,
   stage: stage,
+  supplierProblem: supplierProblem,
+  estimatedAnnualVolume: estimatedAnnualVolume,
 );
 
 FollowupDraft _followupDraft({
@@ -189,6 +194,25 @@ void main() {
   });
 
   group('跟进与提醒', () {
+    test('沟通方向可追加简短供应商替代建议', () {
+      expect(
+        talkingDirectionForStage(OpportunityStage.needsConfirmed),
+        '确认年用量、具体型号、采购时间和注册要求',
+      );
+      expect(
+        talkingDirectionForStage(
+          OpportunityStage.needsConfirmed,
+          const SupplierSubstitutionRecommendation(
+            entryPoint: '价格替代',
+            investmentAdvice: '继续投入',
+            summary: '测试建议',
+            reasons: [],
+          ),
+        ),
+        '确认年用量、具体型号、采购时间和注册要求；替代建议：价格替代，继续投入',
+      );
+    });
+
     test('项目必须存在且属于当前客户', () async {
       final customerId = await seedCustomer(db);
       final otherCustomerId = await seedCustomer(db, name: '其他客户');
@@ -253,6 +277,8 @@ void main() {
         customerId,
         name: '密封件项目',
         stage: OpportunityStage.contactEstablished,
+        supplierProblem: '价格高',
+        estimatedAnnualVolume: 1200,
       );
       final occurredAt = DateTime.utc(2026, 8, 5, 10);
       final nextFollowAt = DateTime.utc(2026, 8, 8, 10);
@@ -293,7 +319,7 @@ void main() {
       expect(plan.sourceId, followup.id);
       expect(plan.ruleKey, 'next_followup');
       expect(plan.reason, '按计划继续跟进');
-      expect(plan.talkingDirection, '确认年用量、具体型号、采购时间和注册要求');
+      expect(plan.talkingDirection, '确认年用量、具体型号、采购时间和注册要求；替代建议：价格替代，继续投入');
       expect(plan.nextAction, '发送正式报价');
       expect(plan.owner, '本人');
       expect(plan.title, '发送正式报价');

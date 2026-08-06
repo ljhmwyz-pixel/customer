@@ -8,6 +8,7 @@ import '../../theme/tokens.dart';
 import '../customers/customer_providers.dart';
 import '../customers/customer_widgets.dart';
 import 'opportunity_providers.dart';
+import 'supplier_substitution.dart';
 
 class OpportunityFormPage extends ConsumerStatefulWidget {
   const OpportunityFormPage({
@@ -34,6 +35,11 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
   bool _needsSample = false;
   bool _needsRegistration = false;
   bool _needsAuthorization = false;
+  String? _supplierProblem;
+  String? _changeWillingness;
+  String? _substitutionDifficulty;
+  String? _entryPoint;
+  String? _investmentAdvice;
   bool _loading = true;
   bool _saving = false;
   String? _loadError;
@@ -86,13 +92,13 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
     set('currentPurchaseBrand', value.currentPurchaseBrand);
     set('currentPurchasePrice', _minorText(value.currentPurchasePriceMinor));
     set('supplierStability', value.supplierStability);
-    set('supplierProblem', value.supplierProblem);
-    set('changeWillingness', value.changeWillingness);
-    set('substitutionDifficulty', value.substitutionDifficulty);
+    _supplierProblem = value.supplierProblem;
+    _changeWillingness = value.changeWillingness;
+    _substitutionDifficulty = value.substitutionDifficulty;
     set('latestQuote', _minorText(value.latestQuoteMinor));
     set('targetPrice', _minorText(value.targetPriceMinor));
-    set('entryPoint', value.entryPoint);
-    set('investmentAdvice', value.investmentAdvice);
+    _entryPoint = value.entryPoint;
+    _investmentAdvice = value.investmentAdvice;
     set('latestFeedback', value.latestFeedback);
     set('currentObstacle', value.currentObstacle);
     set('nextAction', value.nextAction);
@@ -185,13 +191,13 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
           '当前采购价',
         ),
         supplierStability: _text('supplierStability'),
-        supplierProblem: _text('supplierProblem'),
-        changeWillingness: _text('changeWillingness'),
-        substitutionDifficulty: _text('substitutionDifficulty'),
+        supplierProblem: _supplierProblem,
+        changeWillingness: _changeWillingness,
+        substitutionDifficulty: _substitutionDifficulty,
         latestQuoteMinor: _optionalMinor('latestQuote', '最新报价'),
         targetPriceMinor: _optionalMinor('targetPrice', '目标价'),
-        entryPoint: _text('entryPoint'),
-        investmentAdvice: _text('investmentAdvice'),
+        entryPoint: _entryPoint,
+        investmentAdvice: _investmentAdvice,
         needsSample: _needsSample,
         needsRegistration: _needsRegistration,
         needsAuthorization: _needsAuthorization,
@@ -243,6 +249,25 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
     });
   }
 
+  SupplierSubstitutionRecommendation get _supplierRecommendation =>
+      recommendSupplierSubstitution(
+        SupplierSubstitutionInput(
+          equipmentBrand: _text('equipmentBrand'),
+          equipmentModel: _text('equipmentModel'),
+          currentSupplier: _text('currentSupplier'),
+          currentPurchaseBrand: _text('currentPurchaseBrand'),
+          supplierStability: _text('supplierStability'),
+          supplierProblem: _supplierProblem,
+          changeWillingness: _changeWillingness,
+          substitutionDifficulty: _substitutionDifficulty,
+          estimatedAnnualVolume: int.tryParse(
+            _controller('estimatedAnnualVolume').text.trim(),
+          ),
+          expectedCloseAt: _expectedCloseAt,
+          stage: _stage,
+        ),
+      );
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(widget.opportunityId == null ? '新增项目' : '编辑项目')),
@@ -261,9 +286,14 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
         _field('name', '项目名称 *', required: true),
         _field('productCategory', '产品类别'),
         _field('productModel', '产品型号'),
-        _field('equipmentBrand', '设备品牌'),
-        _field('equipmentModel', '设备型号'),
-        _field('estimatedAnnualVolume', '预计年用量', number: true),
+        _field('equipmentBrand', '设备品牌', onChanged: (_) => setState(() {})),
+        _field('equipmentModel', '设备型号', onChanged: (_) => setState(() {})),
+        _field(
+          'estimatedAnnualVolume',
+          '预计年用量',
+          number: true,
+          onChanged: (_) => setState(() {}),
+        ),
         _field('forecastAmount', '预计项目金额', decimal: true),
         _field('currency', '币种（如 USD）'),
         _field('probabilityPercent', '成交概率（0–100）', number: true),
@@ -293,13 +323,43 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
           tilePadding: EdgeInsets.zero,
           title: const Text('供应商与价格信息'),
           children: [
-            _field('currentSupplier', '当前供应商'),
-            _field('currentPurchaseBrand', '当前采购品牌'),
+            _field(
+              'currentSupplier',
+              '当前供应商',
+              onChanged: (_) => setState(() {}),
+            ),
+            _field(
+              'currentPurchaseBrand',
+              '当前采购品牌',
+              onChanged: (_) => setState(() {}),
+            ),
             _field('currentPurchasePrice', '当前采购价', decimal: true),
-            _field('supplierStability', '供应稳定性'),
-            _field('supplierProblem', '现供应商问题', lines: 2),
-            _field('changeWillingness', '更换意愿'),
-            _field('substitutionDifficulty', '替代难度'),
+            _field(
+              'supplierStability',
+              '供应稳定性',
+              onChanged: (_) => setState(() {}),
+            ),
+            _optionField(
+              key: 'supplierProblem',
+              label: '现供应商问题',
+              options: supplierProblemOptions,
+              value: _supplierProblem,
+              onChanged: (value) => _supplierProblem = value,
+            ),
+            _optionField(
+              key: 'changeWillingness',
+              label: '更换意愿',
+              options: changeWillingnessOptions,
+              value: _changeWillingness,
+              onChanged: (value) => _changeWillingness = value,
+            ),
+            _optionField(
+              key: 'substitutionDifficulty',
+              label: '替代难度',
+              options: substitutionDifficultyOptions,
+              value: _substitutionDifficulty,
+              onChanged: (value) => _substitutionDifficulty = value,
+            ),
             _field('latestQuote', '最新报价', decimal: true),
             _field('targetPrice', '客户目标价', decimal: true),
           ],
@@ -308,8 +368,21 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
           tilePadding: EdgeInsets.zero,
           title: const Text('投入建议与前置事项'),
           children: [
-            _field('entryPoint', '切入点', lines: 2),
-            _field('investmentAdvice', '投入建议', lines: 2),
+            _optionField(
+              key: 'entryPoint',
+              label: '切入点',
+              options: entryPointOptions,
+              value: _entryPoint,
+              onChanged: (value) => _entryPoint = value,
+            ),
+            _optionField(
+              key: 'investmentAdvice',
+              label: '投入建议',
+              options: investmentAdviceOptions,
+              value: _investmentAdvice,
+              onChanged: (value) => _investmentAdvice = value,
+            ),
+            _recommendationCard(_supplierRecommendation),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('需要样品'),
@@ -353,6 +426,7 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
     bool number = false,
     bool decimal = false,
     int lines = 1,
+    ValueChanged<String>? onChanged,
   }) => Padding(
     padding: const EdgeInsets.only(bottom: AppTokens.s12),
     child: TextFormField(
@@ -367,9 +441,81 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
           ? TextInputType.multiline
           : TextInputType.text,
       maxLines: lines,
+      onChanged: onChanged,
       validator: required
           ? (value) => value == null || value.trim().isEmpty ? '请输入项目名称' : null
           : null,
+    ),
+  );
+
+  Widget _optionField({
+    required String key,
+    required String label,
+    required List<String> options,
+    required String? value,
+    required ValueChanged<String?> onChanged,
+  }) {
+    final items = optionsWithLegacyValue(options, value);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTokens.s12),
+      child: KeyedSubtree(
+        key: ValueKey('$key-$value'),
+        child: DropdownButtonFormField<String>(
+          key: ValueKey('opportunity-$key'),
+          initialValue: value?.trim().isEmpty ?? true ? null : value,
+          isExpanded: true,
+          decoration: InputDecoration(labelText: label),
+          items: [
+            const DropdownMenuItem<String>(value: null, child: Text('未设置')),
+            ...items.map(
+              (item) => DropdownMenuItem(
+                value: item,
+                child: Text(
+                  options.contains(item) ? item : '历史值：$item',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+          ],
+          onChanged: (next) => setState(() => onChanged(next)),
+        ),
+      ),
+    );
+  }
+
+  Widget _recommendationCard(
+    SupplierSubstitutionRecommendation recommendation,
+  ) => Card(
+    key: const ValueKey('supplier-recommendation-card'),
+    margin: const EdgeInsets.only(bottom: AppTokens.s12),
+    child: Padding(
+      padding: const EdgeInsets.all(AppTokens.s12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('建议切入点：${recommendation.entryPoint}'),
+          const SizedBox(height: AppTokens.s4),
+          Text('建议投入：${recommendation.investmentAdvice}'),
+          const SizedBox(height: AppTokens.s8),
+          Text(recommendation.summary),
+          ...recommendation.reasons.map(
+            (reason) => Padding(
+              padding: const EdgeInsets.only(top: AppTokens.s4),
+              child: Text('• $reason'),
+            ),
+          ),
+          const SizedBox(height: AppTokens.s8),
+          FilledButton.tonalIcon(
+            key: const ValueKey('apply-supplier-recommendation'),
+            onPressed: () => setState(() {
+              _entryPoint = recommendation.entryPoint;
+              _investmentAdvice = recommendation.investmentAdvice;
+            }),
+            icon: const Icon(Icons.check_outlined),
+            label: const Text('采用建议'),
+          ),
+        ],
+      ),
     ),
   );
 

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/database.dart';
 import '../../data/database_provider.dart';
 import '../../models/enums.dart';
+import 'supplier_substitution.dart';
 
 class OpportunityDraft {
   const OpportunityDraft({
@@ -133,8 +134,8 @@ class OpportunityService {
     int id,
     OpportunityDraft draft,
   ) async {
-    await _requireOpportunity(customerId, id);
-    final value = _normalize(draft);
+    final existing = await _requireOpportunity(customerId, id);
+    final value = _normalize(draft, existing: existing);
     await _db.opportunityDao.updateOpportunity(
       id,
       name: value.name,
@@ -195,7 +196,10 @@ class OpportunityService {
     return value;
   }
 
-  OpportunityDraft _normalize(OpportunityDraft value) {
+  OpportunityDraft _normalize(
+    OpportunityDraft value, {
+    OpportunityRow? existing,
+  }) {
     final name = value.name.trim();
     if (name.isEmpty) {
       throw const OpportunityValidationException('项目名称不能为空');
@@ -228,6 +232,22 @@ class OpportunityService {
       return result == null || result.isEmpty ? null : result;
     }
 
+    String? fixedOption({
+      required String fieldName,
+      required String? raw,
+      required List<String> options,
+      required String? legacyValue,
+    }) {
+      final result = text(raw);
+      final normalizedLegacyValue = text(legacyValue);
+      if (result == null ||
+          options.contains(result) ||
+          result == normalizedLegacyValue) {
+        return result;
+      }
+      throw OpportunityValidationException('$fieldName必须选择固定选项');
+    }
+
     return OpportunityDraft(
       name: name,
       productCategory: text(value.productCategory),
@@ -243,13 +263,38 @@ class OpportunityService {
       currentPurchaseBrand: text(value.currentPurchaseBrand),
       currentPurchasePriceMinor: value.currentPurchasePriceMinor,
       supplierStability: text(value.supplierStability),
-      supplierProblem: text(value.supplierProblem),
-      changeWillingness: text(value.changeWillingness),
-      substitutionDifficulty: text(value.substitutionDifficulty),
+      supplierProblem: fixedOption(
+        fieldName: '供应商问题',
+        raw: value.supplierProblem,
+        options: supplierProblemOptions,
+        legacyValue: existing?.supplierProblem,
+      ),
+      changeWillingness: fixedOption(
+        fieldName: '更换意愿',
+        raw: value.changeWillingness,
+        options: changeWillingnessOptions,
+        legacyValue: existing?.changeWillingness,
+      ),
+      substitutionDifficulty: fixedOption(
+        fieldName: '替代难度',
+        raw: value.substitutionDifficulty,
+        options: substitutionDifficultyOptions,
+        legacyValue: existing?.substitutionDifficulty,
+      ),
       latestQuoteMinor: value.latestQuoteMinor,
       targetPriceMinor: value.targetPriceMinor,
-      entryPoint: text(value.entryPoint),
-      investmentAdvice: text(value.investmentAdvice),
+      entryPoint: fixedOption(
+        fieldName: '推荐切入点',
+        raw: value.entryPoint,
+        options: entryPointOptions,
+        legacyValue: existing?.entryPoint,
+      ),
+      investmentAdvice: fixedOption(
+        fieldName: '投入建议',
+        raw: value.investmentAdvice,
+        options: investmentAdviceOptions,
+        legacyValue: existing?.investmentAdvice,
+      ),
       needsSample: value.needsSample,
       needsRegistration: value.needsRegistration,
       needsAuthorization: value.needsAuthorization,

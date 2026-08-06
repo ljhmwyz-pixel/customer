@@ -8,6 +8,7 @@ import '../../data/database_provider.dart';
 import '../../models/enums.dart';
 import '../../services/reminder_scheduler.dart';
 import '../../services/service_providers.dart';
+import '../opportunities/supplier_substitution.dart';
 
 class CustomerDraft {
   const CustomerDraft({
@@ -110,20 +111,29 @@ class CustomerValidationException implements Exception {
 }
 
 /// 按 SPRD 第 9 节给任务提供可解释的沟通方向，不自动生成外发消息。
-String talkingDirectionForStage(OpportunityStage stage) => switch (stage) {
-  OpportunityStage.newLead ||
-  OpportunityStage.contactEstablished => '确认设备品牌/型号、经营品牌、现有供应商、医院覆盖和产品需求',
-  OpportunityStage.needsConfirmed => '确认年用量、具体型号、采购时间和注册要求',
-  OpportunityStage.quoted ||
-  OpportunityStage.priceNegotiation => '确认报价是否收到、内部反馈、目标价格、竞争价格和决策时间',
-  OpportunityStage.samplePreparing ||
-  OpportunityStage.sampleTesting => '确认物流、签收、测试负责人、测试日期、初步结果和正式报告',
-  OpportunityStage.registrationInProgress ||
-  OpportunityStage.tenderPreparing => '确认文件截止、投标主体、资质、保证金、授权和项目时间表',
-  OpportunityStage.awaitingOrder => '确认 PI/PO、付款安排、采购审批和预计下单时间',
-  OpportunityStage.won => '确认库存、销售速度、终端反馈和下一次补货时间',
-  OpportunityStage.paused || OpportunityStage.lost => '确认暂停或流失原因，以及是否存在恢复推进的条件',
-};
+String talkingDirectionForStage(
+  OpportunityStage stage, [
+  SupplierSubstitutionRecommendation? recommendation,
+]) {
+  final stageDirection = switch (stage) {
+    OpportunityStage.newLead ||
+    OpportunityStage.contactEstablished => '确认设备品牌/型号、经营品牌、现有供应商、医院覆盖和产品需求',
+    OpportunityStage.needsConfirmed => '确认年用量、具体型号、采购时间和注册要求',
+    OpportunityStage.quoted ||
+    OpportunityStage.priceNegotiation => '确认报价是否收到、内部反馈、目标价格、竞争价格和决策时间',
+    OpportunityStage.samplePreparing ||
+    OpportunityStage.sampleTesting => '确认物流、签收、测试负责人、测试日期、初步结果和正式报告',
+    OpportunityStage.registrationInProgress ||
+    OpportunityStage.tenderPreparing => '确认文件截止、投标主体、资质、保证金、授权和项目时间表',
+    OpportunityStage.awaitingOrder => '确认 PI/PO、付款安排、采购审批和预计下单时间',
+    OpportunityStage.won => '确认库存、销售速度、终端反馈和下一次补货时间',
+    OpportunityStage.paused ||
+    OpportunityStage.lost => '确认暂停或流失原因，以及是否存在恢复推进的条件',
+  };
+  if (recommendation == null) return stageDirection;
+  return '$stageDirection；替代建议：${recommendation.entryPoint}，'
+      '${recommendation.investmentAdvice}';
+}
 
 class CustomerFilter {
   const CustomerFilter({this.keyword = '', this.stage, this.tagId});
@@ -302,6 +312,26 @@ class CustomerService {
     if (hasNextFollowAt == hasPauseReason) {
       throw const CustomerValidationException('请选择下一次跟进时间，或填写暂不跟进原因');
     }
+    final substitutionRecommendation = recommendSupplierSubstitution(
+      SupplierSubstitutionInput(
+        equipmentBrand: opportunity.equipmentBrand,
+        equipmentModel: opportunity.equipmentModel,
+        currentSupplier: opportunity.currentSupplier,
+        currentPurchaseBrand: opportunity.currentPurchaseBrand,
+        supplierStability: opportunity.supplierStability,
+        supplierProblem: opportunity.supplierProblem,
+        changeWillingness: opportunity.changeWillingness,
+        substitutionDifficulty: opportunity.substitutionDifficulty,
+        estimatedAnnualVolume: opportunity.estimatedAnnualVolume,
+        expectedCloseAt: opportunity.expectedCloseAt == null
+            ? null
+            : DateTime.fromMillisecondsSinceEpoch(
+                opportunity.expectedCloseAt!,
+                isUtc: true,
+              ),
+        stage: draft.stage,
+      ),
+    );
 
     late int followupId;
     int? planId;
@@ -334,7 +364,10 @@ class CustomerService {
           sourceId: followupId,
           ruleKey: 'next_followup',
           reason: '按计划继续跟进',
-          talkingDirection: talkingDirectionForStage(draft.stage),
+          talkingDirection: talkingDirectionForStage(
+            draft.stage,
+            substitutionRecommendation,
+          ),
           nextAction: nextAction,
           owner: owner,
           planAt: draft.nextFollowAt!,

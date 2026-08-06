@@ -10,6 +10,7 @@ import '../../widgets/empty_state.dart';
 import '../orders/order_form_page.dart';
 import '../orders/order_providers.dart';
 import '../opportunities/opportunity_providers.dart';
+import '../opportunities/supplier_substitution.dart';
 import 'contact_actions.dart';
 import 'customer_providers.dart';
 import 'customer_widgets.dart';
@@ -730,6 +731,39 @@ class _OpportunityTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final stage = OpportunityStage.fromDb(opportunity.stage);
     final status = OpportunityStatus.fromDb(opportunity.status);
+    final recommendation = recommendSupplierSubstitution(
+      SupplierSubstitutionInput(
+        equipmentBrand: opportunity.equipmentBrand,
+        equipmentModel: opportunity.equipmentModel,
+        currentSupplier: opportunity.currentSupplier,
+        currentPurchaseBrand: opportunity.currentPurchaseBrand,
+        supplierStability: opportunity.supplierStability,
+        supplierProblem: opportunity.supplierProblem,
+        changeWillingness: opportunity.changeWillingness,
+        substitutionDifficulty: opportunity.substitutionDifficulty,
+        estimatedAnnualVolume: opportunity.estimatedAnnualVolume,
+        expectedCloseAt: opportunity.expectedCloseAt == null
+            ? null
+            : DateTime.fromMillisecondsSinceEpoch(
+                opportunity.expectedCloseAt!,
+                isUtc: true,
+              ),
+        stage: stage,
+      ),
+    );
+    final savedEntryPoint = opportunity.entryPoint?.trim();
+    final savedInvestmentAdvice = opportunity.investmentAdvice?.trim();
+    final hasSavedEntryPoint = savedEntryPoint?.isNotEmpty ?? false;
+    final hasSavedInvestmentAdvice = savedInvestmentAdvice?.isNotEmpty ?? false;
+    final substitutionDecision = [
+      hasSavedEntryPoint ? savedEntryPoint! : recommendation.entryPoint,
+      hasSavedInvestmentAdvice
+          ? savedInvestmentAdvice!
+          : recommendation.investmentAdvice,
+    ].join(' · ');
+    final substitutionText = hasSavedEntryPoint || hasSavedInvestmentAdvice
+        ? substitutionDecision
+        : '建议：$substitutionDecision';
     final product = [
       opportunity.productCategory?.trim(),
       opportunity.productModel?.trim(),
@@ -755,6 +789,7 @@ class _OpportunityTile extends StatelessWidget {
           if (product.isNotEmpty)
             Text(product, maxLines: 1, overflow: TextOverflow.ellipsis),
           Text('${stage.label} · ${status.label}'),
+          Text(substitutionText, maxLines: 2, overflow: TextOverflow.ellipsis),
           if (amount != null)
             Text(
               weighted == null

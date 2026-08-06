@@ -555,6 +555,57 @@ void main() {
     expect(find.textContaining('加权 USD 400.20'), findsOneWidget);
   });
 
+  testWidgets('CustomerDetailPage prioritizes saved substitution decisions', (
+    tester,
+  ) async {
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '已决策客户');
+    await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '已决策项目',
+      supplierProblem: '价格高',
+      estimatedAnnualVolume: 1200,
+      entryPoint: '第二供应商',
+      investmentAdvice: '限制样品投入',
+    );
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: CustomerDetailPage(customerId: customerId),
+    );
+    addTearDown(() => harness.dispose(tester));
+
+    await harness.pump(tester);
+
+    expect(find.text('第二供应商 · 限制样品投入'), findsOneWidget);
+    expect(find.text('建议：价格替代 · 继续投入'), findsNothing);
+  });
+
+  testWidgets('CustomerDetailPage shows a calculated substitution suggestion', (
+    tester,
+  ) async {
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '待决策客户');
+    await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '待决策项目',
+      supplierProblem: '价格高',
+      estimatedAnnualVolume: 1200,
+    );
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: CustomerDetailPage(customerId: customerId),
+    );
+    addTearDown(() => harness.dispose(tester));
+
+    await harness.pump(tester);
+
+    expect(find.text('建议：价格替代 · 继续投入'), findsOneWidget);
+  });
+
   testWidgets('CustomerDetailPage edits an existing project', (tester) async {
     final db = await openTestDb();
     final customerId = await seedCustomer(db, name: '编辑项目客户');
@@ -586,6 +637,212 @@ void main() {
 
     expect((await db.opportunityDao.findById(opportunityId))?.name, '更新后的项目');
     expect(find.text('更新后的项目'), findsOneWidget);
+  });
+
+  testWidgets('OpportunityFormPage applies a supplier recommendation on save', (
+    tester,
+  ) async {
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '替代建议客户');
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: OpportunityFormPage(customerId: customerId),
+    );
+    addTearDown(() => harness.dispose(tester));
+
+    await harness.pump(tester);
+    await tester.enterText(
+      find.byKey(const ValueKey('opportunity-name')),
+      '价格替代项目',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('opportunity-estimatedAnnualVolume')),
+      '1200',
+    );
+    await tester.scrollUntilVisible(
+      find.text('供应商与价格信息'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('供应商与价格信息'));
+    await tester.pumpAndSettle();
+    await _selectDropdownValue<String>(
+      tester,
+      'opportunity-supplierProblem',
+      '价格高',
+    );
+    await tester.scrollUntilVisible(
+      find.text('投入建议与前置事项'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('投入建议与前置事项'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('supplier-recommendation-card')),
+      findsOneWidget,
+    );
+    expect(find.text('建议切入点：价格替代'), findsOneWidget);
+    expect(find.text('建议投入：继续投入'), findsOneWidget);
+    expect(find.textContaining('明确采购条件'), findsOneWidget);
+    expect(find.textContaining('已有年用量或采购时间证据'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('apply-supplier-recommendation')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('apply-supplier-recommendation')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('apply-supplier-recommendation')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<DropdownButtonFormField<String>>(
+            find.byKey(const ValueKey('opportunity-entryPoint')),
+          )
+          .initialValue,
+      '价格替代',
+    );
+    expect(
+      tester
+          .widget<DropdownButtonFormField<String>>(
+            find.byKey(const ValueKey('opportunity-investmentAdvice')),
+          )
+          .initialValue,
+      '继续投入',
+    );
+    expect(await db.opportunityDao.listOfCustomer(customerId), isEmpty);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('save-opportunity')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(const ValueKey('save-opportunity')));
+    await tester.pumpAndSettle();
+
+    final value = (await db.opportunityDao.listOfCustomer(customerId)).single;
+    expect(value.supplierProblem, '价格高');
+    expect(value.entryPoint, '价格替代');
+    expect(value.investmentAdvice, '继续投入');
+  });
+
+  testWidgets('OpportunityFormPage preserves legacy supplier values', (
+    tester,
+  ) async {
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '历史项目客户');
+    final opportunityId = await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '历史项目',
+      supplierProblem: '旧系统供应商描述',
+      changeWillingness: '旧系统意愿',
+      substitutionDifficulty: '旧系统难度',
+      entryPoint: '旧系统切入策略',
+      investmentAdvice: '旧系统投入判断',
+    );
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: OpportunityFormPage(
+        customerId: customerId,
+        opportunityId: opportunityId,
+      ),
+    );
+    addTearDown(() => harness.dispose(tester));
+
+    await harness.pump(tester);
+    await tester.scrollUntilVisible(
+      find.text('供应商与价格信息'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('供应商与价格信息'));
+    await tester.pumpAndSettle();
+    expect(find.text('历史值：旧系统供应商描述'), findsOneWidget);
+    expect(find.text('历史值：旧系统意愿'), findsOneWidget);
+    expect(find.text('历史值：旧系统难度'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('投入建议与前置事项'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('投入建议与前置事项'));
+    await tester.pumpAndSettle();
+    expect(find.text('历史值：旧系统切入策略'), findsOneWidget);
+    expect(find.text('历史值：旧系统投入判断'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('save-opportunity')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(const ValueKey('save-opportunity')));
+    await tester.pumpAndSettle();
+
+    final value = await db.opportunityDao.findById(opportunityId);
+    expect(value?.supplierProblem, '旧系统供应商描述');
+    expect(value?.changeWillingness, '旧系统意愿');
+    expect(value?.substitutionDifficulty, '旧系统难度');
+    expect(value?.entryPoint, '旧系统切入策略');
+    expect(value?.investmentAdvice, '旧系统投入判断');
+  });
+
+  testWidgets('OpportunityFormPage handles recommendations on narrow dark UI', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 700);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '窄屏替代建议客户');
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: OpportunityFormPage(customerId: customerId),
+      themeMode: ThemeMode.dark,
+    );
+    addTearDown(() => harness.dispose(tester));
+
+    await harness.pump(tester);
+    await tester.scrollUntilVisible(
+      find.text('供应商与价格信息'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('供应商与价格信息'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('投入建议与前置事项'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('投入建议与前置事项'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('supplier-recommendation-card')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    expect(
+      find.byKey(const ValueKey('supplier-recommendation-card')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('CustomerDetailPage edits an existing order', (tester) async {
@@ -1023,6 +1280,8 @@ Future<void> _selectDropdownValue<T>(
     300,
     scrollable: find.byType(Scrollable).first,
   );
+  await tester.ensureVisible(dropdown);
+  await tester.pumpAndSettle();
   await tester.tap(dropdown);
   await tester.pumpAndSettle();
   final item = find.byWidgetPredicate(

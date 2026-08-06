@@ -1,5 +1,6 @@
 import 'package:customer/data/database.dart';
 import 'package:customer/features/opportunities/opportunity_providers.dart';
+import 'package:customer/features/opportunities/supplier_substitution.dart';
 import 'package:customer/models/enums.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -56,6 +57,80 @@ void main() {
         throwsA(isA<OpportunityValidationException>()),
       );
     }
+  });
+
+  test('供应商替代字段创建时只接受固定选项或空值', () async {
+    final customerId = await seedCustomer(db);
+    final id = await service.createOpportunity(
+      customerId,
+      OpportunityDraft(
+        name: '标准替代项目',
+        supplierProblem: supplierProblemOptions.first,
+        changeWillingness: changeWillingnessOptions.first,
+        substitutionDifficulty: substitutionDifficultyOptions.first,
+        entryPoint: entryPointOptions.first,
+        investmentAdvice: investmentAdviceOptions.first,
+      ),
+    );
+    final created = await db.opportunityDao.findById(id);
+    expect(created?.supplierProblem, supplierProblemOptions.first);
+    expect(created?.entryPoint, entryPointOptions.first);
+
+    await expectLater(
+      service.createOpportunity(
+        customerId,
+        const OpportunityDraft(name: '非法替代项目', supplierProblem: '随便填写'),
+      ),
+      throwsA(
+        isA<OpportunityValidationException>().having(
+          (error) => error.message,
+          'message',
+          contains('供应商问题'),
+        ),
+      ),
+    );
+  });
+
+  test('更新时可保留历史自由文本，但不能改成另一个自由文本', () async {
+    final customerId = await seedCustomer(db);
+    final id = await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '历史项目',
+      supplierProblem: '旧系统问题描述',
+      entryPoint: '旧系统切入方式',
+    );
+
+    await service.updateOpportunity(
+      customerId,
+      id,
+      const OpportunityDraft(
+        name: '历史项目',
+        supplierProblem: '旧系统问题描述',
+        entryPoint: '旧系统切入方式',
+      ),
+    );
+    final preserved = await db.opportunityDao.findById(id);
+    expect(preserved?.supplierProblem, '旧系统问题描述');
+    expect(preserved?.entryPoint, '旧系统切入方式');
+
+    await expectLater(
+      service.updateOpportunity(
+        customerId,
+        id,
+        const OpportunityDraft(
+          name: '历史项目',
+          supplierProblem: '另一个自由文本',
+          entryPoint: '旧系统切入方式',
+        ),
+      ),
+      throwsA(
+        isA<OpportunityValidationException>().having(
+          (error) => error.message,
+          'message',
+          contains('供应商问题'),
+        ),
+      ),
+    );
   });
 
   test('拒绝跨客户编辑和删除有关联记录的项目', () async {
