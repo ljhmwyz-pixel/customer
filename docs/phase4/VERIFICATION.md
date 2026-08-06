@@ -105,3 +105,12 @@ Independent office validation:
 Open boundary:
 
 - AOSP emulator and the target OnePlus 13 / ColorOS 15 Sharesheet have not yet been exercised for this export path. The remaining check is device/provider compatibility, not workbook generation or application logic.
+
+## Emulator PDF Deletion Re-audit
+
+Date: 2026-08-06
+
+- Confirmed `attachment-qa.pdf` has no row in the retained emulator database and no file below `app_flutter/attachments/`.
+- Removed its remaining picker-cache copy at `cache/attachment_sources/ad852cbe-961e-47d7-b5b1-6824d4429ad8.pdf`.
+- Preserved attachment id 1 (`62.png`) and id 2 (`customer-attachment.txt`) with both private files present.
+- Post-cleanup counts remained 18 customers, 11 follow-ups, and 2 attachments; `PRAGMA foreign_key_check` returned no rows.
