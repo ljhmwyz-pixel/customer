@@ -1,5 +1,6 @@
 import 'package:customer/data/database.dart';
 import 'package:customer/data/database_provider.dart';
+import 'package:customer/data/daos/customer_dao.dart';
 import 'package:customer/features/customers/contact_actions.dart';
 import 'package:customer/features/customers/customer_detail_page.dart';
 import 'package:customer/features/customers/customer_form_page.dart';
@@ -20,6 +21,89 @@ import 'package:go_router/go_router.dart';
 import '../../data/helpers.dart';
 
 void main() {
+  test('customer advanced filter state', () {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(customerFilterProvider.notifier);
+
+    notifier.setProductCategory('  体外诊断  ');
+    notifier.setProductModel('Model X');
+    notifier.setEquipmentBrand('Brand A');
+    notifier.setOpportunityStatus(OpportunityStatus.active);
+    notifier.setExpectedCloseFrom(DateTime(2026, 8, 1));
+    notifier.setExpectedCloseTo(DateTime(2026, 8, 31));
+    notifier.toggleAnomaly(CustomerAnomalyFilter.stalledQuote);
+    notifier.toggleAnomaly(CustomerAnomalyFilter.longSilence);
+
+    var state = container.read(customerFilterProvider);
+    expect(state.productCategory, '体外诊断');
+    expect(state.productModel, 'Model X');
+    expect(state.equipmentBrand, 'Brand A');
+    expect(state.opportunityStatus, OpportunityStatus.active);
+    expect(state.expectedCloseFrom, DateTime(2026, 8, 1));
+    expect(state.expectedCloseTo, DateTime(2026, 8, 31));
+    expect(state.anomalies, {
+      CustomerAnomalyFilter.stalledQuote,
+      CustomerAnomalyFilter.longSilence,
+    });
+    expect(state.activeFilterCount, 8);
+
+    notifier.toggleAnomaly(CustomerAnomalyFilter.stalledQuote);
+    notifier.setProductModel('   ');
+    notifier.setExpectedCloseFrom(DateTime(2026, 9, 1));
+    state = container.read(customerFilterProvider);
+    expect(state.anomalies, {CustomerAnomalyFilter.longSilence});
+    expect(state.productModel, isNull);
+    expect(state.expectedCloseFrom, DateTime(2026, 9, 1));
+    expect(state.expectedCloseTo, isNull);
+
+    notifier.setExpectedCloseTo(DateTime(2026, 8, 31));
+    expect(container.read(customerFilterProvider).expectedCloseTo, isNull);
+
+    final source = {CustomerAnomalyFilter.stalledSample};
+    final copied = state.copyWith(anomalies: source);
+    source.add(CustomerAnomalyFilter.stalledQuote);
+    expect(copied.anomalies, {CustomerAnomalyFilter.stalledSample});
+    expect(
+      () => copied.anomalies.add(CustomerAnomalyFilter.longSilence),
+      throwsUnsupportedError,
+    );
+  });
+
+  test('customer advanced filter clear behavior', () {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(customerFilterProvider.notifier);
+
+    notifier.setKeyword('目标客户');
+    notifier.setCustomerStage(CustomerStage.potential);
+    notifier.setProductCategory('耗材');
+    notifier.setExpectedCloseFrom(DateTime(2026, 8, 1));
+    notifier.toggleAnomaly(CustomerAnomalyFilter.stalledSample);
+    notifier.clearNonKeywordFilters();
+
+    var state = container.read(customerFilterProvider);
+    expect(state.keyword, '目标客户');
+    expect(state.activeFilterCount, 0);
+    expect(state.productCategory, isNull);
+    expect(state.expectedCloseFrom, isNull);
+    expect(state.anomalies, isEmpty);
+
+    notifier.setEquipmentBrand('Brand B');
+    notifier.toggleAnomaly(CustomerAnomalyFilter.longSilence);
+    notifier.setKeyword('');
+    state = container.read(customerFilterProvider);
+    expect(state.keyword, isEmpty);
+    expect(state.equipmentBrand, 'Brand B');
+    expect(state.anomalies, {CustomerAnomalyFilter.longSilence});
+    expect(state.activeFilterCount, 2);
+
+    notifier.clear();
+    state = container.read(customerFilterProvider);
+    expect(state.hasFilters, isFalse);
+    expect(state.anomalies, isEmpty);
+  });
+
   testWidgets('CustomerFormPage creates a customer with only a name', (
     tester,
   ) async {

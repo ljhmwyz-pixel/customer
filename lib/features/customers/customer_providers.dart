@@ -136,7 +136,7 @@ String talkingDirectionForStage(
 }
 
 class CustomerFilter {
-  const CustomerFilter({
+  CustomerFilter({
     this.keyword = '',
     this.customerStage,
     this.tagId,
@@ -146,7 +146,14 @@ class CustomerFilter {
     this.entryPoint,
     this.opportunityStage,
     this.owner,
-  });
+    this.productCategory,
+    this.productModel,
+    this.equipmentBrand,
+    this.opportunityStatus,
+    this.expectedCloseFrom,
+    this.expectedCloseTo,
+    Set<CustomerAnomalyFilter> anomalies = const {},
+  }) : anomalies = Set.unmodifiable(anomalies);
 
   static const _unset = Object();
 
@@ -159,17 +166,32 @@ class CustomerFilter {
   final String? entryPoint;
   final OpportunityStage? opportunityStage;
   final String? owner;
+  final String? productCategory;
+  final String? productModel;
+  final String? equipmentBrand;
+  final OpportunityStatus? opportunityStatus;
+  final DateTime? expectedCloseFrom;
+  final DateTime? expectedCloseTo;
+  final Set<CustomerAnomalyFilter> anomalies;
 
-  int get activeFilterCount => [
-    customerStage,
-    tagId,
-    country,
-    customerGrade,
-    currentSupplier,
-    entryPoint,
-    opportunityStage,
-    owner,
-  ].where((value) => value != null).length;
+  int get activeFilterCount =>
+      [
+        customerStage,
+        tagId,
+        country,
+        customerGrade,
+        currentSupplier,
+        entryPoint,
+        opportunityStage,
+        owner,
+        productCategory,
+        productModel,
+        equipmentBrand,
+        opportunityStatus,
+        expectedCloseFrom,
+        expectedCloseTo,
+      ].where((value) => value != null).length +
+      anomalies.length;
 
   bool get hasNonKeywordFilters => activeFilterCount > 0;
 
@@ -185,6 +207,13 @@ class CustomerFilter {
     Object? entryPoint = _unset,
     Object? opportunityStage = _unset,
     Object? owner = _unset,
+    Object? productCategory = _unset,
+    Object? productModel = _unset,
+    Object? equipmentBrand = _unset,
+    Object? opportunityStatus = _unset,
+    Object? expectedCloseFrom = _unset,
+    Object? expectedCloseTo = _unset,
+    Object? anomalies = _unset,
   }) => CustomerFilter(
     keyword: keyword ?? this.keyword,
     customerStage: identical(customerStage, _unset)
@@ -205,6 +234,27 @@ class CustomerFilter {
         ? this.opportunityStage
         : opportunityStage as OpportunityStage?,
     owner: identical(owner, _unset) ? this.owner : owner as String?,
+    productCategory: identical(productCategory, _unset)
+        ? this.productCategory
+        : productCategory as String?,
+    productModel: identical(productModel, _unset)
+        ? this.productModel
+        : productModel as String?,
+    equipmentBrand: identical(equipmentBrand, _unset)
+        ? this.equipmentBrand
+        : equipmentBrand as String?,
+    opportunityStatus: identical(opportunityStatus, _unset)
+        ? this.opportunityStatus
+        : opportunityStatus as OpportunityStatus?,
+    expectedCloseFrom: identical(expectedCloseFrom, _unset)
+        ? this.expectedCloseFrom
+        : expectedCloseFrom as DateTime?,
+    expectedCloseTo: identical(expectedCloseTo, _unset)
+        ? this.expectedCloseTo
+        : expectedCloseTo as DateTime?,
+    anomalies: identical(anomalies, _unset)
+        ? this.anomalies
+        : anomalies as Set<CustomerAnomalyFilter>,
   );
 }
 
@@ -580,7 +630,7 @@ final customerServiceProvider = Provider<CustomerService>(
 
 class CustomerFilterNotifier extends Notifier<CustomerFilter> {
   @override
-  CustomerFilter build() => const CustomerFilter();
+  CustomerFilter build() => CustomerFilter();
 
   void setKeyword(String value) => state = state.copyWith(keyword: value);
 
@@ -605,10 +655,54 @@ class CustomerFilterNotifier extends Notifier<CustomerFilter> {
 
   void setOwner(String? value) => state = state.copyWith(owner: value);
 
+  void setProductCategory(String? value) =>
+      state = state.copyWith(productCategory: _normalizeText(value));
+
+  void setProductModel(String? value) =>
+      state = state.copyWith(productModel: _normalizeText(value));
+
+  void setEquipmentBrand(String? value) =>
+      state = state.copyWith(equipmentBrand: _normalizeText(value));
+
+  void setOpportunityStatus(OpportunityStatus? value) =>
+      state = state.copyWith(opportunityStatus: value);
+
+  void setExpectedCloseFrom(DateTime? value) {
+    final currentTo = state.expectedCloseTo;
+    state = state.copyWith(
+      expectedCloseFrom: value,
+      expectedCloseTo:
+          value != null && currentTo != null && value.isAfter(currentTo)
+          ? null
+          : currentTo,
+    );
+  }
+
+  void setExpectedCloseTo(DateTime? value) {
+    final currentFrom = state.expectedCloseFrom;
+    if (value != null && currentFrom != null && value.isBefore(currentFrom)) {
+      return;
+    }
+    state = state.copyWith(expectedCloseTo: value);
+  }
+
+  void toggleAnomaly(CustomerAnomalyFilter value) {
+    final next = {...state.anomalies};
+    next.contains(value) ? next.remove(value) : next.add(value);
+    state = state.copyWith(anomalies: next);
+  }
+
+  void clearAnomalies() => state = state.copyWith(anomalies: const {});
+
   void clearNonKeywordFilters() =>
       state = CustomerFilter(keyword: state.keyword);
 
-  void clear() => state = const CustomerFilter();
+  void clear() => state = CustomerFilter();
+
+  String? _normalizeText(String? value) {
+    final normalized = value?.trim();
+    return normalized == null || normalized.isEmpty ? null : normalized;
+  }
 }
 
 final customerFilterProvider =
@@ -643,6 +737,13 @@ final customerListProvider = FutureProvider<CustomerListData>((ref) async {
     entryPoint: filter.entryPoint,
     opportunityStage: filter.opportunityStage,
     owner: filter.owner,
+    productCategory: filter.productCategory,
+    productModel: filter.productModel,
+    equipmentBrand: filter.equipmentBrand,
+    opportunityStatus: filter.opportunityStatus,
+    expectedCloseFrom: filter.expectedCloseFrom,
+    expectedCloseTo: filter.expectedCloseTo,
+    anomalies: filter.anomalies,
   );
   final tags = await dao.tagsForCustomers(
     items.map((item) => item.customer.id),
@@ -673,6 +774,9 @@ final customerFilterOptionsProvider = FutureProvider<CustomerFilterOptions>((
       ),
     ]),
     owners: values.owners,
+    productCategories: values.productCategories,
+    productModels: values.productModels,
+    equipmentBrands: values.equipmentBrands,
   );
 });
 
