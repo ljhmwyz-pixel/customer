@@ -12107,6 +12107,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $TendersTable tenders = $TendersTable(this);
   late final $AttachmentsTable attachments = $AttachmentsTable(this);
   late final CustomerDao customerDao = CustomerDao(this as AppDatabase);
+  late final ExportDao exportDao = ExportDao(this as AppDatabase);
   late final ContactDao contactDao = ContactDao(this as AppDatabase);
   late final FollowupDao followupDao = FollowupDao(this as AppDatabase);
   late final PlanDao planDao = PlanDao(this as AppDatabase);

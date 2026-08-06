@@ -9,6 +9,7 @@ import 'package:sqlite3/sqlite3.dart' as sqlite3;
 import 'daos/attachment_dao.dart';
 import 'daos/contact_dao.dart';
 import 'daos/customer_dao.dart';
+import 'daos/export_dao.dart';
 import 'daos/followup_dao.dart';
 import 'daos/order_dao.dart';
 import 'daos/opportunity_dao.dart';
@@ -50,6 +51,7 @@ part 'database.g.dart';
   ],
   daos: [
     CustomerDao,
+    ExportDao,
     ContactDao,
     FollowupDao,
     PlanDao,
