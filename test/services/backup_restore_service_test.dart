@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:archive/archive.dart';
+import 'package:crypto/crypto.dart';
 import 'package:customer/data/database.dart';
 import 'package:customer/services/backup_restore_service.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,7 +17,11 @@ void main() {
     database = AppDatabase.memory();
     directory = await Directory.systemTemp.createTemp('backup-restore-');
     databaseFile = File('${directory.path}/customer.sqlite');
-    await databaseFile.writeAsBytes(_sqliteHeader);
+    final raw = sqlite.sqlite3.open(databaseFile.path);
+    raw.execute('CREATE TABLE customers (id INTEGER PRIMARY KEY)');
+    raw.execute('CREATE TABLE attachments (id INTEGER PRIMARY KEY)');
+    raw.execute('PRAGMA user_version = 8');
+    raw.close();
   });
 
   tearDown(() async {
@@ -47,7 +52,10 @@ void main() {
     expect(result.fileName, '客户跟进备份_20260806_101112.zip');
     expect(manifest['formatVersion'], 1);
     expect(manifest['schemaVersion'], 8);
-    expect(archive.findFile('customer.sqlite')!.content, _sqliteHeader);
+    expect(
+      archive.findFile('customer.sqlite')!.content,
+      await databaseFile.readAsBytes(),
+    );
     expect(await File('${shared.single.path}.tmp').exists(), isFalse);
   });
 
@@ -123,28 +131,66 @@ void main() {
     await applyPendingRestore(databaseFile);
     expect(await databaseFile.readAsBytes(), [9]);
   });
+
+  test('完整备份可在另一目录恢复数据库和附件', () async {
+    final sourceRoot = Directory('${directory.path}/source')
+      ..createSync(recursive: true);
+    final sourceDb = await _createValidDatabase(sourceRoot);
+    final sourceAttachments = Directory(
+      '${sourceRoot.path}/attachments/2026/08',
+    )..createSync(recursive: true);
+    File('${sourceAttachments.path}/proof.txt').writeAsStringSync('restored');
+    final shared = <File>[];
+    final backupService = BackupRestoreService(
+      database: database,
+      databaseFile: () async => sourceDb,
+      outputDirectory: () async => directory,
+      attachmentDirectory: () async =>
+          Directory('${sourceRoot.path}/attachments'),
+      sharer: _FakeSharer(shared),
+      clock: () => DateTime(2026, 8, 6, 10, 11, 12),
+    );
+    await backupService.backupAndShare();
+
+    final restoreRoot = Directory('${directory.path}/restore')
+      ..createSync(recursive: true);
+    final restoreDb = File('${restoreRoot.path}/customer.sqlite')
+      ..writeAsBytesSync([1, 2, 3]);
+    final restoreService = BackupRestoreService(
+      database: database,
+      databaseFile: () async => restoreDb,
+      outputDirectory: () async => directory,
+      attachmentDirectory: () async =>
+          Directory('${restoreRoot.path}/attachments'),
+      sharer: const _NoopSharer(),
+    );
+    await restoreService.stageRestore(shared.single);
+    await applyPendingRestore(restoreDb);
+
+    final restored = sqlite.sqlite3.open(
+      restoreDb.path,
+      mode: sqlite.OpenMode.readOnly,
+    );
+    expect(restored.select('PRAGMA user_version').first.values.first, 8);
+    restored.close();
+    expect(
+      File(
+        '${restoreRoot.path}/attachments/2026/08/proof.txt',
+      ).readAsStringSync(),
+      'restored',
+    );
+    expect(File('${restoreDb.path}.restore-pending').existsSync(), isFalse);
+    expect(
+      Directory('${restoreDb.path}.restore-attachments-pending').existsSync(),
+      isFalse,
+    );
+  });
 }
 
-const _sqliteHeader = [
-  83,
-  81,
-  76,
-  105,
-  116,
-  101,
-  32,
-  102,
-  111,
-  114,
-  109,
-  97,
-  116,
-  32,
-  51,
-  0,
-];
-
 List<int> _zip(List<int> databaseBytes) {
+  final dataBytes = utf8.encode(
+    jsonEncode({'schemaVersion': 8, 'tables': <String, Object?>{}}),
+  );
   final archive = Archive()
     ..addFile(
       ArchiveFile('customer.sqlite', databaseBytes.length, databaseBytes),
@@ -156,9 +202,15 @@ List<int> _zip(List<int> databaseBytes) {
           'formatVersion': 1,
           'schemaVersion': 8,
           'createdAt': '2026-08-06T02:00:00Z',
+          'attachments': <String>[],
+          'checksums': {
+            'customer.sqlite': sha256.convert(databaseBytes).toString(),
+            'data.json': sha256.convert(dataBytes).toString(),
+          },
         }),
       ),
     );
+  archive.addFile(ArchiveFile('data.json', dataBytes.length, dataBytes));
   return ZipEncoder().encode(archive)!;
 }
 

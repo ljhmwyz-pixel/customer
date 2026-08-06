@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:archive/archive.dart';
+import 'package:crypto/crypto.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
@@ -53,6 +54,7 @@ class BackupRestoreService implements BackupRestoreActions {
 
   static const formatVersion = 1;
   static const manifestName = 'manifest.json';
+  static const dataName = 'data.json';
   static const databaseName = 'customer.sqlite';
 
   final AppDatabase database;
@@ -68,15 +70,22 @@ class BackupRestoreService implements BackupRestoreActions {
     final source = await databaseFile();
     if (!await source.exists()) throw StateError('数据库文件不存在');
     final now = clock().toLocal();
+    final databaseBytes = await source.readAsBytes();
+    final dataBytes = await _snapshotData(source);
     final archive = Archive()
-      ..addFile(
-        ArchiveFile(
-          databaseName,
-          await source.length(),
-          await source.readAsBytes(),
-        ),
-      );
+      ..addFile(ArchiveFile(databaseName, databaseBytes.length, databaseBytes))
+      ..addFile(ArchiveFile(dataName, dataBytes.length, dataBytes));
     final attachmentPaths = await _addAttachments(archive);
+    final checksums = <String, String>{
+      databaseName: _checksum(databaseBytes),
+      dataName: _checksum(dataBytes),
+    };
+    for (final path in attachmentPaths) {
+      final entry = archive.findFile(path);
+      if (entry != null) {
+        checksums[path] = _checksum(List<int>.from(entry.content));
+      }
+    }
     archive.addFile(
       ArchiveFile.string(
         manifestName,
@@ -85,6 +94,7 @@ class BackupRestoreService implements BackupRestoreActions {
           'schemaVersion': database.schemaVersion,
           'createdAt': now.toUtc().toIso8601String(),
           'attachments': attachmentPaths,
+          'checksums': checksums,
         }),
       ),
     );
@@ -111,7 +121,8 @@ class BackupRestoreService implements BackupRestoreActions {
     final archive = ZipDecoder().decodeBytes(bytes);
     final manifestFile = archive.findFile(manifestName);
     final databaseEntry = archive.findFile(databaseName);
-    if (manifestFile == null || databaseEntry == null) {
+    final dataEntry = archive.findFile(dataName);
+    if (manifestFile == null || databaseEntry == null || dataEntry == null) {
       throw const FormatException('备份文件缺少必要内容');
     }
     final manifest = jsonDecode(utf8.decode(manifestFile.content as List<int>));
@@ -121,6 +132,14 @@ class BackupRestoreService implements BackupRestoreActions {
       throw const FormatException('备份版本与当前应用不兼容');
     }
     final databaseBytes = List<int>.from(databaseEntry.content as List<int>);
+    final dataBytes = List<int>.from(dataEntry.content as List<int>);
+    _verifyChecksum(manifest, databaseName, databaseBytes);
+    _verifyChecksum(manifest, dataName, dataBytes);
+    try {
+      jsonDecode(utf8.decode(dataBytes));
+    } catch (_) {
+      throw const FormatException('备份数据清单无效');
+    }
     const sqliteHeader = [
       83,
       81,
@@ -156,6 +175,57 @@ class BackupRestoreService implements BackupRestoreActions {
       await staging.rename(pending.path);
     } finally {
       if (await staging.exists()) await staging.delete();
+    }
+  }
+
+  Future<List<int>> _snapshotData(File source) async {
+    final raw = sqlite.sqlite3.open(
+      source.path,
+      mode: sqlite.OpenMode.readOnly,
+    );
+    try {
+      final names = raw
+          .select(
+            "SELECT name FROM sqlite_master WHERE type = 'table' "
+            "AND name NOT LIKE 'sqlite_%' ORDER BY name",
+          )
+          .map((row) => row.values.first as String)
+          .toList();
+      final tables = <String, Object?>{};
+      for (final name in names) {
+        final rows = raw.select(
+          'SELECT * FROM "${name.replaceAll('"', '""')}"',
+        );
+        tables[name] = rows
+            .map(
+              (row) => <String, Object?>{
+                for (final key in row.keys) key: _jsonValue(row[key]),
+              },
+            )
+            .toList();
+      }
+      return utf8.encode(
+        jsonEncode({'schemaVersion': database.schemaVersion, 'tables': tables}),
+      );
+    } finally {
+      raw.close();
+    }
+  }
+
+  static Object? _jsonValue(Object? value) {
+    if (value is List<int>) return base64Encode(value);
+    return value;
+  }
+
+  static String _checksum(List<int> bytes) => sha256.convert(bytes).toString();
+
+  static void _verifyChecksum(Object manifest, String name, List<int> bytes) {
+    if (manifest is! Map || manifest['checksums'] is! Map) {
+      throw const FormatException('备份缺少校验清单');
+    }
+    final expected = (manifest['checksums'] as Map)[name];
+    if (expected is! String || expected != _checksum(bytes)) {
+      throw const FormatException('备份文件校验失败');
     }
   }
 
@@ -205,6 +275,7 @@ class BackupRestoreService implements BackupRestoreActions {
         final relative = AttachmentPath.normalizeRelative(value);
         final entry = archive.findFile(relative);
         if (entry == null) throw const FormatException('备份缺少附件文件');
+        _verifyChecksum(decoded, relative, List<int>.from(entry.content));
         final destination = File(
           p.join(
             staging.path,

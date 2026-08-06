@@ -84,3 +84,23 @@
 
 - [ ] Verify the Android Sharesheet receives the XLSX MIME type and a nonempty workbook.
 - [ ] Verify a compatible spreadsheet application opens all four sheets and preserves Chinese text, formulas, and typed values.
+
+## Backup and Restore
+
+### Automated gate
+
+- [x] Backup ZIP contains `customer.sqlite`, `data.json`, all private attachment files, schema version, and SHA-256 checksums.
+- [x] Restore rejects missing manifest/data, incompatible schema, invalid SQLite headers, corrupt SQLite integrity, missing attachment entries, and checksum mismatches.
+- [x] Restore stages database and attachments before startup replacement and consumes pending state only once.
+- [x] Startup replacement removes stale WAL/SHM files and preserves the existing database when staging validation fails.
+- [x] Application startup calls the existing reminder `rescheduleAll()` flow after the restored database is opened.
+- [x] Backup/restore service and settings-page tests pass with the full test suite.
+
+### Local acceptance
+
+- [x] Debug APK builds successfully with the backup/restore entry point.
+- [x] File-level end-to-end test backs up a real v8 SQLite file plus attachment, restores into another application directory, and verifies the database, attachment, and consumed pending state.
+
+### Target device boundary
+
+- [ ] Verify backup sharing and restore file selection through OnePlus 13 / ColorOS 15 providers.
