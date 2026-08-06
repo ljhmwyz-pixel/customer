@@ -16,6 +16,32 @@
 - [x] Attachment pages cover loading, empty, populated, error, add, preview, open, confirmation, 320px, and dark-mode states.
 - [x] `flutter analyze`, full `flutter test`, debug APK, and release APK complete successfully.
 
+## Reversible Sample Data
+
+### Automated gate
+
+- [x] Fresh schema is v8 with nullable internal `customers.sample_batch_id` and a partial lookup index.
+- [x] v7-to-v8 migration preserves formal customers with a null sample marker and passes `PRAGMA foreign_key_check`.
+- [x] Nine PRD scenarios import atomically with deterministic UTC-clock data and realistic opportunity, follow-up, plan, quote, sample, tender, and order rows.
+- [x] Re-import is idempotent and does not reschedule reminders or change any table count.
+- [x] A collision in the final scenario rolls back all nine customer graphs.
+- [x] Undo finds roots by the internal marker after customer edits, cancels open reminders, deletes database graphs transactionally, and delegates attachment file cleanup after commit.
+- [x] Formal customers remain untouched; physical cleanup failures are reported for startup retry.
+- [x] Settings page requires explicit confirmation for import and undo and keeps state on mutation failure.
+- [x] `flutter analyze` and full `flutter test` complete successfully after the sample-data stage.
+
+### Android emulator
+
+- [x] Install debug APK with `adb install -r` without clearing retained attachment data.
+- [x] Settings > 示例数据 initially shows `尚未导入` and performs no write automatically.
+- [x] Confirmed import shows `已导入 9 条`; customer list displays sample customers.
+- [x] Force-stop and cold-start preserve the imported batch state.
+- [x] Confirmed undo returns to `尚未导入` and reports `已撤销 9 条示例数据`.
+
+### OnePlus 13 / ColorOS 15
+
+- [ ] Repeat explicit import, edit, restart, and whole-batch undo on the target device.
+
 ### Android emulator
 
 - [x] Install debug APK with `adb install -r` without uninstalling or clearing retained data.

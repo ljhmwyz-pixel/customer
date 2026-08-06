@@ -57,3 +57,28 @@ Common attachment flow:
 - OnePlus 13 / ColorOS 15 camera, provider, external PDF application, process-exit, and restart checks remain required before target-device completion is claimed.
 
 The repeatable release checklist is `docs/TEST_CHECKLIST.md`.
+
+## Phase F Sample Data Evidence
+
+Date: 2026-08-06
+
+Status: v8 migration, nine reversible scenarios, settings UI, and AOSP emulator flow pass; OnePlus 13 / ColorOS 15 remains open.
+
+Automated evidence:
+
+- `flutter analyze`: `No issues found!`.
+- `flutter test`: 411 tests passed, zero failures.
+- `flutter build apk --debug`: success, SHA-256 `5175f30d03f2ff33d61ec122ec27ed0f0a2bd9cdefeaf113e22c2943e7b61dce`.
+- `flutter build apk --release`: success, 66.0 MB, SHA-256 `b74943823f3823bc20b35f6df3f282331875073b38e7f24dd6b8697088fec5a2`.
+- Focused service evidence: six service tests cover nine scenario fields, duplicate import, transaction rollback, edit-tolerant undo, reminder cancellation, attachment path handoff, and cleanup-failure reporting.
+
+Emulator evidence:
+
+- Device `emulator-5554`, AOSP `sdk_gphone16k_arm64`, Android 17 / API 37, 1080x2400.
+- Debug APK installed with `adb install -r`; existing attachment data was retained.
+- Settings page initially showed `尚未导入`; no sample rows were created before the explicit command.
+- After confirmation, page showed `已导入 9 条`, and the customer list showed `示例｜Medtron 合作商`, `示例｜普通注射器招标客户`, and `示例｜样品测试客户` among existing records.
+- After force-stop and cold-start, the sample page still showed `已导入 9 条`.
+- After confirmation of whole-batch undo, the page showed `尚未导入` and the SnackBar `已撤销 9 条示例数据`.
+
+The internal batch marker is `phase-f-samples-v1`; it is not user-editable or used as a visible tag, so renaming or adding child records cannot detach a sample graph from undo.
