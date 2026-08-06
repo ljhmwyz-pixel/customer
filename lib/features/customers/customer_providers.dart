@@ -136,22 +136,75 @@ String talkingDirectionForStage(
 }
 
 class CustomerFilter {
-  const CustomerFilter({this.keyword = '', this.stage, this.tagId});
+  const CustomerFilter({
+    this.keyword = '',
+    this.customerStage,
+    this.tagId,
+    this.country,
+    this.customerGrade,
+    this.currentSupplier,
+    this.entryPoint,
+    this.opportunityStage,
+    this.owner,
+  });
+
+  static const _unset = Object();
 
   final String keyword;
-  final CustomerStage? stage;
+  final CustomerStage? customerStage;
   final int? tagId;
+  final String? country;
+  final CustomerGrade? customerGrade;
+  final String? currentSupplier;
+  final String? entryPoint;
+  final OpportunityStage? opportunityStage;
+  final String? owner;
+
+  int get activeFilterCount => [
+    customerStage,
+    tagId,
+    country,
+    customerGrade,
+    currentSupplier,
+    entryPoint,
+    opportunityStage,
+    owner,
+  ].where((value) => value != null).length;
+
+  bool get hasNonKeywordFilters => activeFilterCount > 0;
+
+  bool get hasFilters => keyword.trim().isNotEmpty || hasNonKeywordFilters;
 
   CustomerFilter copyWith({
     String? keyword,
-    CustomerStage? stage,
-    int? tagId,
-    bool clearStage = false,
-    bool clearTag = false,
+    Object? customerStage = _unset,
+    Object? tagId = _unset,
+    Object? country = _unset,
+    Object? customerGrade = _unset,
+    Object? currentSupplier = _unset,
+    Object? entryPoint = _unset,
+    Object? opportunityStage = _unset,
+    Object? owner = _unset,
   }) => CustomerFilter(
     keyword: keyword ?? this.keyword,
-    stage: clearStage ? null : stage ?? this.stage,
-    tagId: clearTag ? null : tagId ?? this.tagId,
+    customerStage: identical(customerStage, _unset)
+        ? this.customerStage
+        : customerStage as CustomerStage?,
+    tagId: identical(tagId, _unset) ? this.tagId : tagId as int?,
+    country: identical(country, _unset) ? this.country : country as String?,
+    customerGrade: identical(customerGrade, _unset)
+        ? this.customerGrade
+        : customerGrade as CustomerGrade?,
+    currentSupplier: identical(currentSupplier, _unset)
+        ? this.currentSupplier
+        : currentSupplier as String?,
+    entryPoint: identical(entryPoint, _unset)
+        ? this.entryPoint
+        : entryPoint as String?,
+    opportunityStage: identical(opportunityStage, _unset)
+        ? this.opportunityStage
+        : opportunityStage as OpportunityStage?,
+    owner: identical(owner, _unset) ? this.owner : owner as String?,
   );
 }
 
@@ -531,13 +584,29 @@ class CustomerFilterNotifier extends Notifier<CustomerFilter> {
 
   void setKeyword(String value) => state = state.copyWith(keyword: value);
 
-  void setStage(CustomerStage? value) => state = value == null
-      ? state.copyWith(clearStage: true)
-      : state.copyWith(stage: value);
+  void setCustomerStage(CustomerStage? value) =>
+      state = state.copyWith(customerStage: value);
 
-  void setTag(int? value) => state = value == null
-      ? state.copyWith(clearTag: true)
-      : state.copyWith(tagId: value);
+  void setTag(int? value) => state = state.copyWith(tagId: value);
+
+  void setCountry(String? value) => state = state.copyWith(country: value);
+
+  void setCustomerGrade(CustomerGrade? value) =>
+      state = state.copyWith(customerGrade: value);
+
+  void setCurrentSupplier(String? value) =>
+      state = state.copyWith(currentSupplier: value);
+
+  void setEntryPoint(String? value) =>
+      state = state.copyWith(entryPoint: value);
+
+  void setOpportunityStage(OpportunityStage? value) =>
+      state = state.copyWith(opportunityStage: value);
+
+  void setOwner(String? value) => state = state.copyWith(owner: value);
+
+  void clearNonKeywordFilters() =>
+      state = CustomerFilter(keyword: state.keyword);
 
   void clear() => state = const CustomerFilter();
 }
@@ -566,8 +635,14 @@ final customerListProvider = FutureProvider<CustomerListData>((ref) async {
   final items = await dao.listFilteredByUrgency(
     now: DateTime.now(),
     keyword: filter.keyword,
-    stage: filter.stage,
+    customerStage: filter.customerStage,
     tagId: filter.tagId,
+    country: filter.country,
+    customerGrade: filter.customerGrade,
+    currentSupplier: filter.currentSupplier,
+    entryPoint: filter.entryPoint,
+    opportunityStage: filter.opportunityStage,
+    owner: filter.owner,
   );
   final tags = await dao.tagsForCustomers(
     items.map((item) => item.customer.id),
@@ -578,6 +653,27 @@ final customerListProvider = FutureProvider<CustomerListData>((ref) async {
 final allCustomerTagsProvider = FutureProvider<List<TagRow>>((ref) {
   ref.watch(customerRevisionProvider);
   return ref.watch(databaseProvider).customerDao.allTags();
+});
+
+final customerFilterOptionsProvider = FutureProvider<CustomerFilterOptions>((
+  ref,
+) async {
+  ref.watch(customerRevisionProvider);
+  final values = await ref
+      .watch(databaseProvider)
+      .customerDao
+      .listFilterOptions();
+  return CustomerFilterOptions(
+    countries: values.countries,
+    currentSuppliers: values.currentSuppliers,
+    entryPoints: List.unmodifiable([
+      ...entryPointOptions,
+      ...values.entryPoints.where(
+        (value) => !entryPointOptions.contains(value),
+      ),
+    ]),
+    owners: values.owners,
+  );
 });
 
 final customerDetailProvider = FutureProvider.family<CustomerDetailData?, int>((

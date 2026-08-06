@@ -111,14 +111,14 @@ void main() {
     await db.customerDao.listFilteredByUrgency(
       now: now,
       keyword: '客户',
-      stage: CustomerStage.contacted,
+      customerStage: CustomerStage.contacted,
     );
 
     final sw = Stopwatch()..start();
     final rows = await db.customerDao.listFilteredByUrgency(
       now: now,
       keyword: '客户',
-      stage: CustomerStage.contacted,
+      customerStage: CustomerStage.contacted,
     );
     sw.stop();
 

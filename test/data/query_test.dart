@@ -628,10 +628,268 @@ void main() {
       final rows = await db.customerDao.listFilteredByUrgency(
         now: now,
         keyword: '7654',
-        stage: CustomerStage.intent,
+        customerStage: CustomerStage.intent,
         tagId: selectedTag,
       );
       expect(rows.map((row) => row.customer.id), [target]);
+    });
+
+    test('国家、等级、供应商、切入点、销售阶段和负责人同时生效', () async {
+      final now = DateTime(2026, 8, 4, 12);
+      final target = await db.customerDao.insertCustomer(
+        name: '目标客户',
+        country: '智利',
+        grade: CustomerGrade.a,
+        now: now,
+      );
+      await db.opportunityDao.insertOpportunity(
+        customerId: target,
+        name: '目标项目',
+        currentSupplier: '供应商 A',
+        entryPoint: '第二供应商',
+        stage: OpportunityStage.quoted,
+        owner: '王销售',
+        now: now,
+      );
+
+      for (final mismatch in <({String country, CustomerGrade grade})>[
+        (country: '巴西', grade: CustomerGrade.a),
+        (country: '智利', grade: CustomerGrade.b),
+      ]) {
+        final id = await db.customerDao.insertCustomer(
+          name: '客户 ${mismatch.country}-${mismatch.grade.label}',
+          country: mismatch.country,
+          grade: mismatch.grade,
+          now: now,
+        );
+        await db.opportunityDao.insertOpportunity(
+          customerId: id,
+          name: '匹配项目',
+          currentSupplier: '供应商 A',
+          entryPoint: '第二供应商',
+          stage: OpportunityStage.quoted,
+          owner: '王销售',
+          now: now,
+        );
+      }
+
+      final projectMismatches =
+          <
+            ({
+              String supplier,
+              String entryPoint,
+              OpportunityStage stage,
+              String owner,
+            })
+          >[
+            (
+              supplier: '供应商 B',
+              entryPoint: '第二供应商',
+              stage: OpportunityStage.quoted,
+              owner: '王销售',
+            ),
+            (
+              supplier: '供应商 A',
+              entryPoint: '样品测试',
+              stage: OpportunityStage.quoted,
+              owner: '王销售',
+            ),
+            (
+              supplier: '供应商 A',
+              entryPoint: '第二供应商',
+              stage: OpportunityStage.sampleTesting,
+              owner: '王销售',
+            ),
+            (
+              supplier: '供应商 A',
+              entryPoint: '第二供应商',
+              stage: OpportunityStage.quoted,
+              owner: '李销售',
+            ),
+          ];
+      for (var index = 0; index < projectMismatches.length; index++) {
+        final mismatch = projectMismatches[index];
+        final id = await db.customerDao.insertCustomer(
+          name: '项目条件不符 $index',
+          country: '智利',
+          grade: CustomerGrade.a,
+          now: now,
+        );
+        await db.opportunityDao.insertOpportunity(
+          customerId: id,
+          name: '不匹配项目',
+          currentSupplier: mismatch.supplier,
+          entryPoint: mismatch.entryPoint,
+          stage: mismatch.stage,
+          owner: mismatch.owner,
+          now: now,
+        );
+      }
+
+      final rows = await db.customerDao.listFilteredByUrgency(
+        now: now,
+        country: '智利',
+        customerGrade: CustomerGrade.a,
+        currentSupplier: '供应商 A',
+        entryPoint: '第二供应商',
+        opportunityStage: OpportunityStage.quoted,
+        owner: '王销售',
+      );
+      expect(rows.map((row) => row.customer.id), [target]);
+    });
+
+    test('多个项目筛选条件必须由同一个项目满足', () async {
+      final now = DateTime(2026, 8, 4, 12);
+      final split = await db.customerDao.insertCustomer(
+        name: '拆分命中客户',
+        now: now,
+      );
+      await db.opportunityDao.insertOpportunity(
+        customerId: split,
+        name: '只匹配供应商',
+        currentSupplier: '供应商 A',
+        stage: OpportunityStage.sampleTesting,
+        now: now,
+      );
+      await db.opportunityDao.insertOpportunity(
+        customerId: split,
+        name: '只匹配阶段',
+        currentSupplier: '供应商 B',
+        stage: OpportunityStage.quoted,
+        now: now,
+      );
+      final same = await db.customerDao.insertCustomer(
+        name: '同项目命中客户',
+        now: now,
+      );
+      await db.opportunityDao.insertOpportunity(
+        customerId: same,
+        name: '同时匹配',
+        currentSupplier: '供应商 A',
+        stage: OpportunityStage.quoted,
+        now: now,
+      );
+
+      final rows = await db.customerDao.listFilteredByUrgency(
+        now: now,
+        currentSupplier: '供应商 A',
+        opportunityStage: OpportunityStage.quoted,
+      );
+      expect(rows.map((row) => row.customer.id), [same]);
+    });
+
+    test(r'项目文本精确匹配 %、_、\，空白筛选不启用', () async {
+      final now = DateTime(2026, 8, 4, 12);
+      final literal = await db.customerDao.insertCustomer(
+        name: '特殊字符客户',
+        now: now,
+      );
+      await db.opportunityDao.insertOpportunity(
+        customerId: literal,
+        name: '特殊字符项目',
+        currentSupplier: r'供%应_商\A',
+        entryPoint: r'切%入_点\B',
+        owner: '王销售',
+        now: now,
+      );
+      final ordinary = await db.customerDao.insertCustomer(
+        name: '普通客户',
+        now: now,
+      );
+      await db.opportunityDao.insertOpportunity(
+        customerId: ordinary,
+        name: '普通项目',
+        currentSupplier: '供应商 A',
+        entryPoint: '第二供应商',
+        owner: '李销售',
+        now: now,
+      );
+
+      final exact = await db.customerDao.listFilteredByUrgency(
+        now: now,
+        currentSupplier: r' 供%应_商\A ',
+        entryPoint: r' 切%入_点\B ',
+      );
+      expect(exact.map((row) => row.customer.id), [literal]);
+
+      final blank = await db.customerDao.listFilteredByUrgency(
+        now: now,
+        country: '   ',
+        currentSupplier: ' ',
+        entryPoint: '\n',
+        owner: '\t',
+      );
+      expect(blank.map((row) => row.customer.id), [literal, ordinary]);
+    });
+
+    test('动态筛选选项去空、去重并排序', () async {
+      final now = DateTime(2026, 8, 4, 12);
+      final first = await db.customerDao.insertCustomer(
+        name: '甲',
+        country: ' 智利 ',
+        now: now,
+      );
+      final second = await db.customerDao.insertCustomer(
+        name: '乙',
+        country: '巴西',
+        now: now,
+      );
+      await db.customerDao.insertCustomer(name: '丙', country: ' ', now: now);
+      await db.opportunityDao.insertOpportunity(
+        customerId: first,
+        name: '项目甲',
+        currentSupplier: ' 供应商 B ',
+        entryPoint: ' 自定义切入 ',
+        owner: ' 王销售 ',
+        now: now,
+      );
+      await db.opportunityDao.insertOpportunity(
+        customerId: second,
+        name: '项目乙',
+        currentSupplier: '供应商 A',
+        entryPoint: '第二供应商',
+        owner: '李销售',
+        now: now,
+      );
+      await db.opportunityDao.insertOpportunity(
+        customerId: second,
+        name: '项目丙',
+        currentSupplier: '供应商 B',
+        entryPoint: '自定义切入',
+        owner: '王销售',
+        now: now,
+      );
+
+      final options = await db.customerDao.listFilterOptions();
+      expect(options.countries, ['巴西', '智利']);
+      expect(options.currentSuppliers, ['供应商 A', '供应商 B']);
+      expect(options.entryPoints, ['第二供应商', '自定义切入']);
+      expect(options.owners, ['李销售', '王销售']);
+    });
+
+    test('筛选后仍保持原有紧急度排序', () async {
+      final now = DateTime(2026, 8, 4, 12);
+      final noPlan = await db.customerDao.insertCustomer(
+        name: '无计划',
+        country: '智利',
+        now: now,
+      );
+      final overdue = await db.customerDao.insertCustomer(
+        name: '逾期',
+        country: '智利',
+        now: now,
+      );
+      await db.planDao.insertPlan(
+        customerId: overdue,
+        title: '逾期任务',
+        planAt: now.subtract(const Duration(days: 2)),
+      );
+
+      final rows = await db.customerDao.listFilteredByUrgency(
+        now: now,
+        country: '智利',
+      );
+      expect(rows.map((row) => row.customer.id), [overdue, noPlan]);
     });
 
     test(r'关键字把 %、_、\ 当作普通字符', () async {

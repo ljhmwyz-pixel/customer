@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../data/database.dart';
 import '../../models/enums.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/empty_state.dart';
@@ -32,9 +33,23 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
     super.dispose();
   }
 
-  void _clearFilters() {
+  void _clearSearch() {
+    _searchController.clear();
+    ref.read(customerFilterProvider.notifier).setKeyword('');
+  }
+
+  void _clearAllFilters() {
     _searchController.clear();
     ref.read(customerFilterProvider.notifier).clear();
+  }
+
+  void _showFilters() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => const _CustomerFiltersSheet(),
+    );
   }
 
   void _refresh() {
@@ -46,10 +61,6 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
     final filter = ref.watch(customerFilterProvider);
     final customers = ref.watch(customerListProvider);
     final tags = ref.watch(allCustomerTagsProvider);
-    final hasFilter =
-        filter.keyword.trim().isNotEmpty ||
-        filter.stage != null ||
-        filter.tagId != null;
 
     return Scaffold(
       appBar: AppBar(title: const Text('客户')),
@@ -69,6 +80,7 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
               AppTokens.s12,
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 TextField(
                   key: const ValueKey('customer-search'),
@@ -84,108 +96,52 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
                         ? null
                         : IconButton(
                             key: const ValueKey('clear-customer-search'),
-                            onPressed: () {
-                              _searchController.clear();
-                              ref
-                                  .read(customerFilterProvider.notifier)
-                                  .setKeyword('');
-                            },
+                            onPressed: _clearSearch,
                             tooltip: '清空搜索',
                             icon: const Icon(Icons.close),
                           ),
                   ),
                 ),
                 const SizedBox(height: AppTokens.s8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<CustomerStage?>(
-                        key: const ValueKey('customer-stage-filter'),
-                        initialValue: filter.stage,
-                        isExpanded: true,
-                        decoration: const InputDecoration(
-                          labelText: '阶段',
-                          prefixIcon: Icon(Icons.filter_alt_outlined),
-                        ),
-                        items: [
-                          const DropdownMenuItem(
-                            value: null,
-                            child: Text('全部阶段'),
-                          ),
-                          ...CustomerStage.values.map(
-                            (stage) => DropdownMenuItem(
-                              value: stage,
-                              child: Text(
-                                stage.label,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: OutlinedButton.icon(
+                    key: const ValueKey('open-customer-filters'),
+                    onPressed: _showFilters,
+                    icon: const Icon(Icons.filter_alt_outlined),
+                    label: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('筛选'),
+                        if (filter.activeFilterCount > 0) ...[
+                          const SizedBox(width: AppTokens.s4),
+                          Container(
+                            key: const ValueKey('customer-filter-count'),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppTokens.s8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '${filter.activeFilterCount}',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onPrimary,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
                         ],
-                        onChanged: ref
-                            .read(customerFilterProvider.notifier)
-                            .setStage,
-                      ),
+                      ],
                     ),
-                    const SizedBox(width: AppTokens.s8),
-                    Expanded(
-                      child: tags.when(
-                        data: (values) {
-                          final selected =
-                              values.any((tag) => tag.id == filter.tagId)
-                              ? filter.tagId
-                              : null;
-                          return DropdownButtonFormField<int?>(
-                            key: const ValueKey('customer-tag-filter'),
-                            initialValue: selected,
-                            isExpanded: true,
-                            decoration: const InputDecoration(
-                              labelText: '标签',
-                              prefixIcon: Icon(Icons.sell_outlined),
-                            ),
-                            items: [
-                              const DropdownMenuItem(
-                                value: null,
-                                child: Text('全部标签'),
-                              ),
-                              ...values.map(
-                                (tag) => DropdownMenuItem(
-                                  value: tag.id,
-                                  child: Text(
-                                    tag.name,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ),
-                            ],
-                            onChanged: ref
-                                .read(customerFilterProvider.notifier)
-                                .setTag,
-                          );
-                        },
-                        loading: () => const _DisabledFilter(
-                          label: '标签',
-                          icon: Icons.sell_outlined,
-                        ),
-                        error: (_, _) => const _DisabledFilter(
-                          label: '标签不可用',
-                          icon: Icons.sell_outlined,
-                        ),
-                      ),
-                    ),
-                    if (hasFilter) ...[
-                      const SizedBox(width: AppTokens.s4),
-                      IconButton(
-                        key: const ValueKey('clear-customer-filters'),
-                        onPressed: _clearFilters,
-                        tooltip: '清空筛选',
-                        icon: const Icon(Icons.filter_alt_off_outlined),
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
+                if (filter.hasNonKeywordFilters) ...[
+                  const SizedBox(height: AppTokens.s8),
+                  _ActiveFilterSummary(filter: filter, tags: tags),
+                ],
               ],
             ),
           ),
@@ -195,13 +151,13 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
               data: (data) {
                 if (data.items.isEmpty) {
                   return EmptyState(
-                    icon: hasFilter
+                    icon: filter.hasFilters
                         ? Icons.search_off_outlined
                         : Icons.people_outline,
-                    message: hasFilter ? '没有符合条件的客户' : '还没有客户',
-                    actionLabel: hasFilter ? '清空筛选' : '新建客户',
-                    onAction: hasFilter
-                        ? _clearFilters
+                    message: filter.hasFilters ? '没有符合条件的客户' : '还没有客户',
+                    actionLabel: filter.hasFilters ? '清空筛选' : '新建客户',
+                    onAction: filter.hasFilters
+                        ? _clearAllFilters
                         : () => context.push('/customers/new'),
                   );
                 }
@@ -235,6 +191,369 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
       ),
     );
   }
+}
+
+class _CustomerFiltersSheet extends ConsumerWidget {
+  const _CustomerFiltersSheet();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final filter = ref.watch(customerFilterProvider);
+    final notifier = ref.read(customerFilterProvider.notifier);
+    final tags = ref.watch(allCustomerTagsProvider);
+    final dynamicOptions = ref.watch(customerFilterOptionsProvider);
+
+    return FractionallySizedBox(
+      key: const ValueKey('customer-filters-sheet'),
+      heightFactor: 0.9,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTokens.s16,
+              AppTokens.s12,
+              AppTokens.s8,
+              AppTokens.s8,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '筛选客户',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                IconButton(
+                  key: const ValueKey('close-customer-filters'),
+                  onPressed: () => Navigator.of(context).pop(),
+                  tooltip: '关闭',
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          Expanded(
+            child: ListView(
+              key: const ValueKey('customer-filters-list'),
+              padding: const EdgeInsets.all(AppTokens.s16),
+              children: [
+                _FilterDropdown<CustomerStage>(
+                  fieldKey: 'customer-stage-filter',
+                  label: '客户阶段',
+                  allLabel: '全部客户阶段',
+                  icon: Icons.flag_outlined,
+                  value: filter.customerStage,
+                  options: CustomerStage.values,
+                  labelFor: (value) => value.label,
+                  onChanged: notifier.setCustomerStage,
+                ),
+                const SizedBox(height: AppTokens.s12),
+                tags.when(
+                  data: (values) => _FilterDropdown<int>(
+                    fieldKey: 'customer-tag-filter',
+                    label: '标签',
+                    allLabel: '全部标签',
+                    icon: Icons.sell_outlined,
+                    value: values.any((tag) => tag.id == filter.tagId)
+                        ? filter.tagId
+                        : null,
+                    options: values.map((tag) => tag.id).toList(),
+                    labelFor: (id) =>
+                        values.firstWhere((tag) => tag.id == id).name,
+                    onChanged: notifier.setTag,
+                  ),
+                  loading: () => const _DisabledFilter(
+                    label: '标签',
+                    icon: Icons.sell_outlined,
+                  ),
+                  error: (_, _) => const _DisabledFilter(
+                    label: '标签不可用',
+                    icon: Icons.sell_outlined,
+                  ),
+                ),
+                const SizedBox(height: AppTokens.s12),
+                dynamicOptions.when(
+                  data: (values) => Column(
+                    children: [
+                      _FilterDropdown<String>(
+                        fieldKey: 'customer-country-filter',
+                        label: '国家',
+                        allLabel: '全部国家',
+                        icon: Icons.public_outlined,
+                        value: filter.country,
+                        options: values.countries,
+                        labelFor: (value) => value,
+                        onChanged: notifier.setCountry,
+                      ),
+                      const SizedBox(height: AppTokens.s12),
+                      _FilterDropdown<String>(
+                        fieldKey: 'customer-supplier-filter',
+                        label: '当前供应商',
+                        allLabel: '全部供应商',
+                        icon: Icons.factory_outlined,
+                        value: filter.currentSupplier,
+                        options: values.currentSuppliers,
+                        labelFor: (value) => value,
+                        onChanged: notifier.setCurrentSupplier,
+                      ),
+                      const SizedBox(height: AppTokens.s12),
+                      _FilterDropdown<String>(
+                        fieldKey: 'customer-entry-point-filter',
+                        label: '替代切入点',
+                        allLabel: '全部切入点',
+                        icon: Icons.alt_route_outlined,
+                        value: filter.entryPoint,
+                        options: values.entryPoints,
+                        labelFor: (value) => value,
+                        onChanged: notifier.setEntryPoint,
+                      ),
+                    ],
+                  ),
+                  loading: () => const Column(
+                    children: [
+                      _DisabledFilter(label: '国家', icon: Icons.public_outlined),
+                      SizedBox(height: AppTokens.s12),
+                      _DisabledFilter(
+                        label: '当前供应商',
+                        icon: Icons.factory_outlined,
+                      ),
+                      SizedBox(height: AppTokens.s12),
+                      _DisabledFilter(
+                        label: '替代切入点',
+                        icon: Icons.alt_route_outlined,
+                      ),
+                    ],
+                  ),
+                  error: (_, _) => const _DisabledFilter(
+                    label: '动态筛选项不可用',
+                    icon: Icons.error_outline,
+                  ),
+                ),
+                const SizedBox(height: AppTokens.s12),
+                _FilterDropdown<CustomerGrade>(
+                  fieldKey: 'customer-grade-filter',
+                  label: '客户等级',
+                  allLabel: '全部客户等级',
+                  icon: Icons.grade_outlined,
+                  value: filter.customerGrade,
+                  options: CustomerGrade.values,
+                  labelFor: (value) => value.label,
+                  onChanged: notifier.setCustomerGrade,
+                ),
+                const SizedBox(height: AppTokens.s12),
+                _FilterDropdown<OpportunityStage>(
+                  fieldKey: 'customer-opportunity-stage-filter',
+                  label: '销售阶段',
+                  allLabel: '全部销售阶段',
+                  icon: Icons.trending_up_outlined,
+                  value: filter.opportunityStage,
+                  options: OpportunityStage.values,
+                  labelFor: (value) => value.label,
+                  onChanged: notifier.setOpportunityStage,
+                ),
+                const SizedBox(height: AppTokens.s12),
+                dynamicOptions.when(
+                  data: (values) => _FilterDropdown<String>(
+                    fieldKey: 'customer-owner-filter',
+                    label: '负责人',
+                    allLabel: '全部负责人',
+                    icon: Icons.badge_outlined,
+                    value: filter.owner,
+                    options: values.owners,
+                    labelFor: (value) => value,
+                    onChanged: notifier.setOwner,
+                  ),
+                  loading: () => const _DisabledFilter(
+                    label: '负责人',
+                    icon: Icons.badge_outlined,
+                  ),
+                  error: (_, _) => const _DisabledFilter(
+                    label: '负责人不可用',
+                    icon: Icons.badge_outlined,
+                  ),
+                ),
+                const SizedBox(height: AppTokens.s24),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.all(AppTokens.s16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    key: const ValueKey('clear-customer-filter-sheet'),
+                    onPressed: filter.hasNonKeywordFilters
+                        ? notifier.clearNonKeywordFilters
+                        : null,
+                    child: const Text('清除全部'),
+                  ),
+                ),
+                const SizedBox(width: AppTokens.s12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('完成'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterDropdown<T> extends StatelessWidget {
+  const _FilterDropdown({
+    required this.fieldKey,
+    required this.label,
+    required this.allLabel,
+    required this.icon,
+    required this.value,
+    required this.options,
+    required this.labelFor,
+    required this.onChanged,
+  });
+
+  final String fieldKey;
+  final String label;
+  final String allLabel;
+  final IconData icon;
+  final T? value;
+  final List<T> options;
+  final String Function(T value) labelFor;
+  final ValueChanged<T?> onChanged;
+
+  @override
+  Widget build(BuildContext context) => DropdownButtonFormField<T?>(
+    key: ValueKey(fieldKey),
+    initialValue: options.contains(value) ? value : null,
+    isExpanded: true,
+    decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
+    items: [
+      DropdownMenuItem<T?>(value: null, child: Text(allLabel)),
+      ...options.map(
+        (option) => DropdownMenuItem<T?>(
+          value: option,
+          child: Text(
+            labelFor(option),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ),
+    ],
+    onChanged: onChanged,
+  );
+}
+
+class _ActiveFilterSummary extends ConsumerWidget {
+  const _ActiveFilterSummary({required this.filter, required this.tags});
+
+  final CustomerFilter filter;
+  final AsyncValue<List<TagRow>> tags;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifier = ref.read(customerFilterProvider.notifier);
+    final loadedTags = tags.whenOrNull(data: (values) => values);
+    final tagName = loadedTags
+        ?.where((tag) => tag.id == filter.tagId)
+        .firstOrNull
+        ?.name;
+    final chips = <Widget>[
+      if (filter.customerStage != null)
+        _SummaryChip(
+          chipKey: 'customer-filter-chip-stage',
+          label: '客户阶段：${filter.customerStage!.label}',
+          onDeleted: () => notifier.setCustomerStage(null),
+        ),
+      if (filter.tagId != null)
+        _SummaryChip(
+          chipKey: 'customer-filter-chip-tag',
+          label: '标签：${tagName ?? filter.tagId}',
+          onDeleted: () => notifier.setTag(null),
+        ),
+      if (filter.country != null)
+        _SummaryChip(
+          chipKey: 'customer-filter-chip-country',
+          label: '国家：${filter.country}',
+          onDeleted: () => notifier.setCountry(null),
+        ),
+      if (filter.customerGrade != null)
+        _SummaryChip(
+          chipKey: 'customer-filter-chip-grade',
+          label: '等级：${filter.customerGrade!.label}',
+          onDeleted: () => notifier.setCustomerGrade(null),
+        ),
+      if (filter.currentSupplier != null)
+        _SummaryChip(
+          chipKey: 'customer-filter-chip-supplier',
+          label: '供应商：${filter.currentSupplier}',
+          onDeleted: () => notifier.setCurrentSupplier(null),
+        ),
+      if (filter.entryPoint != null)
+        _SummaryChip(
+          chipKey: 'customer-filter-chip-entry-point',
+          label: '切入点：${filter.entryPoint}',
+          onDeleted: () => notifier.setEntryPoint(null),
+        ),
+      if (filter.opportunityStage != null)
+        _SummaryChip(
+          chipKey: 'customer-filter-chip-opportunity-stage',
+          label: '销售阶段：${filter.opportunityStage!.label}',
+          onDeleted: () => notifier.setOpportunityStage(null),
+        ),
+      if (filter.owner != null)
+        _SummaryChip(
+          chipKey: 'customer-filter-chip-owner',
+          label: '负责人：${filter.owner}',
+          onDeleted: () => notifier.setOwner(null),
+        ),
+      TextButton.icon(
+        key: const ValueKey('clear-customer-filters'),
+        onPressed: notifier.clearNonKeywordFilters,
+        icon: const Icon(Icons.filter_alt_off_outlined),
+        label: const Text('清除全部'),
+      ),
+    ];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (var index = 0; index < chips.length; index++) ...[
+            if (index > 0) const SizedBox(width: AppTokens.s8),
+            chips[index],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _SummaryChip extends StatelessWidget {
+  const _SummaryChip({
+    required this.chipKey,
+    required this.label,
+    required this.onDeleted,
+  });
+
+  final String chipKey;
+  final String label;
+  final VoidCallback onDeleted;
+
+  @override
+  Widget build(BuildContext context) => InputChip(
+    key: ValueKey(chipKey),
+    label: Text(label),
+    onDeleted: onDeleted,
+  );
 }
 
 class _DisabledFilter extends StatelessWidget {

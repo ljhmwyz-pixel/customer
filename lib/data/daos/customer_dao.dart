@@ -40,6 +40,21 @@ class CustomerListItem {
   }
 }
 
+/// 客户列表筛选器中从现有业务数据提取的动态选项。
+class CustomerFilterOptions {
+  const CustomerFilterOptions({
+    required this.countries,
+    required this.currentSuppliers,
+    required this.entryPoints,
+    required this.owners,
+  });
+
+  final List<String> countries;
+  final List<String> currentSuppliers;
+  final List<String> entryPoints;
+  final List<String> owners;
+}
+
 class DashboardMetrics {
   const DashboardMetrics({
     required this.totalCustomers,
@@ -112,6 +127,7 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
   Future<int> insertCustomer({
     required String name,
     String? company,
+    String? country,
     String? phone,
     String? wechat,
     String? address,
@@ -126,6 +142,7 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
       CustomersCompanion.insert(
         name: name,
         company: Value(company),
+        country: Value(country),
         phone: Value(phone),
         wechat: Value(wechat),
         address: Value(address),
@@ -208,12 +225,18 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
     int? limit,
   }) => listFilteredByUrgency(now: now, limit: limit);
 
-  /// 按紧急度排序，并组合关键字、阶段、标签筛选。
+  /// 按紧急度排序，并组合客户与项目维度筛选。
   Future<List<CustomerListItem>> listFilteredByUrgency({
     required DateTime now,
     String keyword = '',
-    CustomerStage? stage,
+    CustomerStage? customerStage,
     int? tagId,
+    String? country,
+    CustomerGrade? customerGrade,
+    String? currentSupplier,
+    String? entryPoint,
+    OpportunityStage? opportunityStage,
+    String? owner,
     int? limit,
   }) async {
     final nowMs = now.toUtc().millisecondsSinceEpoch;
@@ -229,6 +252,10 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
     final conditions = <String>[];
     final filterVariables = <Variable<Object>>[];
     final trimmedKeyword = keyword.trim();
+    final trimmedCountry = country?.trim() ?? '';
+    final trimmedCurrentSupplier = currentSupplier?.trim() ?? '';
+    final trimmedEntryPoint = entryPoint?.trim() ?? '';
+    final trimmedOwner = owner?.trim() ?? '';
 
     if (trimmedKeyword.isNotEmpty) {
       final escaped = trimmedKeyword
@@ -252,9 +279,9 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
         Variable.withString(pattern),
       ]);
     }
-    if (stage != null) {
+    if (customerStage != null) {
       conditions.add('c.stage = ?');
-      filterVariables.add(Variable.withString(stage.dbValue));
+      filterVariables.add(Variable.withString(customerStage.dbValue));
     }
     if (tagId != null) {
       conditions.add('''
@@ -266,6 +293,44 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
         )
       ''');
       filterVariables.add(Variable.withInt(tagId));
+    }
+    if (trimmedCountry.isNotEmpty) {
+      conditions.add('TRIM(c.country) = ?');
+      filterVariables.add(Variable.withString(trimmedCountry));
+    }
+    if (customerGrade != null) {
+      conditions.add('c.grade = ?');
+      filterVariables.add(Variable.withString(customerGrade.dbValue));
+    }
+
+    final opportunityConditions = <String>[];
+    final opportunityVariables = <Variable<Object>>[];
+    if (trimmedCurrentSupplier.isNotEmpty) {
+      opportunityConditions.add('TRIM(o.current_supplier) = ?');
+      opportunityVariables.add(Variable.withString(trimmedCurrentSupplier));
+    }
+    if (trimmedEntryPoint.isNotEmpty) {
+      opportunityConditions.add('TRIM(o.entry_point) = ?');
+      opportunityVariables.add(Variable.withString(trimmedEntryPoint));
+    }
+    if (opportunityStage != null) {
+      opportunityConditions.add('o.stage = ?');
+      opportunityVariables.add(Variable.withString(opportunityStage.dbValue));
+    }
+    if (trimmedOwner.isNotEmpty) {
+      opportunityConditions.add('TRIM(o.owner) = ?');
+      opportunityVariables.add(Variable.withString(trimmedOwner));
+    }
+    if (opportunityConditions.isNotEmpty) {
+      conditions.add('''
+        EXISTS (
+          SELECT 1
+          FROM opportunities o
+          WHERE o.customer_id = c.id
+            AND ${opportunityConditions.join(' AND ')}
+        )
+      ''');
+      filterVariables.addAll(opportunityVariables);
     }
     final whereSql = conditions.isEmpty
         ? ''
@@ -311,10 +376,63 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
         ...filterVariables,
         if (limit != null) Variable.withInt(limit),
       ],
-      readsFrom: {customers, db.followPlans, contacts, customerTags},
+      readsFrom: {
+        customers,
+        db.followPlans,
+        contacts,
+        customerTags,
+        db.opportunities,
+      },
     ).get();
 
     return rows.map(_mapListItem).toList();
+  }
+
+  /// 从已有客户和项目中生成文本筛选选项。
+  Future<CustomerFilterOptions> listFilterOptions() async {
+    final rows = await customSelect(
+      '''
+      SELECT kind, value
+      FROM (
+        SELECT 'country' AS kind, TRIM(country) AS value FROM customers
+        UNION ALL
+        SELECT 'supplier', TRIM(current_supplier) FROM opportunities
+        UNION ALL
+        SELECT 'entry_point', TRIM(entry_point) FROM opportunities
+        UNION ALL
+        SELECT 'owner', TRIM(owner) FROM opportunities
+      )
+      WHERE value IS NOT NULL AND value != ''
+      GROUP BY kind, value
+      ORDER BY kind ASC, value ASC
+      ''',
+      readsFrom: {customers, db.opportunities},
+    ).get();
+
+    final countries = <String>[];
+    final currentSuppliers = <String>[];
+    final entryPoints = <String>[];
+    final owners = <String>[];
+    for (final row in rows) {
+      final kind = row.read<String>('kind');
+      final value = row.read<String>('value');
+      switch (kind) {
+        case 'country':
+          countries.add(value);
+        case 'supplier':
+          currentSuppliers.add(value);
+        case 'entry_point':
+          entryPoints.add(value);
+        case 'owner':
+          owners.add(value);
+      }
+    }
+    return CustomerFilterOptions(
+      countries: countries,
+      currentSuppliers: currentSuppliers,
+      entryPoints: entryPoints,
+      owners: owners,
+    );
   }
 
   /// 按名称或电话模糊搜索。

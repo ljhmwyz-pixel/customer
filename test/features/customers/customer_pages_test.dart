@@ -74,7 +74,7 @@ void main() {
     addTearDown(() => harness.dispose(tester));
     harness.container
         .read(customerFilterProvider.notifier)
-        .setStage(CustomerStage.potential);
+        .setCustomerStage(CustomerStage.potential);
     harness.container.read(customerFilterProvider.notifier).setTag(tagId);
 
     await harness.pump(tester);
@@ -82,6 +82,240 @@ void main() {
     expect(find.text('客户 A'), findsOneWidget);
     expect(find.text('客户 B'), findsNothing);
     expect(find.text('客户 C'), findsNothing);
+  });
+
+  testWidgets('CustomersPage combines customer and same-project filters', (
+    tester,
+  ) async {
+    final db = await openTestDb();
+    final targetId = await db.customerDao.insertCustomer(
+      name: '目标客户',
+      country: '德国',
+      grade: CustomerGrade.a,
+    );
+    await db.opportunityDao.insertOpportunity(
+      customerId: targetId,
+      name: '目标项目',
+      currentSupplier: 'Supplier A',
+      entryPoint: '第二供应商',
+      owner: 'Alice',
+      stage: OpportunityStage.quoted,
+    );
+
+    final wrongCountryId = await db.customerDao.insertCustomer(
+      name: '国家不匹配客户',
+      country: '法国',
+      grade: CustomerGrade.a,
+    );
+    await db.opportunityDao.insertOpportunity(
+      customerId: wrongCountryId,
+      name: '国家不匹配项目',
+      currentSupplier: 'Supplier A',
+      owner: 'Alice',
+      stage: OpportunityStage.quoted,
+    );
+
+    final partialProjectId = await db.customerDao.insertCustomer(
+      name: '项目部分匹配客户',
+      country: '德国',
+      grade: CustomerGrade.a,
+    );
+    await db.opportunityDao.insertOpportunity(
+      customerId: partialProjectId,
+      name: '项目部分匹配',
+      currentSupplier: 'Supplier A',
+      owner: 'Alice',
+      stage: OpportunityStage.newLead,
+    );
+
+    final splitProjectId = await db.customerDao.insertCustomer(
+      name: '项目条件分散客户',
+      country: '德国',
+      grade: CustomerGrade.a,
+    );
+    await db.opportunityDao.insertOpportunity(
+      customerId: splitProjectId,
+      name: '仅供应商匹配',
+      currentSupplier: 'Supplier A',
+      owner: 'Alice',
+      stage: OpportunityStage.newLead,
+    );
+    await db.opportunityDao.insertOpportunity(
+      customerId: splitProjectId,
+      name: '仅阶段匹配',
+      currentSupplier: 'Supplier B',
+      owner: 'Alice',
+      stage: OpportunityStage.quoted,
+    );
+
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: const CustomersPage(),
+    );
+    addTearDown(() => harness.dispose(tester));
+    await harness.pump(tester);
+
+    await tester.tap(find.byKey(const ValueKey('open-customer-filters')));
+    await tester.pumpAndSettle();
+    await _selectCustomerFilter<String>(
+      tester,
+      'customer-country-filter',
+      '德国',
+    );
+    await _selectCustomerFilter<String>(
+      tester,
+      'customer-supplier-filter',
+      'Supplier A',
+    );
+    await _selectCustomerFilter<OpportunityStage>(
+      tester,
+      'customer-opportunity-stage-filter',
+      OpportunityStage.quoted,
+    );
+    await tester.tap(find.text('完成'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('目标客户'), findsOneWidget);
+    expect(find.text('国家不匹配客户'), findsNothing);
+    expect(find.text('项目部分匹配客户'), findsNothing);
+    expect(find.text('项目条件分散客户'), findsNothing);
+  });
+
+  testWidgets('CustomersPage keeps search independent from filter clearing', (
+    tester,
+  ) async {
+    final db = await openTestDb();
+    await db.customerDao.insertCustomer(
+      name: '目标客户',
+      country: '德国',
+      grade: CustomerGrade.a,
+    );
+    await db.customerDao.insertCustomer(
+      name: '其他客户',
+      country: '法国',
+      grade: CustomerGrade.c,
+    );
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: const CustomersPage(),
+    );
+    addTearDown(() => harness.dispose(tester));
+    await harness.pump(tester);
+
+    await tester.enterText(find.byKey(const ValueKey('customer-search')), '目标');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('open-customer-filters')));
+    await tester.pumpAndSettle();
+    await _selectCustomerFilter<String>(
+      tester,
+      'customer-country-filter',
+      '德国',
+    );
+    await _selectCustomerFilter<CustomerGrade>(
+      tester,
+      'customer-grade-filter',
+      CustomerGrade.a,
+    );
+    await tester.tap(find.text('完成'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('customer-filter-count')), findsOneWidget);
+    expect(find.text('2'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('customer-filter-chip-country')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('customer-filter-chip-grade')),
+      findsOneWidget,
+    );
+
+    tester
+        .widget<InputChip>(
+          find.byKey(const ValueKey('customer-filter-chip-country')),
+        )
+        .onDeleted!();
+    await tester.pumpAndSettle();
+    expect(find.text('1'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('customer-filter-chip-country')),
+      findsNothing,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('clear-customer-filters')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('customer-filter-count')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('customer-filter-chip-grade')),
+      findsNothing,
+    );
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const ValueKey('customer-search')))
+          .controller!
+          .text,
+      '目标',
+    );
+    expect(find.text('目标客户'), findsOneWidget);
+    expect(find.text('其他客户'), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('clear-customer-search')));
+    await tester.pumpAndSettle();
+    expect(find.text('目标客户'), findsOneWidget);
+    expect(find.text('其他客户'), findsOneWidget);
+  });
+
+  testWidgets('CustomersPage filter sheet supports a narrow viewport', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 700);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final db = await openTestDb();
+    final customerId = await db.customerDao.insertCustomer(
+      name: '窄屏客户',
+      country: '德国',
+      grade: CustomerGrade.a,
+    );
+    await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '窄屏项目',
+      currentSupplier: 'Supplier A',
+      entryPoint: '第二供应商',
+      owner: 'Alice',
+      stage: OpportunityStage.quoted,
+    );
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: const CustomersPage(),
+    );
+    addTearDown(() => harness.dispose(tester));
+    await harness.pump(tester);
+
+    await tester.tap(find.byKey(const ValueKey('open-customer-filters')));
+    await tester.pumpAndSettle();
+    for (final key in [
+      'customer-stage-filter',
+      'customer-tag-filter',
+      'customer-country-filter',
+      'customer-supplier-filter',
+      'customer-entry-point-filter',
+      'customer-grade-filter',
+      'customer-opportunity-stage-filter',
+      'customer-owner-filter',
+    ]) {
+      await _ensureCustomerFilterVisible(tester, key);
+      expect(find.byKey(ValueKey(key)), findsOneWidget);
+    }
+
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets(
@@ -1289,6 +1523,36 @@ Future<void> _selectDropdownValue<T>(
   );
   await tester.ensureVisible(item.last);
   await tester.pumpAndSettle();
+  await tester.tapAt(tester.getCenter(item.last));
+  await tester.pumpAndSettle();
+}
+
+Future<void> _ensureCustomerFilterVisible(
+  WidgetTester tester,
+  String key,
+) async {
+  final dropdown = find.byKey(ValueKey(key));
+  final panelScrollable = find.descendant(
+    of: find.byKey(const ValueKey('customer-filters-list')),
+    matching: find.byType(Scrollable),
+  );
+  await tester.scrollUntilVisible(dropdown, 250, scrollable: panelScrollable);
+  await tester.ensureVisible(dropdown);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _selectCustomerFilter<T>(
+  WidgetTester tester,
+  String key,
+  T value,
+) async {
+  await _ensureCustomerFilterVisible(tester, key);
+  final dropdown = find.byKey(ValueKey(key));
+  await tester.tap(dropdown);
+  await tester.pumpAndSettle();
+  final item = find.byWidgetPredicate(
+    (widget) => widget is DropdownMenuItem && widget.value == value,
+  );
   await tester.tapAt(tester.getCenter(item.last));
   await tester.pumpAndSettle();
 }
