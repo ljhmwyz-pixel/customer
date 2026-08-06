@@ -867,6 +867,200 @@ void main() {
       expect(options.owners, ['李销售', '王销售']);
     });
 
+    test('customer advanced filter options', () async {
+      final now = DateTime(2026, 8, 6, 12);
+      final first = await db.customerDao.insertCustomer(
+        name: '高级选项甲',
+        now: now,
+      );
+      final second = await db.customerDao.insertCustomer(
+        name: '高级选项乙',
+        now: now,
+      );
+
+      await db.opportunityDao.insertOpportunity(
+        customerId: first,
+        name: '高级选项项目甲',
+        productCategory: ' Category B ',
+        productModel: ' Model B ',
+        equipmentBrand: ' Brand B ',
+        now: now,
+      );
+      await db.opportunityDao.insertOpportunity(
+        customerId: second,
+        name: '高级选项项目乙',
+        productCategory: 'Category A',
+        productModel: 'Model A',
+        equipmentBrand: 'Brand A',
+        now: now,
+      );
+      await db.opportunityDao.insertOpportunity(
+        customerId: second,
+        name: '高级选项重复值',
+        productCategory: 'Category B',
+        productModel: ' Model B',
+        equipmentBrand: 'Brand B ',
+        now: now,
+      );
+      await db.opportunityDao.insertOpportunity(
+        customerId: second,
+        name: '高级选项空值',
+        productCategory: '   ',
+        productModel: null,
+        equipmentBrand: '\n',
+        now: now,
+      );
+
+      final options = await db.customerDao.listFilterOptions();
+      expect(options.productCategories, ['Category A', 'Category B']);
+      expect(options.productModels, ['Model A', 'Model B']);
+      expect(options.equipmentBrands, ['Brand A', 'Brand B']);
+    });
+
+    test('customer project advanced fields', () async {
+      final now = DateTime(2026, 8, 6, 12);
+
+      Future<int> insertProjectCustomer({
+        required String name,
+        required String productCategory,
+        required String productModel,
+        required String equipmentBrand,
+        required OpportunityStatus status,
+      }) async {
+        final customerId = await db.customerDao.insertCustomer(
+          name: name,
+          now: now,
+        );
+        await db.opportunityDao.insertOpportunity(
+          customerId: customerId,
+          name: '$name 项目',
+          productCategory: productCategory,
+          productModel: productModel,
+          equipmentBrand: equipmentBrand,
+          status: status,
+          now: now,
+        );
+        return customerId;
+      }
+
+      final target = await insertProjectCustomer(
+        name: '高级字段完全匹配',
+        productCategory: '耗材',
+        productModel: 'M-100',
+        equipmentBrand: 'Acme',
+        status: OpportunityStatus.paused,
+      );
+      final wrongCategory = await insertProjectCustomer(
+        name: '产品大类不符',
+        productCategory: '设备',
+        productModel: 'M-100',
+        equipmentBrand: 'Acme',
+        status: OpportunityStatus.paused,
+      );
+      final wrongModel = await insertProjectCustomer(
+        name: '具体型号不符',
+        productCategory: '耗材',
+        productModel: 'M-200',
+        equipmentBrand: 'Acme',
+        status: OpportunityStatus.paused,
+      );
+      final wrongBrand = await insertProjectCustomer(
+        name: '设备品牌不符',
+        productCategory: '耗材',
+        productModel: 'M-100',
+        equipmentBrand: 'Other',
+        status: OpportunityStatus.paused,
+      );
+      final wrongStatus = await insertProjectCustomer(
+        name: '项目状态不符',
+        productCategory: '耗材',
+        productModel: 'M-100',
+        equipmentBrand: 'Acme',
+        status: OpportunityStatus.active,
+      );
+
+      final split = await db.customerDao.insertCustomer(
+        name: '不同项目拆分满足',
+        now: now,
+      );
+      await db.opportunityDao.insertOpportunity(
+        customerId: split,
+        name: '只匹配产品和型号',
+        productCategory: '耗材',
+        productModel: 'M-100',
+        equipmentBrand: 'Other',
+        status: OpportunityStatus.active,
+        now: now,
+      );
+      await db.opportunityDao.insertOpportunity(
+        customerId: split,
+        name: '只匹配品牌和状态',
+        productCategory: '设备',
+        productModel: 'M-200',
+        equipmentBrand: 'Acme',
+        status: OpportunityStatus.paused,
+        now: now,
+      );
+      await insertProjectCustomer(
+        name: '高级字段完全无关',
+        productCategory: '试剂',
+        productModel: 'X-900',
+        equipmentBrand: 'Elsewhere',
+        status: OpportunityStatus.closed,
+      );
+
+      Future<Set<int>> filteredIds({
+        String? productCategory,
+        String? productModel,
+        String? equipmentBrand,
+        OpportunityStatus? opportunityStatus,
+      }) async => (await db.customerDao.listFilteredByUrgency(
+        now: now,
+        productCategory: productCategory,
+        productModel: productModel,
+        equipmentBrand: equipmentBrand,
+        opportunityStatus: opportunityStatus,
+      )).map((row) => row.customer.id).toSet();
+
+      expect(await filteredIds(productCategory: ' 耗材 '), {
+        target,
+        wrongModel,
+        wrongBrand,
+        wrongStatus,
+        split,
+      });
+      expect(await filteredIds(productModel: ' M-100 '), {
+        target,
+        wrongCategory,
+        wrongBrand,
+        wrongStatus,
+        split,
+      });
+      expect(await filteredIds(equipmentBrand: ' Acme '), {
+        target,
+        wrongCategory,
+        wrongModel,
+        wrongStatus,
+        split,
+      });
+      expect(await filteredIds(opportunityStatus: OpportunityStatus.paused), {
+        target,
+        wrongCategory,
+        wrongModel,
+        wrongBrand,
+        split,
+      });
+      expect(
+        await filteredIds(
+          productCategory: '耗材',
+          productModel: 'M-100',
+          equipmentBrand: 'Acme',
+          opportunityStatus: OpportunityStatus.paused,
+        ),
+        {target},
+      );
+    });
+
     test('筛选后仍保持原有紧急度排序', () async {
       final now = DateTime(2026, 8, 4, 12);
       final noPlan = await db.customerDao.insertCustomer(

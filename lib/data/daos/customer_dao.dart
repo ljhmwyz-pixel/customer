@@ -47,12 +47,18 @@ class CustomerFilterOptions {
     required this.currentSuppliers,
     required this.entryPoints,
     required this.owners,
+    required this.productCategories,
+    required this.productModels,
+    required this.equipmentBrands,
   });
 
   final List<String> countries;
   final List<String> currentSuppliers;
   final List<String> entryPoints;
   final List<String> owners;
+  final List<String> productCategories;
+  final List<String> productModels;
+  final List<String> equipmentBrands;
 }
 
 class DashboardMetrics {
@@ -237,6 +243,10 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
     String? entryPoint,
     OpportunityStage? opportunityStage,
     String? owner,
+    String? productCategory,
+    String? productModel,
+    String? equipmentBrand,
+    OpportunityStatus? opportunityStatus,
     int? limit,
   }) async {
     final nowMs = now.toUtc().millisecondsSinceEpoch;
@@ -256,6 +266,9 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
     final trimmedCurrentSupplier = currentSupplier?.trim() ?? '';
     final trimmedEntryPoint = entryPoint?.trim() ?? '';
     final trimmedOwner = owner?.trim() ?? '';
+    final trimmedProductCategory = productCategory?.trim() ?? '';
+    final trimmedProductModel = productModel?.trim() ?? '';
+    final trimmedEquipmentBrand = equipmentBrand?.trim() ?? '';
 
     if (trimmedKeyword.isNotEmpty) {
       final escaped = trimmedKeyword
@@ -320,6 +333,22 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
     if (trimmedOwner.isNotEmpty) {
       opportunityConditions.add('TRIM(o.owner) = ?');
       opportunityVariables.add(Variable.withString(trimmedOwner));
+    }
+    if (trimmedProductCategory.isNotEmpty) {
+      opportunityConditions.add('TRIM(o.product_category) = ?');
+      opportunityVariables.add(Variable.withString(trimmedProductCategory));
+    }
+    if (trimmedProductModel.isNotEmpty) {
+      opportunityConditions.add('TRIM(o.product_model) = ?');
+      opportunityVariables.add(Variable.withString(trimmedProductModel));
+    }
+    if (trimmedEquipmentBrand.isNotEmpty) {
+      opportunityConditions.add('TRIM(o.equipment_brand) = ?');
+      opportunityVariables.add(Variable.withString(trimmedEquipmentBrand));
+    }
+    if (opportunityStatus != null) {
+      opportunityConditions.add('o.status = ?');
+      opportunityVariables.add(Variable.withString(opportunityStatus.dbValue));
     }
     if (opportunityConditions.isNotEmpty) {
       conditions.add('''
@@ -394,13 +423,33 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
       '''
       SELECT kind, value
       FROM (
-        SELECT 'country' AS kind, TRIM(country) AS value FROM customers
+        SELECT 'country' AS kind,
+               TRIM(country, char(9) || char(10) || char(11) || char(12) || char(13) || ' ') AS value
+        FROM customers
         UNION ALL
-        SELECT 'supplier', TRIM(current_supplier) FROM opportunities
+        SELECT 'supplier',
+               TRIM(current_supplier, char(9) || char(10) || char(11) || char(12) || char(13) || ' ')
+        FROM opportunities
         UNION ALL
-        SELECT 'entry_point', TRIM(entry_point) FROM opportunities
+        SELECT 'entry_point',
+               TRIM(entry_point, char(9) || char(10) || char(11) || char(12) || char(13) || ' ')
+        FROM opportunities
         UNION ALL
-        SELECT 'owner', TRIM(owner) FROM opportunities
+        SELECT 'owner',
+               TRIM(owner, char(9) || char(10) || char(11) || char(12) || char(13) || ' ')
+        FROM opportunities
+        UNION ALL
+        SELECT 'product_category',
+               TRIM(product_category, char(9) || char(10) || char(11) || char(12) || char(13) || ' ')
+        FROM opportunities
+        UNION ALL
+        SELECT 'product_model',
+               TRIM(product_model, char(9) || char(10) || char(11) || char(12) || char(13) || ' ')
+        FROM opportunities
+        UNION ALL
+        SELECT 'equipment_brand',
+               TRIM(equipment_brand, char(9) || char(10) || char(11) || char(12) || char(13) || ' ')
+        FROM opportunities
       )
       WHERE value IS NOT NULL AND value != ''
       GROUP BY kind, value
@@ -413,6 +462,9 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
     final currentSuppliers = <String>[];
     final entryPoints = <String>[];
     final owners = <String>[];
+    final productCategories = <String>[];
+    final productModels = <String>[];
+    final equipmentBrands = <String>[];
     for (final row in rows) {
       final kind = row.read<String>('kind');
       final value = row.read<String>('value');
@@ -425,6 +477,12 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
           entryPoints.add(value);
         case 'owner':
           owners.add(value);
+        case 'product_category':
+          productCategories.add(value);
+        case 'product_model':
+          productModels.add(value);
+        case 'equipment_brand':
+          equipmentBrands.add(value);
       }
     }
     return CustomerFilterOptions(
@@ -432,6 +490,9 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
       currentSuppliers: currentSuppliers,
       entryPoints: entryPoints,
       owners: owners,
+      productCategories: productCategories,
+      productModels: productModels,
+      equipmentBrands: equipmentBrands,
     );
   }
 
