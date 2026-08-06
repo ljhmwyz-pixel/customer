@@ -48,6 +48,7 @@ dependencies:
   # 已满足备份 zip 打包需求。
   archive: 3.6.1
   excel: 4.0.6
+  xml: 6.6.1
   share_plus: 13.3.0
 
   # 工具
