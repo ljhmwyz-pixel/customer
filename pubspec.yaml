@@ -82,3 +82,5 @@ dependency_overrides:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/branding/cat_mascot_blink.webp
