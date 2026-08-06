@@ -8,6 +8,7 @@ import '../../data/database.dart';
 import '../../services/attachment_service.dart';
 import '../../services/attachment_service_providers.dart';
 import '../../services/attachment_source_service.dart';
+import '../../theme/tokens.dart';
 import 'attachment_providers.dart';
 
 class AttachmentPage extends ConsumerStatefulWidget {
@@ -102,28 +103,31 @@ class _AttachmentPageState extends ConsumerState<AttachmentPage> {
       context: context,
       showDragHandle: true,
       builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_camera_outlined),
-              title: const Text('拍照'),
-              onTap: () =>
-                  Navigator.pop(context, _AttachmentSourceAction.camera),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('从相册选择'),
-              onTap: () =>
-                  Navigator.pop(context, _AttachmentSourceAction.gallery),
-            ),
-            ListTile(
-              leading: const Icon(Icons.folder_open_outlined),
-              title: const Text('从系统文件选择'),
-              onTap: () =>
-                  Navigator.pop(context, _AttachmentSourceAction.files),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppTokens.s8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: const Text('拍照'),
+                onTap: () =>
+                    Navigator.pop(context, _AttachmentSourceAction.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('从相册选择'),
+                onTap: () =>
+                    Navigator.pop(context, _AttachmentSourceAction.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.folder_open_outlined),
+                title: const Text('从系统文件选择'),
+                onTap: () =>
+                    Navigator.pop(context, _AttachmentSourceAction.files),
+              ),
+            ],
+          ),
         ),
       ),
     );

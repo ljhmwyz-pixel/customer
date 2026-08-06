@@ -565,6 +565,9 @@ class _FilterDropdown<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => DropdownButtonFormField<T?>(
+    menuMaxHeight: 320,
+    borderRadius: BorderRadius.circular(AppTokens.r8),
+    dropdownColor: Theme.of(context).colorScheme.surfaceContainerLowest,
     key: ValueKey(fieldKey),
     initialValue: options.contains(value) ? value : null,
     isExpanded: true,

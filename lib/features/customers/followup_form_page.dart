@@ -204,6 +204,11 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
                     const SizedBox(height: AppTokens.s16),
                   ] else ...[
                     DropdownButtonFormField<int>(
+                      menuMaxHeight: 320,
+                      borderRadius: BorderRadius.circular(AppTokens.r8),
+                      dropdownColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerLowest,
                       key: const ValueKey('followup-opportunity'),
                       initialValue: _selectedOpportunityId,
                       isExpanded: true,
@@ -247,6 +252,11 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
                   ),
                   const SizedBox(height: AppTokens.s12),
                   DropdownButtonFormField<OpportunityStage>(
+                    menuMaxHeight: 320,
+                    borderRadius: BorderRadius.circular(AppTokens.r8),
+                    dropdownColor: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerLowest,
                     key: const ValueKey('followup-stage'),
                     initialValue: _stage,
                     isExpanded: true,
@@ -292,6 +302,11 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
                   ),
                   const SizedBox(height: AppTokens.s16),
                   DropdownButtonFormField<FollowMethod>(
+                    menuMaxHeight: 320,
+                    borderRadius: BorderRadius.circular(AppTokens.r8),
+                    dropdownColor: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerLowest,
                     initialValue: _method,
                     decoration: const InputDecoration(labelText: '跟进方式'),
                     items: FollowMethod.values

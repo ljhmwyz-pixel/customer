@@ -1381,10 +1381,12 @@ class _ContactDialogState extends State<_ContactDialog> {
               validator: (value) =>
                   value == null || value.trim().isEmpty ? '联系人名称不能为空' : null,
             ),
+            const SizedBox(height: AppTokens.s12),
             TextFormField(
               controller: _positionController,
               decoration: const InputDecoration(labelText: '职位'),
             ),
+            const SizedBox(height: AppTokens.s12),
             TextFormField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,

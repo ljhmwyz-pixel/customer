@@ -28,10 +28,10 @@
 
 ### 主色种子
 
-主色取自银灰虎斑猫的黄绿色眼睛，是一个中性偏冷的黄绿：
+主色采用低饱和蓝绿色，作为中性工作台中的少量强调色：
 
 ```dart
-static const seedColor = Color(0xFF7A8B3F);
+static const seedColor = Color(0xFF3F6B66);
 ```
 
 用 `ColorScheme.fromSeed` 推导出全部语义色槽，明暗两套：

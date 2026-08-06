@@ -232,6 +232,11 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
                     _TextField(controller: _addressController, label: '地址'),
                     _TextField(controller: _sourceController, label: '来源'),
                     DropdownButtonFormField<CustomerStage>(
+                      menuMaxHeight: 320,
+                      borderRadius: BorderRadius.circular(AppTokens.r8),
+                      dropdownColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerLowest,
                       initialValue: _stage,
                       decoration: const InputDecoration(labelText: '阶段'),
                       items: CustomerStage.values

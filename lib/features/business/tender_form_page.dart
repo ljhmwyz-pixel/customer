@@ -307,6 +307,9 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
   }) => Padding(
     padding: const EdgeInsets.only(bottom: AppTokens.s12),
     child: DropdownButtonFormField<T>(
+      menuMaxHeight: 320,
+      borderRadius: BorderRadius.circular(AppTokens.r8),
+      dropdownColor: Theme.of(context).colorScheme.surfaceContainerLowest,
       key: ValueKey(key),
       initialValue: value,
       decoration: InputDecoration(labelText: label),

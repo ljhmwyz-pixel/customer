@@ -316,6 +316,11 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
             )
           else
             DropdownButtonFormField<int>(
+              menuMaxHeight: 320,
+              borderRadius: BorderRadius.circular(AppTokens.r8),
+              dropdownColor: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerLowest,
               key: const ValueKey('order-opportunity'),
               initialValue: _selectedOpportunityId,
               decoration: const InputDecoration(labelText: '项目'),
@@ -380,6 +385,9 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
           ),
           const SizedBox(height: AppTokens.s12),
           DropdownButtonFormField<PaymentStatus>(
+            menuMaxHeight: 320,
+            borderRadius: BorderRadius.circular(AppTokens.r8),
+            dropdownColor: Theme.of(context).colorScheme.surfaceContainerLowest,
             key: const ValueKey('order-payment-status'),
             initialValue: _paymentStatus,
             decoration: const InputDecoration(labelText: '付款状态'),
@@ -399,6 +407,9 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
           ),
           const SizedBox(height: AppTokens.s12),
           DropdownButtonFormField<ProductionStatus>(
+            menuMaxHeight: 320,
+            borderRadius: BorderRadius.circular(AppTokens.r8),
+            dropdownColor: Theme.of(context).colorScheme.surfaceContainerLowest,
             key: const ValueKey('order-production-status'),
             initialValue: _productionStatus,
             decoration: const InputDecoration(labelText: '生产状态'),
@@ -420,6 +431,9 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
           ),
           const SizedBox(height: AppTokens.s12),
           DropdownButtonFormField<ShippingStatus>(
+            menuMaxHeight: 320,
+            borderRadius: BorderRadius.circular(AppTokens.r8),
+            dropdownColor: Theme.of(context).colorScheme.surfaceContainerLowest,
             key: const ValueKey('order-shipping-status'),
             initialValue: _shippingStatus,
             decoration: const InputDecoration(labelText: '发货状态'),
@@ -450,6 +464,9 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
           ),
           const SizedBox(height: AppTokens.s12),
           DropdownButtonFormField<OrderResult>(
+            menuMaxHeight: 320,
+            borderRadius: BorderRadius.circular(AppTokens.r8),
+            dropdownColor: Theme.of(context).colorScheme.surfaceContainerLowest,
             key: const ValueKey('order-result'),
             initialValue: _orderResult,
             decoration: const InputDecoration(labelText: '订单结果'),

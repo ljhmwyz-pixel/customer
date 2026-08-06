@@ -6,9 +6,9 @@ import 'package:flutter/material.dart';
 /// 数值依据 docs/UI_GUIDELINES.md，改动需同步文档。
 abstract final class AppTokens {
   // ── 主色种子 ──
-  // 取自银灰虎斑猫的黄绿色眼睛，中性偏冷。
+  // 冷静的蓝绿色作为品牌强调色；大面积背景在 theme.dart 中保持中性。
   // 用 ColorScheme.fromSeed 推导出明暗两套完整色板。
-  static const Color seedColor = Color(0xFF7A8B3F);
+  static const Color seedColor = Color(0xFF3F6B66);
 
   // ── 间距　只用 4 的倍数 ──
   /// 紧邻元素，如图标与文字之间

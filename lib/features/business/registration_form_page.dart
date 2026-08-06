@@ -115,6 +115,9 @@ class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
             maxLines: 3,
           ),
           DropdownButtonFormField<RegistrationDocumentStatus>(
+            menuMaxHeight: 320,
+            borderRadius: BorderRadius.circular(AppTokens.r8),
+            dropdownColor: Theme.of(context).colorScheme.surfaceContainerLowest,
             key: const ValueKey('registration-document-status'),
             initialValue: _documentStatus,
             decoration: const InputDecoration(labelText: '资料状态'),
@@ -152,6 +155,9 @@ class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
             label: '费用承担方',
           ),
           DropdownButtonFormField<RegistrationStatus>(
+            menuMaxHeight: 320,
+            borderRadius: BorderRadius.circular(AppTokens.r8),
+            dropdownColor: Theme.of(context).colorScheme.surfaceContainerLowest,
             key: const ValueKey('registration-status'),
             initialValue: _status,
             decoration: const InputDecoration(labelText: '注册状态'),

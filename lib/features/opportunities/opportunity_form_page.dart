@@ -298,6 +298,9 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
         _field('currency', '币种（如 USD）'),
         _field('probabilityPercent', '成交概率（0–100）', number: true),
         DropdownButtonFormField<OpportunityStage>(
+          menuMaxHeight: 320,
+          borderRadius: BorderRadius.circular(AppTokens.r8),
+          dropdownColor: Theme.of(context).colorScheme.surfaceContainerLowest,
           initialValue: _stage,
           decoration: const InputDecoration(labelText: '销售阶段'),
           items: OpportunityStage.values
@@ -306,6 +309,9 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
           onChanged: (value) => setState(() => _stage = value ?? _stage),
         ),
         DropdownButtonFormField<OpportunityStatus>(
+          menuMaxHeight: 320,
+          borderRadius: BorderRadius.circular(AppTokens.r8),
+          dropdownColor: Theme.of(context).colorScheme.surfaceContainerLowest,
           initialValue: _status,
           decoration: const InputDecoration(labelText: '投入状态'),
           items: OpportunityStatus.values
@@ -461,6 +467,9 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
       child: KeyedSubtree(
         key: ValueKey('$key-$value'),
         child: DropdownButtonFormField<String>(
+          menuMaxHeight: 320,
+          borderRadius: BorderRadius.circular(AppTokens.r8),
+          dropdownColor: Theme.of(context).colorScheme.surfaceContainerLowest,
           key: ValueKey('opportunity-$key'),
           initialValue: value?.trim().isEmpty ?? true ? null : value,
           isExpanded: true,
