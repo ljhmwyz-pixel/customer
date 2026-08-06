@@ -756,6 +756,63 @@ class _ActiveFilterSummary extends ConsumerWidget {
           label: '负责人：${filter.owner}',
           onDeleted: () => notifier.setOwner(null),
         ),
+      if (filter.productCategory != null)
+        _SummaryChip(
+          chipKey: 'customer-filter-chip-product-category',
+          label: '产品品类：${filter.productCategory}',
+          onDeleted: () => notifier.setProductCategory(null),
+        ),
+      if (filter.productModel != null)
+        _SummaryChip(
+          chipKey: 'customer-filter-chip-product-model',
+          label: '产品型号：${filter.productModel}',
+          onDeleted: () => notifier.setProductModel(null),
+        ),
+      if (filter.equipmentBrand != null)
+        _SummaryChip(
+          chipKey: 'customer-filter-chip-equipment-brand',
+          label: '设备品牌：${filter.equipmentBrand}',
+          onDeleted: () => notifier.setEquipmentBrand(null),
+        ),
+      if (filter.opportunityStatus != null)
+        _SummaryChip(
+          chipKey: 'customer-filter-chip-opportunity-status',
+          label: '项目状态：${filter.opportunityStatus!.label}',
+          onDeleted: () => notifier.setOpportunityStatus(null),
+        ),
+      if (filter.expectedCloseFrom != null)
+        _SummaryChip(
+          chipKey: 'customer-filter-chip-expected-close-from',
+          label: '预计成交自 ${_formatFilterDate(filter.expectedCloseFrom!)}',
+          onDeleted: () => notifier.setExpectedCloseFrom(null),
+        ),
+      if (filter.expectedCloseTo != null)
+        _SummaryChip(
+          chipKey: 'customer-filter-chip-expected-close-to',
+          label: '预计成交至 ${_formatFilterDate(filter.expectedCloseTo!)}',
+          onDeleted: () => notifier.setExpectedCloseTo(null),
+        ),
+      if (filter.anomalies.contains(CustomerAnomalyFilter.stalledQuote))
+        _SummaryChip(
+          chipKey: 'customer-filter-chip-stalled-quote',
+          label: '报价停滞',
+          onDeleted: () =>
+              notifier.toggleAnomaly(CustomerAnomalyFilter.stalledQuote),
+        ),
+      if (filter.anomalies.contains(CustomerAnomalyFilter.stalledSample))
+        _SummaryChip(
+          chipKey: 'customer-filter-chip-stalled-sample',
+          label: '样品停滞',
+          onDeleted: () =>
+              notifier.toggleAnomaly(CustomerAnomalyFilter.stalledSample),
+        ),
+      if (filter.anomalies.contains(CustomerAnomalyFilter.longSilence))
+        _SummaryChip(
+          chipKey: 'customer-filter-chip-long-silence',
+          label: '长期沉默',
+          onDeleted: () =>
+              notifier.toggleAnomaly(CustomerAnomalyFilter.longSilence),
+        ),
       TextButton.icon(
         key: const ValueKey('clear-customer-filters'),
         onPressed: notifier.clearNonKeywordFilters,

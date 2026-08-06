@@ -539,6 +539,231 @@ void main() {
     expect(filter.activeFilterCount, 2);
   });
 
+  testWidgets('customer advanced filter summary chips', (tester) async {
+    final harness = await _TestHarness.create(home: const CustomersPage());
+    addTearDown(() => harness.dispose(tester));
+    final notifier = harness.container.read(customerFilterProvider.notifier);
+    notifier.setKeyword('目标');
+    notifier.setProductCategory('体外诊断');
+    notifier.setProductModel('Model X');
+    notifier.setEquipmentBrand('Brand A');
+    notifier.setOpportunityStatus(OpportunityStatus.active);
+    notifier.setExpectedCloseFrom(DateTime(2026, 8, 1));
+    notifier.setExpectedCloseTo(DateTime(2026, 8, 31));
+    notifier.toggleAnomaly(CustomerAnomalyFilter.stalledQuote);
+    notifier.toggleAnomaly(CustomerAnomalyFilter.stalledSample);
+    notifier.toggleAnomaly(CustomerAnomalyFilter.longSilence);
+    await harness.pump(tester);
+
+    const chipKeys = [
+      'customer-filter-chip-product-category',
+      'customer-filter-chip-product-model',
+      'customer-filter-chip-equipment-brand',
+      'customer-filter-chip-opportunity-status',
+      'customer-filter-chip-expected-close-from',
+      'customer-filter-chip-expected-close-to',
+      'customer-filter-chip-stalled-quote',
+      'customer-filter-chip-stalled-sample',
+      'customer-filter-chip-long-silence',
+    ];
+    for (final key in chipKeys) {
+      expect(find.byKey(ValueKey(key)), findsOneWidget);
+    }
+    expect(find.text('预计成交自 2026-08-01'), findsOneWidget);
+    expect(find.text('预计成交至 2026-08-31'), findsOneWidget);
+    expect(
+      harness.container.read(customerFilterProvider).activeFilterCount,
+      chipKeys.length,
+    );
+
+    for (var index = 0; index < chipKeys.length; index++) {
+      final key = chipKeys[index];
+      tester.widget<InputChip>(find.byKey(ValueKey(key))).onDeleted!();
+      await tester.pumpAndSettle();
+
+      final filter = harness.container.read(customerFilterProvider);
+      expect(filter.keyword, '目标');
+      expect(filter.activeFilterCount, chipKeys.length - index - 1);
+      expect(find.byKey(ValueKey(key)), findsNothing);
+      for (final remainingKey in chipKeys.skip(index + 1)) {
+        expect(find.byKey(ValueKey(remainingKey)), findsOneWidget);
+      }
+      switch (key) {
+        case 'customer-filter-chip-product-category':
+          expect(filter.productCategory, isNull);
+          break;
+        case 'customer-filter-chip-product-model':
+          expect(filter.productModel, isNull);
+          break;
+        case 'customer-filter-chip-equipment-brand':
+          expect(filter.equipmentBrand, isNull);
+          break;
+        case 'customer-filter-chip-opportunity-status':
+          expect(filter.opportunityStatus, isNull);
+          break;
+        case 'customer-filter-chip-expected-close-from':
+          expect(filter.expectedCloseFrom, isNull);
+          break;
+        case 'customer-filter-chip-expected-close-to':
+          expect(filter.expectedCloseTo, isNull);
+          break;
+        case 'customer-filter-chip-stalled-quote':
+          expect(
+            filter.anomalies,
+            isNot(contains(CustomerAnomalyFilter.stalledQuote)),
+          );
+          break;
+        case 'customer-filter-chip-stalled-sample':
+          expect(
+            filter.anomalies,
+            isNot(contains(CustomerAnomalyFilter.stalledSample)),
+          );
+          break;
+        case 'customer-filter-chip-long-silence':
+          expect(
+            filter.anomalies,
+            isNot(contains(CustomerAnomalyFilter.longSilence)),
+          );
+          break;
+      }
+    }
+
+    expect(find.byKey(const ValueKey('customer-filter-count')), findsNothing);
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const ValueKey('customer-search')))
+          .controller!
+          .text,
+      '目标',
+    );
+  });
+
+  testWidgets('customer advanced filters clear independently from keyword', (
+    tester,
+  ) async {
+    final harness = await _TestHarness.create(home: const CustomersPage());
+    addTearDown(() => harness.dispose(tester));
+    final notifier = harness.container.read(customerFilterProvider.notifier);
+    notifier.setKeyword('目标');
+    notifier.setProductCategory('体外诊断');
+    notifier.setExpectedCloseFrom(DateTime(2026, 8, 1));
+    notifier.toggleAnomaly(CustomerAnomalyFilter.stalledQuote);
+    await harness.pump(tester);
+
+    await tester.tap(find.byKey(const ValueKey('clear-customer-filters')));
+    await tester.pumpAndSettle();
+    var filter = harness.container.read(customerFilterProvider);
+    expect(filter.keyword, '目标');
+    expect(filter.activeFilterCount, 0);
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const ValueKey('customer-search')))
+          .controller!
+          .text,
+      '目标',
+    );
+
+    notifier.setEquipmentBrand('Brand A');
+    notifier.setOpportunityStatus(OpportunityStatus.active);
+    notifier.toggleAnomaly(CustomerAnomalyFilter.longSilence);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('clear-customer-search')));
+    await tester.pumpAndSettle();
+    filter = harness.container.read(customerFilterProvider);
+    expect(filter.keyword, isEmpty);
+    expect(filter.equipmentBrand, 'Brand A');
+    expect(filter.opportunityStatus, OpportunityStatus.active);
+    expect(filter.anomalies, {CustomerAnomalyFilter.longSilence});
+    expect(filter.activeFilterCount, 3);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('customer-search')),
+      '第二次搜索',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('open-customer-filters')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('clear-customer-filter-sheet')));
+    await tester.pumpAndSettle();
+    filter = harness.container.read(customerFilterProvider);
+    expect(filter.keyword, '第二次搜索');
+    expect(filter.activeFilterCount, 0);
+    expect(filter.equipmentBrand, isNull);
+    expect(filter.opportunityStatus, isNull);
+    expect(filter.anomalies, isEmpty);
+  });
+
+  testWidgets('customer advanced filters fit 320x700', (tester) async {
+    tester.view.physicalSize = const Size(320, 700);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final db = await openTestDb();
+    final customerId = await db.customerDao.insertCustomer(name: '高级窄屏客户');
+    await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '高级窄屏项目',
+      productCategory: '体外诊断',
+      productModel: 'Model X',
+      equipmentBrand: 'Brand A',
+      status: OpportunityStatus.active,
+    );
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: const CustomersPage(),
+    );
+    addTearDown(() => harness.dispose(tester));
+    await harness.pump(tester);
+
+    await tester.tap(find.byKey(const ValueKey('open-customer-filters')));
+    await tester.pumpAndSettle();
+    await _selectCustomerFilter<String>(
+      tester,
+      'customer-product-category-filter',
+      '体外诊断',
+    );
+    await _selectCustomerFilter<String>(
+      tester,
+      'customer-product-model-filter',
+      'Model X',
+    );
+    await _selectCustomerFilter<String>(
+      tester,
+      'customer-equipment-brand-filter',
+      'Brand A',
+    );
+    await _selectCustomerFilter<OpportunityStatus>(
+      tester,
+      'customer-opportunity-status-filter',
+      OpportunityStatus.active,
+    );
+    for (final key in [
+      'customer-anomaly-stalled-quote',
+      'customer-anomaly-stalled-sample',
+      'customer-anomaly-long-silence',
+    ]) {
+      await _ensureCustomerFilterVisible(tester, key);
+      await tester.tap(find.byKey(ValueKey(key)));
+      await tester.pumpAndSettle();
+    }
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.widgetWithText(FilledButton, '完成'));
+    await tester.pumpAndSettle();
+    expect(harness.container.read(customerFilterProvider).activeFilterCount, 7);
+    expect(
+      find.byKey(const ValueKey('customer-filter-chip-product-category')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('customer-filter-chip-long-silence')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('CustomersPage filter sheet supports a narrow viewport', (
     tester,
   ) async {

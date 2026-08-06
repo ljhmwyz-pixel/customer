@@ -326,7 +326,7 @@ flutter test test/features/customers/customer_pages_test.dart --plain-name 'cust
 - Consumes: Task 4 UI 和 Task 3 清除方法。
 - Produces: 独立摘要 Chip、互不干扰的清除行为、320×700 无溢出布局。
 
-- [ ] 写 `customer advanced filter summary chips` 失败测试，覆盖以下 Key：
+- [x] 写 `customer advanced filter summary chips` 失败测试，覆盖以下 Key：
 
 ```text
 customer-filter-chip-product-category
@@ -340,10 +340,10 @@ customer-filter-chip-stalled-sample
 customer-filter-chip-long-silence
 ```
 
-- [ ] 逐项删除 Chip，验证只清对应条件，其他筛选和关键字不变，计数减一。
-- [ ] 写 `customer advanced filters clear independently from keyword`，验证两个方向的独立清除语义。
-- [ ] 写 `customer advanced filters fit 320x700`，打开面板、滚动、启用多项条件并返回列表，断言无 overflow。
-- [ ] 运行失败测试：
+- [x] 逐项删除 Chip，验证只清对应条件，其他筛选和关键字不变，计数减一。
+- [x] 写 `customer advanced filters clear independently from keyword`，验证两个方向的独立清除语义。
+- [x] 写 `customer advanced filters fit 320x700`，打开面板、滚动、启用多项条件并返回列表，断言无 overflow。
+- [x] 运行失败测试：
 
 ```bash
 flutter test test/features/customers/customer_pages_test.dart --plain-name 'customer advanced filter summary chips'
@@ -353,11 +353,11 @@ flutter test test/features/customers/customer_pages_test.dart --plain-name 'cust
 
 预期：摘要 Key、清除或布局断言失败。
 
-- [ ] 为每个非空高级条件渲染独立可删除 Chip；日期文案为“预计成交自/至 YYYY-MM-DD”。
-- [ ] Chip 删除动作调用对应 setter 或 `toggleAnomaly`，不得重建并误清其他条件。
-- [ ] 摘要可换行或横向滚动，底部面板主体保持可滚动并适配安全区。
-- [ ] 复用 `clear-customer-filters`、`clear-customer-filter-sheet` 的既有语义和 Key。
-- [ ] 运行通过验证：
+- [x] 为每个非空高级条件渲染独立可删除 Chip；日期文案为“预计成交自/至 YYYY-MM-DD”。
+- [x] Chip 删除动作调用对应 setter 或 `toggleAnomaly`，不得重建并误清其他条件。
+- [x] 摘要可换行或横向滚动，底部面板主体保持可滚动并适配安全区。
+- [x] 复用 `clear-customer-filters`、`clear-customer-filter-sheet` 的既有语义和 Key。
+- [x] 运行通过验证：
 
 ```bash
 flutter test test/features/customers/customer_pages_test.dart --plain-name 'customer advanced filter summary chips'
@@ -368,7 +368,7 @@ flutter test test/features/customers/customer_pages_test.dart
 
 预期：摘要、清除、窄屏和客户页面全量测试通过。
 
-- [ ] 暂停并汇报 Task 5；不提交 Git。
+- [x] 暂停并汇报 Task 5；不提交 Git。
 
 ---
 
