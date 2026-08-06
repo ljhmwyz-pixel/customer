@@ -81,12 +81,13 @@ class SettingsPage extends StatelessWidget {
             leading: const Icon(Icons.backup_outlined),
             title: const Text('备份与恢复'),
             subtitle: Text(
-              '阶段 5 实现',
+              '保存或恢复本机业务数据',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            enabled: false,
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.go('/settings/backup-restore'),
           ),
         ],
       ),

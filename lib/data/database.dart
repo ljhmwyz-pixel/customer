@@ -523,6 +523,7 @@ QueryExecutor _openConnection() {
   return LazyDatabase(() async {
     final dir = await getApplicationDocumentsDirectory();
     final file = File(p.join(dir.path, 'customer.sqlite'));
+    await applyPendingRestore(file);
 
     // sqlite3 3.x 已内置原生库，不再需要 sqlite3_flutter_libs（已 EOL）。
     // 这里显式引用一次 sqlite3 的版本，确保原生库在启动时就绑定成功，
@@ -531,4 +532,38 @@ QueryExecutor _openConnection() {
 
     return NativeDatabase.createInBackground(file);
   });
+}
+
+Future<void> applyPendingRestore(File databaseFile) async {
+  final pending = File('${databaseFile.path}.restore-pending');
+  if (await pending.exists()) {
+    final applying = File('${databaseFile.path}.restore-applying');
+    if (await applying.exists()) await applying.delete();
+    await pending.copy(applying.path);
+    for (final suffix in const ['-wal', '-shm']) {
+      final sidecar = File('${databaseFile.path}$suffix');
+      if (await sidecar.exists()) await sidecar.delete();
+    }
+    await applying.rename(databaseFile.path);
+    await pending.delete();
+  }
+
+  final attachmentPending = Directory(
+    '${databaseFile.path}.restore-attachments-pending',
+  );
+  if (!await attachmentPending.exists()) return;
+  final attachmentRoot = Directory(
+    p.join(databaseFile.parent.path, 'attachments'),
+  );
+  final attachmentApplying = Directory(
+    '${databaseFile.path}.restore-attachments-applying',
+  );
+  if (await attachmentApplying.exists()) {
+    await attachmentApplying.delete(recursive: true);
+  }
+  await attachmentPending.rename(attachmentApplying.path);
+  if (await attachmentRoot.exists()) {
+    await attachmentRoot.delete(recursive: true);
+  }
+  await attachmentApplying.rename(attachmentRoot.path);
 }

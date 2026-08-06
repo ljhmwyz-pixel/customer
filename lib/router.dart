@@ -22,6 +22,7 @@ import 'features/reminders/reminder_test_page.dart';
 import 'features/settings/settings_page.dart';
 import 'features/settings/sample_data_page.dart';
 import 'features/settings/excel_export_page.dart';
+import 'features/settings/backup_restore_page.dart';
 import 'widgets/app_shell.dart';
 
 /// 客户详情页的路由路径。
@@ -278,6 +279,10 @@ final router = GoRouter(
                 GoRoute(
                   path: 'excel-export',
                   builder: (context, state) => const ExcelExportPage(),
+                ),
+                GoRoute(
+                  path: 'backup-restore',
+                  builder: (context, state) => const BackupRestorePage(),
                 ),
               ],
             ),
