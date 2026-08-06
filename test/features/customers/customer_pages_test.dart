@@ -1,5 +1,6 @@
 import 'package:customer/data/database.dart';
 import 'package:customer/data/database_provider.dart';
+import 'package:customer/data/daos/attachment_dao.dart';
 import 'package:customer/data/daos/customer_dao.dart';
 import 'package:customer/features/customers/contact_actions.dart';
 import 'package:customer/features/customers/customer_detail_page.dart';
@@ -103,6 +104,85 @@ void main() {
     expect(state.hasFilters, isFalse);
     expect(state.anomalies, isEmpty);
   });
+
+  test(
+    'customer detail groups saved business history by opportunity',
+    () async {
+      final db = await openTestDb();
+      final customerId = await seedCustomer(db);
+      final firstOpportunityId = await db.opportunityDao.insertOpportunity(
+        customerId: customerId,
+        name: '项目一',
+      );
+      final secondOpportunityId = await db.opportunityDao.insertOpportunity(
+        customerId: customerId,
+        name: '项目二',
+      );
+      final quoteId = await db.quoteDao.insertVersion(
+        opportunityId: firstOpportunityId,
+        quoteNo: 'Q-HISTORY',
+        quantity: 10,
+        quotedAt: DateTime(2026, 8, 6),
+      );
+      final sampleId = await db.sampleDao.insertSample(
+        opportunityId: secondOpportunityId,
+        sampleModel: 'S-HISTORY',
+        quantity: 2,
+      );
+      final registrationId = await db.registrationDao.insertRegistration(
+        opportunityId: firstOpportunityId,
+        country: '德国',
+      );
+      final tenderId = await db.tenderDao.insertTender(
+        opportunityId: secondOpportunityId,
+        projectNo: 'T-HISTORY',
+      );
+      final container = ProviderContainer(
+        overrides: [databaseProvider.overrideWithValue(db)],
+      );
+      addTearDown(() async {
+        container.dispose();
+        await db.close();
+      });
+
+      final detail = await container.read(
+        customerDetailProvider(customerId).future,
+      );
+
+      expect(
+        detail!.businessByOpportunity[firstOpportunityId]!.quotes.map(
+          (row) => row.id,
+        ),
+        [quoteId],
+      );
+      expect(
+        detail.businessByOpportunity[firstOpportunityId]!.registrations.map(
+          (row) => row.id,
+        ),
+        [registrationId],
+      );
+      expect(
+        detail.businessByOpportunity[firstOpportunityId]!.samples,
+        isEmpty,
+      );
+      expect(
+        detail.businessByOpportunity[secondOpportunityId]!.samples.map(
+          (row) => row.id,
+        ),
+        [sampleId],
+      );
+      expect(
+        detail.businessByOpportunity[secondOpportunityId]!.tenders.map(
+          (row) => row.id,
+        ),
+        [tenderId],
+      );
+      expect(
+        detail.businessByOpportunity[secondOpportunityId]!.quotes,
+        isEmpty,
+      );
+    },
+  );
 
   testWidgets('CustomerFormPage creates a customer with only a name', (
     tester,
@@ -1110,6 +1190,110 @@ void main() {
     expect(find.text('结论：历史结论'), findsOneWidget);
   });
 
+  testWidgets('CustomerDetailPage exposes attachments for six saved records', (
+    tester,
+  ) async {
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '附件入口客户');
+    final opportunityId = await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '附件入口项目',
+    );
+    final followupId = await db.followupDao.insertAndTouchCustomer(
+      customerId: customerId,
+      opportunityId: opportunityId,
+      occurredAt: DateTime.utc(2026, 8, 6),
+      method: FollowMethod.wechat,
+      content: '附件入口跟进',
+    );
+    final orderId = await db.orderDao.insertOrder(
+      customerId: customerId,
+      opportunityId: opportunityId,
+      orderNo: 'O-ATT',
+      orderedAt: DateTime.utc(2026, 8, 6),
+      amountCents: 10000,
+    );
+    final quoteId = await db.quoteDao.insertVersion(
+      opportunityId: opportunityId,
+      quoteNo: 'Q-ATT',
+      quantity: 10,
+      quotedAt: DateTime.utc(2026, 8, 6),
+    );
+    final sampleId = await db.sampleDao.insertSample(
+      opportunityId: opportunityId,
+      sampleModel: 'S-ATT',
+      quantity: 2,
+    );
+    final registrationId = await db.registrationDao.insertRegistration(
+      opportunityId: opportunityId,
+      country: '德国',
+    );
+    final tenderId = await db.tenderDao.insertTender(
+      opportunityId: opportunityId,
+      projectNo: 'T-ATT',
+    );
+    final owners = <(String, int, AttachmentOwner)>[
+      ('followup', followupId, FollowupAttachmentOwner(followupId)),
+      ('order', orderId, OrderAttachmentOwner(orderId)),
+      ('quote', quoteId, QuoteAttachmentOwner(quoteId)),
+      ('sample', sampleId, SampleAttachmentOwner(sampleId)),
+      (
+        'registration',
+        registrationId,
+        RegistrationAttachmentOwner(registrationId),
+      ),
+      ('tender', tenderId, TenderAttachmentOwner(tenderId)),
+    ];
+    for (final (segment, id, owner) in owners) {
+      await db.attachmentDao.insertAttachment(
+        owner: owner,
+        relativePath: 'attachments/2026/08/$segment-$id.pdf',
+        originalName: '$segment-$id.pdf',
+        mimeType: 'application/pdf',
+        sizeBytes: 10,
+      );
+    }
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: CustomerDetailPage(customerId: customerId),
+    );
+    addTearDown(() => harness.dispose(tester));
+
+    await harness.pump(tester);
+
+    expect(find.text('报价 Q-ATT · v1'), findsOneWidget);
+    expect(find.text('样品 S-ATT'), findsOneWidget);
+    expect(find.text('注册 德国'), findsOneWidget);
+    expect(find.text('招标 T-ATT'), findsOneWidget);
+
+    for (final (segment, id, _) in owners) {
+      final action = find.byKey(ValueKey('attachment-$segment-$id'));
+      await tester.scrollUntilVisible(
+        action,
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(
+        find.descendant(of: action, matching: find.text('1')),
+        findsOneWidget,
+      );
+
+      final button = tester.widget<IconButton>(
+        find.descendant(of: action, matching: find.byType(IconButton)),
+      );
+      expect(button.onPressed, isNotNull);
+      button.onPressed!();
+      await tester.pumpAndSettle();
+      expect(find.text('附件:$segment:$id'), findsOneWidget);
+
+      harness.router.go('/');
+      await tester.pumpAndSettle();
+    }
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('CustomerDetailPage reports an invalid customer id', (
     tester,
   ) async {
@@ -1881,6 +2065,14 @@ class _TestHarness {
       initialLocation: '/',
       routes: [
         GoRoute(path: '/', builder: (_, _) => home),
+        GoRoute(
+          path: '/attachments/:ownerType/:ownerId',
+          builder: (_, state) => Scaffold(
+            body: Text(
+              '附件:${state.pathParameters['ownerType']}:${state.pathParameters['ownerId']}',
+            ),
+          ),
+        ),
         GoRoute(path: '/customers', builder: (_, _) => const CustomersPage()),
         GoRoute(
           path: '/customers/new',

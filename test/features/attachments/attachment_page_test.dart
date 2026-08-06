@@ -149,6 +149,45 @@ void main() {
       ]);
     });
 
+    test('数量只统计当前 owner', () async {
+      for (var index = 0; index < 2; index++) {
+        await _seedAttachment(
+          db,
+          ownerId: firstFollowupId,
+          relativePath: 'attachments/2026/08/first-$index.pdf',
+          originalName: '第一个归属-$index.pdf',
+          mimeType: 'application/pdf',
+        );
+      }
+      await _seedAttachment(
+        db,
+        ownerId: secondFollowupId,
+        relativePath: 'attachments/2026/08/second.pdf',
+        originalName: '第二个归属.pdf',
+        mimeType: 'application/pdf',
+      );
+
+      final firstCount = await container.read(
+        attachmentCountProvider(
+          AttachmentOwnerRoute(
+            type: AttachmentOwnerType.followup,
+            id: firstFollowupId,
+          ),
+        ).future,
+      );
+      final secondCount = await container.read(
+        attachmentCountProvider(
+          AttachmentOwnerRoute(
+            type: AttachmentOwnerType.followup,
+            id: secondFollowupId,
+          ),
+        ).future,
+      );
+
+      expect(firstCount, 2);
+      expect(secondCount, 1);
+    });
+
     test('图片存在时预览状态包含记录和安全绝对路径', () async {
       final id = await _seedAttachment(
         db,

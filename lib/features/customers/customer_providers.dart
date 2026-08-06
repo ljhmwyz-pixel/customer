@@ -274,6 +274,7 @@ class CustomerDetailData {
     required this.plans,
     required this.followups,
     required this.orders,
+    required this.businessByOpportunity,
     required this.completedAmountCents,
   });
 
@@ -284,7 +285,22 @@ class CustomerDetailData {
   final List<FollowPlanRow> plans;
   final List<FollowupRow> followups;
   final List<OrderRow> orders;
+  final Map<int, OpportunityBusinessRecords> businessByOpportunity;
   final int completedAmountCents;
+}
+
+class OpportunityBusinessRecords {
+  const OpportunityBusinessRecords({
+    required this.quotes,
+    required this.samples,
+    required this.registrations,
+    required this.tenders,
+  });
+
+  final List<QuoteRow> quotes;
+  final List<SampleRow> samples;
+  final List<RegistrationRow> registrations;
+  final List<TenderRow> tenders;
 }
 
 class DashboardData {
@@ -797,14 +813,37 @@ final customerDetailProvider = FutureProvider.family<CustomerDetailData?, int>((
     db.orderDao.listOf(id),
     db.orderDao.sumAmountByCustomer(id),
   ]);
+  final opportunities = values[2] as List<OpportunityRow>;
+  final businessEntries = await Future.wait(
+    opportunities.map((opportunity) async {
+      final records = await Future.wait<Object>([
+        db.quoteDao.listVersions(opportunity.id),
+        db.sampleDao.listOf(opportunity.id),
+        db.registrationDao.listOf(opportunity.id),
+        db.tenderDao.listOf(opportunity.id),
+      ]);
+      return MapEntry(
+        opportunity.id,
+        OpportunityBusinessRecords(
+          quotes: List.unmodifiable(records[0] as List<QuoteRow>),
+          samples: List.unmodifiable(records[1] as List<SampleRow>),
+          registrations: List.unmodifiable(records[2] as List<RegistrationRow>),
+          tenders: List.unmodifiable(records[3] as List<TenderRow>),
+        ),
+      );
+    }),
+  );
   return CustomerDetailData(
     customer: customer,
     tags: values[0] as List<TagRow>,
     contacts: values[1] as List<ContactRow>,
-    opportunities: values[2] as List<OpportunityRow>,
+    opportunities: opportunities,
     plans: values[3] as List<FollowPlanRow>,
     followups: values[4] as List<FollowupRow>,
     orders: values[5] as List<OrderRow>,
+    businessByOpportunity: Map.unmodifiable(
+      Map<int, OpportunityBusinessRecords>.fromEntries(businessEntries),
+    ),
     completedAmountCents: values[6] as int,
   );
 });

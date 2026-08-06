@@ -7,6 +7,7 @@ import '../../models/enums.dart';
 import '../../theme/semantic_colors.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/empty_state.dart';
+import '../attachments/attachment_providers.dart';
 import '../orders/order_form_page.dart';
 import '../orders/order_providers.dart';
 import '../opportunities/opportunity_providers.dart';
@@ -157,6 +158,14 @@ class CustomerDetailPage extends ConsumerWidget {
                     (opportunity) => _OpportunityTile(
                       customerId: id,
                       opportunity: opportunity,
+                      businessRecords:
+                          value.businessByOpportunity[opportunity.id] ??
+                          const OpportunityBusinessRecords(
+                            quotes: [],
+                            samples: [],
+                            registrations: [],
+                            tenders: [],
+                          ),
                       onEdit: () => context.push(
                         '/customers/$id/opportunities/${opportunity.id}/edit',
                       ),
@@ -189,6 +198,10 @@ class CustomerDetailPage extends ConsumerWidget {
                     return _OrderTile(
                       order: order,
                       status: status,
+                      attachmentRoute: AttachmentOwnerRoute(
+                        type: AttachmentOwnerType.order,
+                        id: order.id,
+                      ),
                       onEdit: () => context.push(
                         '/customers/$id/orders/${order.id}/edit',
                       ),
@@ -712,11 +725,13 @@ class _OpportunityTile extends StatelessWidget {
   const _OpportunityTile({
     required this.customerId,
     required this.opportunity,
+    required this.businessRecords,
     required this.onEdit,
     required this.onDelete,
   });
 
   final OpportunityRow opportunity;
+  final OpportunityBusinessRecords businessRecords;
   final int customerId;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -774,99 +789,201 @@ class _OpportunityTile extends StatelessWidget {
         ? null
         : amount * probability ~/ 100;
     final nextAction = opportunity.nextAction?.trim();
-    return ListTile(
+    final businessCount =
+        businessRecords.quotes.length +
+        businessRecords.samples.length +
+        businessRecords.registrations.length +
+        businessRecords.tenders.length;
+    return Column(
       key: ValueKey('opportunity-${opportunity.id}'),
-      contentPadding: EdgeInsets.zero,
-      leading: const CircleAvatar(child: Icon(Icons.work_outline)),
-      title: Text(
-        opportunity.name,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (product.isNotEmpty)
-            Text(product, maxLines: 1, overflow: TextOverflow.ellipsis),
-          Text('${stage.label} · ${status.label}'),
-          Text(substitutionText, maxLines: 2, overflow: TextOverflow.ellipsis),
-          if (amount != null)
-            Text(
-              weighted == null
-                  ? '预计 ${_money(amount)}'
-                  : '预计 ${_money(amount)} · 加权 ${_money(weighted)}',
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          if (nextAction != null && nextAction.isNotEmpty)
-            Text(
-              '下一步：$nextAction',
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-        ],
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            tooltip: '新增报价',
-            onPressed: () => context.push(
-              '/customers/$customerId/opportunities/${opportunity.id}/quotes/new',
-            ),
-            icon: const Icon(Icons.request_quote_outlined),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const CircleAvatar(child: Icon(Icons.work_outline)),
+          title: Text(
+            opportunity.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
-          IconButton(
-            tooltip: '新增样品',
-            onPressed: () => context.push(
-              '/customers/$customerId/opportunities/${opportunity.id}/samples/new',
-            ),
-            icon: const Icon(Icons.inventory_2_outlined),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (product.isNotEmpty)
+                Text(product, maxLines: 1, overflow: TextOverflow.ellipsis),
+              Text('${stage.label} · ${status.label}'),
+              Text(
+                substitutionText,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (amount != null)
+                Text(
+                  weighted == null
+                      ? '预计 ${_money(amount)}'
+                      : '预计 ${_money(amount)} · 加权 ${_money(weighted)}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              if (nextAction != null && nextAction.isNotEmpty)
+                Text(
+                  '下一步：$nextAction',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+            ],
           ),
-          PopupMenuButton<_OpportunityAction>(
-            tooltip: '项目操作',
-            onSelected: (action) {
-              switch (action) {
-                case _OpportunityAction.registration:
-                  context.push(
-                    '/customers/$customerId/opportunities/${opportunity.id}/registrations/new',
-                  );
-                case _OpportunityAction.tender:
-                  context.push(
-                    '/customers/$customerId/opportunities/${opportunity.id}/tenders/new',
-                  );
-                case _OpportunityAction.edit:
-                  onEdit();
-                case _OpportunityAction.delete:
-                  onDelete();
-              }
-            },
-            itemBuilder: (context) => const [
-              PopupMenuItem(
-                value: _OpportunityAction.registration,
-                child: Text('新增注册'),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                tooltip: '新增报价',
+                onPressed: () => context.push(
+                  '/customers/$customerId/opportunities/${opportunity.id}/quotes/new',
+                ),
+                icon: const Icon(Icons.request_quote_outlined),
               ),
-              PopupMenuItem(
-                value: _OpportunityAction.tender,
-                child: Text('新增招标'),
+              IconButton(
+                tooltip: '新增样品',
+                onPressed: () => context.push(
+                  '/customers/$customerId/opportunities/${opportunity.id}/samples/new',
+                ),
+                icon: const Icon(Icons.inventory_2_outlined),
               ),
-              PopupMenuItem(value: _OpportunityAction.edit, child: Text('编辑')),
-              PopupMenuItem(
-                value: _OpportunityAction.delete,
-                child: Text('删除'),
+              PopupMenuButton<_OpportunityAction>(
+                tooltip: '项目操作',
+                onSelected: (action) {
+                  switch (action) {
+                    case _OpportunityAction.registration:
+                      context.push(
+                        '/customers/$customerId/opportunities/${opportunity.id}/registrations/new',
+                      );
+                    case _OpportunityAction.tender:
+                      context.push(
+                        '/customers/$customerId/opportunities/${opportunity.id}/tenders/new',
+                      );
+                    case _OpportunityAction.edit:
+                      onEdit();
+                    case _OpportunityAction.delete:
+                      onDelete();
+                  }
+                },
+                itemBuilder: (context) => const [
+                  PopupMenuItem(
+                    value: _OpportunityAction.registration,
+                    child: Text('新增注册'),
+                  ),
+                  PopupMenuItem(
+                    value: _OpportunityAction.tender,
+                    child: Text('新增招标'),
+                  ),
+                  PopupMenuItem(
+                    value: _OpportunityAction.edit,
+                    child: Text('编辑'),
+                  ),
+                  PopupMenuItem(
+                    value: _OpportunityAction.delete,
+                    child: Text('删除'),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        ),
+        if (businessCount > 0)
+          Padding(
+            padding: const EdgeInsets.only(left: AppTokens.s24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  '业务记录（$businessCount）',
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+                ...businessRecords.quotes.map(
+                  (quote) => _BusinessRecordTile(
+                    title: '报价 ${quote.quoteNo} · v${quote.version}',
+                    subtitle: formatDateTime(localDateTime(quote.quotedAt)),
+                    icon: Icons.request_quote_outlined,
+                    attachmentRoute: AttachmentOwnerRoute(
+                      type: AttachmentOwnerType.quote,
+                      id: quote.id,
+                    ),
+                  ),
+                ),
+                ...businessRecords.samples.map(
+                  (sample) => _BusinessRecordTile(
+                    title: '样品 ${_recordLabel(sample.sampleModel)}',
+                    subtitle: SampleStatus.fromDb(sample.status).label,
+                    icon: Icons.inventory_2_outlined,
+                    attachmentRoute: AttachmentOwnerRoute(
+                      type: AttachmentOwnerType.sample,
+                      id: sample.id,
+                    ),
+                  ),
+                ),
+                ...businessRecords.registrations.map(
+                  (registration) => _BusinessRecordTile(
+                    title: '注册 ${_recordLabel(registration.country)}',
+                    subtitle: RegistrationStatus.fromDb(
+                      registration.status,
+                    ).label,
+                    icon: Icons.assignment_outlined,
+                    attachmentRoute: AttachmentOwnerRoute(
+                      type: AttachmentOwnerType.registration,
+                      id: registration.id,
+                    ),
+                  ),
+                ),
+                ...businessRecords.tenders.map(
+                  (tender) => _BusinessRecordTile(
+                    title:
+                        '招标 ${_recordLabel(tender.projectNo, fallback: tender.name)}',
+                    subtitle: TenderStatus.fromDb(tender.status).label,
+                    icon: Icons.gavel_outlined,
+                    attachmentRoute: AttachmentOwnerRoute(
+                      type: AttachmentOwnerType.tender,
+                      id: tender.id,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
+}
+
+class _BusinessRecordTile extends StatelessWidget {
+  const _BusinessRecordTile({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.attachmentRoute,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final AttachmentOwnerRoute attachmentRoute;
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+    dense: true,
+    contentPadding: EdgeInsets.zero,
+    leading: Icon(icon),
+    title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+    subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+    trailing: _AttachmentAction(route: attachmentRoute),
+  );
 }
 
 class _OrderTile extends StatelessWidget {
   const _OrderTile({
     required this.order,
     required this.status,
+    required this.attachmentRoute,
     required this.onEdit,
     required this.onAdvance,
     required this.onCancel,
@@ -875,6 +992,7 @@ class _OrderTile extends StatelessWidget {
 
   final OrderRow order;
   final OrderStatus status;
+  final AttachmentOwnerRoute attachmentRoute;
   final VoidCallback onEdit;
   final VoidCallback? onAdvance;
   final VoidCallback? onCancel;
@@ -901,33 +1019,42 @@ class _OrderTile extends StatelessWidget {
             Text(description, maxLines: 2, overflow: TextOverflow.ellipsis),
         ],
       ),
-      trailing: PopupMenuButton<_OrderAction>(
-        tooltip: '订单操作',
-        onSelected: (action) {
-          switch (action) {
-            case _OrderAction.edit:
-              onEdit();
-            case _OrderAction.advance:
-              onAdvance?.call();
-            case _OrderAction.cancel:
-              onCancel?.call();
-            case _OrderAction.delete:
-              onDelete();
-          }
-        },
-        itemBuilder: (context) => [
-          const PopupMenuItem(value: _OrderAction.edit, child: Text('编辑')),
-          if (onAdvance != null)
-            PopupMenuItem(
-              value: _OrderAction.advance,
-              child: Text('推进至${status.nextStatus!.label}'),
-            ),
-          if (onCancel != null)
-            const PopupMenuItem(
-              value: _OrderAction.cancel,
-              child: Text('取消订单'),
-            ),
-          const PopupMenuItem(value: _OrderAction.delete, child: Text('删除')),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _AttachmentAction(route: attachmentRoute),
+          PopupMenuButton<_OrderAction>(
+            tooltip: '订单操作',
+            onSelected: (action) {
+              switch (action) {
+                case _OrderAction.edit:
+                  onEdit();
+                case _OrderAction.advance:
+                  onAdvance?.call();
+                case _OrderAction.cancel:
+                  onCancel?.call();
+                case _OrderAction.delete:
+                  onDelete();
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: _OrderAction.edit, child: Text('编辑')),
+              if (onAdvance != null)
+                PopupMenuItem(
+                  value: _OrderAction.advance,
+                  child: Text('推进至${status.nextStatus!.label}'),
+                ),
+              if (onCancel != null)
+                const PopupMenuItem(
+                  value: _OrderAction.cancel,
+                  child: Text('取消订单'),
+                ),
+              const PopupMenuItem(
+                value: _OrderAction.delete,
+                child: Text('删除'),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -1095,6 +1222,12 @@ class _TimelineEntry extends StatelessWidget {
                           color: scheme.onSurfaceVariant,
                         ),
                       ),
+                      _AttachmentAction(
+                        route: AttachmentOwnerRoute(
+                          type: AttachmentOwnerType.followup,
+                          id: followup.id,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: AppTokens.s8),
@@ -1139,6 +1272,37 @@ class _TimelineEntry extends StatelessWidget {
       ),
     );
   }
+}
+
+class _AttachmentAction extends ConsumerWidget {
+  const _AttachmentAction({required this.route});
+
+  final AttachmentOwnerRoute route;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final count = ref.watch(attachmentCountProvider(route)).value;
+    return SizedBox.square(
+      key: ValueKey('attachment-${route.segment}-${route.id}'),
+      dimension: AppTokens.minTouchTarget,
+      child: Badge(
+        label: Text('${count ?? 0}'),
+        child: IconButton(
+          tooltip: '附件（${count ?? 0}）',
+          onPressed: () => context.push(route.location),
+          icon: const Icon(Icons.attach_file),
+        ),
+      ),
+    );
+  }
+}
+
+String _recordLabel(String? primary, {String? fallback}) {
+  final value = primary?.trim();
+  if (value != null && value.isNotEmpty) return value;
+  final alternate = fallback?.trim();
+  if (alternate != null && alternate.isNotEmpty) return alternate;
+  return '未命名';
 }
 
 class _ContactDialog extends StatefulWidget {

@@ -174,7 +174,7 @@ class _AttachmentPageState extends ConsumerState<AttachmentPage> {
             return;
           }
           if (mounted) {
-            ref.invalidate(attachmentListProvider(widget.owner));
+            _refreshOwnerAttachments();
           }
       }
     } catch (_) {
@@ -245,12 +245,12 @@ class _AttachmentPageState extends ConsumerState<AttachmentPage> {
       switch (result) {
         case AttachmentDeleteResult.deleted:
         case AttachmentDeleteResult.fileNotFound:
-          ref.invalidate(attachmentListProvider(widget.owner));
+          _refreshOwnerAttachments();
         case AttachmentDeleteResult.cleanupFailed:
-          ref.invalidate(attachmentListProvider(widget.owner));
+          _refreshOwnerAttachments();
           _showMessage('附件已删除，但文件清理失败');
         case AttachmentDeleteResult.recordNotFound:
-          ref.invalidate(attachmentListProvider(widget.owner));
+          _refreshOwnerAttachments();
           _showMessage('附件记录不存在');
       }
     } catch (_) {
@@ -258,6 +258,11 @@ class _AttachmentPageState extends ConsumerState<AttachmentPage> {
     } finally {
       if (mounted) setState(() => _isBusy = false);
     }
+  }
+
+  void _refreshOwnerAttachments() {
+    ref.invalidate(attachmentListProvider(widget.owner));
+    ref.invalidate(attachmentCountProvider(widget.owner));
   }
 
   void _showMessage(String message) {

@@ -115,6 +115,11 @@ final attachmentListProvider =
       );
     });
 
+final attachmentCountProvider =
+    FutureProvider.family<int, AttachmentOwnerRoute>(
+      (ref, route) => ref.watch(attachmentDaoProvider).countOf(route.owner),
+    );
+
 final attachmentPreviewProvider =
     FutureProvider.family<AttachmentPreviewState, int>((ref, id) async {
       final row = await ref.watch(attachmentDaoProvider).findById(id);
