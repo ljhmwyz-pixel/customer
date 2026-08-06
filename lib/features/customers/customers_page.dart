@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../data/daos/customer_dao.dart';
 import '../../data/database.dart';
 import '../../models/enums.dart';
 import '../../theme/tokens.dart';
@@ -309,6 +310,39 @@ class _CustomerFiltersSheet extends ConsumerWidget {
                         labelFor: (value) => value,
                         onChanged: notifier.setEntryPoint,
                       ),
+                      const SizedBox(height: AppTokens.s12),
+                      _FilterDropdown<String>(
+                        fieldKey: 'customer-product-category-filter',
+                        label: '产品分类',
+                        allLabel: '全部产品分类',
+                        icon: Icons.category_outlined,
+                        value: filter.productCategory,
+                        options: values.productCategories,
+                        labelFor: (value) => value,
+                        onChanged: notifier.setProductCategory,
+                      ),
+                      const SizedBox(height: AppTokens.s12),
+                      _FilterDropdown<String>(
+                        fieldKey: 'customer-product-model-filter',
+                        label: '产品型号',
+                        allLabel: '全部产品型号',
+                        icon: Icons.inventory_2_outlined,
+                        value: filter.productModel,
+                        options: values.productModels,
+                        labelFor: (value) => value,
+                        onChanged: notifier.setProductModel,
+                      ),
+                      const SizedBox(height: AppTokens.s12),
+                      _FilterDropdown<String>(
+                        fieldKey: 'customer-equipment-brand-filter',
+                        label: '设备品牌',
+                        allLabel: '全部设备品牌',
+                        icon: Icons.precision_manufacturing_outlined,
+                        value: filter.equipmentBrand,
+                        options: values.equipmentBrands,
+                        labelFor: (value) => value,
+                        onChanged: notifier.setEquipmentBrand,
+                      ),
                     ],
                   ),
                   loading: () => const Column(
@@ -324,11 +358,45 @@ class _CustomerFiltersSheet extends ConsumerWidget {
                         label: '替代切入点',
                         icon: Icons.alt_route_outlined,
                       ),
+                      SizedBox(height: AppTokens.s12),
+                      _DisabledFilter(
+                        label: '产品分类',
+                        icon: Icons.category_outlined,
+                      ),
+                      SizedBox(height: AppTokens.s12),
+                      _DisabledFilter(
+                        label: '产品型号',
+                        icon: Icons.inventory_2_outlined,
+                      ),
+                      SizedBox(height: AppTokens.s12),
+                      _DisabledFilter(
+                        label: '设备品牌',
+                        icon: Icons.precision_manufacturing_outlined,
+                      ),
                     ],
                   ),
-                  error: (_, _) => const _DisabledFilter(
-                    label: '动态筛选项不可用',
-                    icon: Icons.error_outline,
+                  error: (_, _) => const Column(
+                    children: [
+                      _DisabledFilter(
+                        label: '动态筛选项不可用',
+                        icon: Icons.error_outline,
+                      ),
+                      SizedBox(height: AppTokens.s12),
+                      _DisabledFilter(
+                        label: '产品分类不可用',
+                        icon: Icons.category_outlined,
+                      ),
+                      SizedBox(height: AppTokens.s12),
+                      _DisabledFilter(
+                        label: '产品型号不可用',
+                        icon: Icons.inventory_2_outlined,
+                      ),
+                      SizedBox(height: AppTokens.s12),
+                      _DisabledFilter(
+                        label: '设备品牌不可用',
+                        icon: Icons.precision_manufacturing_outlined,
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: AppTokens.s12),
@@ -354,6 +422,17 @@ class _CustomerFiltersSheet extends ConsumerWidget {
                   onChanged: notifier.setOpportunityStage,
                 ),
                 const SizedBox(height: AppTokens.s12),
+                _FilterDropdown<OpportunityStatus>(
+                  fieldKey: 'customer-opportunity-status-filter',
+                  label: '项目状态',
+                  allLabel: '全部项目状态',
+                  icon: Icons.toggle_on_outlined,
+                  value: filter.opportunityStatus,
+                  options: OpportunityStatus.values,
+                  labelFor: (value) => value.label,
+                  onChanged: notifier.setOpportunityStatus,
+                ),
+                const SizedBox(height: AppTokens.s12),
                 dynamicOptions.when(
                   data: (values) => _FilterDropdown<String>(
                     fieldKey: 'customer-owner-filter',
@@ -373,6 +452,61 @@ class _CustomerFiltersSheet extends ConsumerWidget {
                     label: '负责人不可用',
                     icon: Icons.badge_outlined,
                   ),
+                ),
+                const SizedBox(height: AppTokens.s12),
+                _FilterDateTile(
+                  fieldKey: 'customer-expected-close-from',
+                  label: '预计成交开始日期',
+                  value: filter.expectedCloseFrom,
+                  firstDate: _earlierDate(
+                    DateTime(2000),
+                    filter.expectedCloseTo,
+                  ),
+                  lastDate: filter.expectedCloseTo ?? DateTime(2100),
+                  onChanged: notifier.setExpectedCloseFrom,
+                ),
+                const SizedBox(height: AppTokens.s12),
+                _FilterDateTile(
+                  fieldKey: 'customer-expected-close-to',
+                  label: '预计成交结束日期',
+                  value: filter.expectedCloseTo,
+                  firstDate: filter.expectedCloseFrom ?? DateTime(2000),
+                  lastDate: _laterDate(
+                    DateTime(2100),
+                    filter.expectedCloseFrom,
+                  ),
+                  onChanged: notifier.setExpectedCloseTo,
+                ),
+                const SizedBox(height: AppTokens.s16),
+                Text('异常状态', style: Theme.of(context).textTheme.titleSmall),
+                _AnomalyFilterTile(
+                  fieldKey: 'customer-anomaly-stalled-quote',
+                  label: '报价停滞（30 天未确认收到）',
+                  selected: filter.anomalies.contains(
+                    CustomerAnomalyFilter.stalledQuote,
+                  ),
+                  onChanged: () => notifier.toggleAnomaly(
+                    CustomerAnomalyFilter.stalledQuote,
+                  ),
+                ),
+                _AnomalyFilterTile(
+                  fieldKey: 'customer-anomaly-stalled-sample',
+                  label: '样品停滞（交付 30 天无测试反馈）',
+                  selected: filter.anomalies.contains(
+                    CustomerAnomalyFilter.stalledSample,
+                  ),
+                  onChanged: () => notifier.toggleAnomaly(
+                    CustomerAnomalyFilter.stalledSample,
+                  ),
+                ),
+                _AnomalyFilterTile(
+                  fieldKey: 'customer-anomaly-long-silence',
+                  label: '长期沉默（按客户等级）',
+                  selected: filter.anomalies.contains(
+                    CustomerAnomalyFilter.longSilence,
+                  ),
+                  onChanged: () =>
+                      notifier.toggleAnomaly(CustomerAnomalyFilter.longSilence),
                 ),
                 const SizedBox(height: AppTokens.s24),
               ],
@@ -451,6 +585,113 @@ class _FilterDropdown<T> extends StatelessWidget {
     onChanged: onChanged,
   );
 }
+
+class _FilterDateTile extends StatelessWidget {
+  const _FilterDateTile({
+    required this.fieldKey,
+    required this.label,
+    required this.value,
+    required this.firstDate,
+    required this.lastDate,
+    required this.onChanged,
+  });
+
+  final String fieldKey;
+  final String label;
+  final DateTime? value;
+  final DateTime firstDate;
+  final DateTime lastDate;
+  final ValueChanged<DateTime?> onChanged;
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+    key: ValueKey(fieldKey),
+    contentPadding: const EdgeInsets.symmetric(horizontal: AppTokens.s12),
+    leading: const Icon(Icons.event_outlined),
+    title: Text(label),
+    subtitle: Text(value == null ? '不限' : _formatFilterDate(value!)),
+    trailing: value == null
+        ? const Icon(Icons.chevron_right)
+        : IconButton(
+            key: ValueKey('$fieldKey-clear'),
+            onPressed: () => onChanged(null),
+            tooltip: '清除$label',
+            icon: const Icon(Icons.close),
+          ),
+    shape: RoundedRectangleBorder(
+      side: BorderSide(color: Theme.of(context).colorScheme.outline),
+      borderRadius: BorderRadius.circular(AppTokens.s12),
+    ),
+    onTap: () async {
+      final today = _dateOnly(DateTime.now());
+      var pickerFirstDate = _dateOnly(firstDate);
+      var pickerLastDate = _dateOnly(lastDate);
+      final currentDate = value == null ? null : _dateOnly(value!);
+      if (currentDate != null && currentDate.isBefore(pickerFirstDate)) {
+        pickerFirstDate = currentDate;
+      }
+      if (currentDate != null && currentDate.isAfter(pickerLastDate)) {
+        pickerLastDate = currentDate;
+      }
+      final initialDate = _clampDate(
+        currentDate ?? today,
+        pickerFirstDate,
+        pickerLastDate,
+      );
+      final selected = await showDatePicker(
+        context: context,
+        initialDate: initialDate,
+        firstDate: pickerFirstDate,
+        lastDate: pickerLastDate,
+      );
+      if (selected != null) onChanged(selected);
+    },
+  );
+}
+
+class _AnomalyFilterTile extends StatelessWidget {
+  const _AnomalyFilterTile({
+    required this.fieldKey,
+    required this.label,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final String fieldKey;
+  final String label;
+  final bool selected;
+  final VoidCallback onChanged;
+
+  @override
+  Widget build(BuildContext context) => CheckboxListTile(
+    key: ValueKey(fieldKey),
+    contentPadding: EdgeInsets.zero,
+    controlAffinity: ListTileControlAffinity.leading,
+    title: Text(label),
+    value: selected,
+    onChanged: (_) => onChanged(),
+  );
+}
+
+DateTime _dateOnly(DateTime value) =>
+    DateTime(value.year, value.month, value.day);
+
+DateTime _earlierDate(DateTime value, DateTime? other) =>
+    other != null && other.isBefore(value) ? other : value;
+
+DateTime _laterDate(DateTime value, DateTime? other) =>
+    other != null && other.isAfter(value) ? other : value;
+
+DateTime _clampDate(DateTime value, DateTime firstDate, DateTime lastDate) {
+  if (value.isBefore(firstDate)) return firstDate;
+  if (value.isAfter(lastDate)) return lastDate;
+  return value;
+}
+
+String _formatFilterDate(DateTime value) =>
+    '${value.year.toString().padLeft(4, '0')}-'
+    '${value.month.toString().padLeft(2, '0')}-'
+    '${value.day.toString().padLeft(2, '0')}';
 
 class _ActiveFilterSummary extends ConsumerWidget {
   const _ActiveFilterSummary({required this.filter, required this.tags});

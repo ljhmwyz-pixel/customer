@@ -267,7 +267,7 @@ flutter test test/data/query_test.dart
 - Consumes: 新动态选项、筛选状态和 Notifier。
 - Produces: 底部面板中的高级控件、合法日期交互、异常多选。
 
-- [ ] 写 `customer advanced filter controls` 失败测试并操作以下 Key：
+- [x] 写 `customer advanced filter controls` 失败测试并操作以下 Key：
 
 ```text
 customer-product-category-filter
@@ -281,10 +281,10 @@ customer-anomaly-stalled-sample
 customer-anomaly-long-silence
 ```
 
-- [ ] 验证选择产品、型号、品牌、项目状态后筛选数量增加，重开面板仍保留。
-- [ ] 写 `customer expected close date controls`：两端显示本地日期，结束日早于开始日时不保存无效范围。
-- [ ] 写 `customer anomaly multi select`：三项可同时启用，再点单项只移除该项，计数同步。
-- [ ] 运行失败测试：
+- [x] 验证选择产品、型号、品牌、项目状态后筛选数量增加，重开面板仍保留。
+- [x] 写 `customer expected close date controls`：两端显示本地日期，结束日早于开始日时不保存无效范围。
+- [x] 写 `customer anomaly multi select`：三项可同时启用，再点单项只移除该项，计数同步。
+- [x] 运行失败测试：
 
 ```bash
 flutter test test/features/customers/customer_pages_test.dart --plain-name 'customer advanced filter controls'
@@ -294,13 +294,13 @@ flutter test test/features/customers/customer_pages_test.dart --plain-name 'cust
 
 预期：新增 Key 不存在或交互断言失败。
 
-- [ ] 在现有 `customer-filters-sheet` / `customer-filters-list` 增加项目信息、预计成交日期、业务异常分组。
-- [ ] 产品字段沿用动态选择样式；项目状态显示本地化文案但保存枚举。
-- [ ] 日期使用纵向 `ListTile` 或全宽按钮调用 `showDatePicker`，每端可单独清除；不做窄屏横排。
-- [ ] 结束日期选择器不得选择早于开始日的日期；`initialDate`、`firstDate`、`lastDate` 始终合法。
-- [ ] 异常文案固定为“报价停滞（30 天未确认收到）”“样品停滞（交付 30 天无测试反馈）”“长期沉默（按客户等级）”。
-- [ ] UI 只编辑枚举，不复制 DAO 的 SQL 判断。
-- [ ] 运行通过验证：
+- [x] 在现有 `customer-filters-sheet` / `customer-filters-list` 增加项目信息、预计成交日期、业务异常分组。
+- [x] 产品字段沿用动态选择样式；项目状态显示本地化文案但保存枚举。
+- [x] 日期使用纵向 `ListTile` 或全宽按钮调用 `showDatePicker`，每端可单独清除；不做窄屏横排。
+- [x] 结束日期选择器不得选择早于开始日的日期；`initialDate`、`firstDate`、`lastDate` 始终合法。
+- [x] 异常文案固定为“报价停滞（30 天未确认收到）”“样品停滞（交付 30 天无测试反馈）”“长期沉默（按客户等级）”。
+- [x] UI 只编辑枚举，不复制 DAO 的 SQL 判断。
+- [x] 运行通过验证：
 
 ```bash
 flutter test test/features/customers/customer_pages_test.dart --plain-name 'customer advanced filter controls'
@@ -310,7 +310,7 @@ flutter test test/features/customers/customer_pages_test.dart --plain-name 'cust
 
 预期：控件、日期合法性和异常多选全部通过。
 
-- [ ] 暂停并汇报 Task 4；不提交 Git。
+- [x] 暂停并汇报 Task 4；不提交 Git。
 
 ---
 

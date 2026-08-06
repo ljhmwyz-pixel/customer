@@ -353,6 +353,192 @@ void main() {
     expect(find.text('其他客户'), findsOneWidget);
   });
 
+  testWidgets('customer advanced filter controls', (tester) async {
+    final db = await openTestDb();
+    final customerId = await db.customerDao.insertCustomer(name: '高级筛选客户');
+    await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '高级筛选项目',
+      productCategory: '体外诊断',
+      productModel: 'Model X',
+      equipmentBrand: 'Brand A',
+      status: OpportunityStatus.active,
+    );
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: const CustomersPage(),
+    );
+    addTearDown(() => harness.dispose(tester));
+    await harness.pump(tester);
+
+    await tester.tap(find.byKey(const ValueKey('open-customer-filters')));
+    await tester.pumpAndSettle();
+    await _selectCustomerFilter<String>(
+      tester,
+      'customer-product-category-filter',
+      '体外诊断',
+    );
+    await _selectCustomerFilter<String>(
+      tester,
+      'customer-product-model-filter',
+      'Model X',
+    );
+    await _selectCustomerFilter<String>(
+      tester,
+      'customer-equipment-brand-filter',
+      'Brand A',
+    );
+    await _selectCustomerFilter<OpportunityStatus>(
+      tester,
+      'customer-opportunity-status-filter',
+      OpportunityStatus.active,
+    );
+
+    var filter = harness.container.read(customerFilterProvider);
+    expect(filter.productCategory, '体外诊断');
+    expect(filter.productModel, 'Model X');
+    expect(filter.equipmentBrand, 'Brand A');
+    expect(filter.opportunityStatus, OpportunityStatus.active);
+    expect(filter.activeFilterCount, 4);
+
+    await tester.tap(find.text('完成'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('customer-filter-count')), findsOneWidget);
+    expect(find.text('4'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('open-customer-filters')));
+    await tester.pumpAndSettle();
+    for (final entry in {
+      'customer-product-category-filter': '体外诊断',
+      'customer-product-model-filter': 'Model X',
+      'customer-equipment-brand-filter': 'Brand A',
+      'customer-opportunity-status-filter': OpportunityStatus.active.label,
+    }.entries) {
+      final key = entry.key;
+      await _ensureCustomerFilterVisible(tester, key);
+      final dropdown = find.byKey(ValueKey(key));
+      expect(dropdown, findsOneWidget);
+      expect(
+        find.descendant(of: dropdown, matching: find.text(entry.value)),
+        findsOneWidget,
+      );
+    }
+    filter = harness.container.read(customerFilterProvider);
+    expect(filter.activeFilterCount, 4);
+  });
+
+  testWidgets('customer expected close date controls', (tester) async {
+    final harness = await _TestHarness.create(home: const CustomersPage());
+    addTearDown(() => harness.dispose(tester));
+    final notifier = harness.container.read(customerFilterProvider.notifier);
+    notifier.setExpectedCloseFrom(DateTime(2026, 8, 20));
+    notifier.setExpectedCloseTo(DateTime(2026, 8, 31));
+    await harness.pump(tester);
+
+    await tester.tap(find.byKey(const ValueKey('open-customer-filters')));
+    await tester.pumpAndSettle();
+    await _ensureCustomerFilterVisible(tester, 'customer-expected-close-from');
+    expect(find.text('2026-08-20'), findsOneWidget);
+    await _ensureCustomerFilterVisible(tester, 'customer-expected-close-to');
+    expect(find.text('2026-08-31'), findsOneWidget);
+
+    notifier.setExpectedCloseTo(DateTime(2026, 8, 19));
+    await tester.pumpAndSettle();
+    expect(
+      harness.container.read(customerFilterProvider).expectedCloseTo,
+      DateTime(2026, 8, 31),
+    );
+    expect(find.text('2026-08-31'), findsOneWidget);
+
+    await tester.tap(
+      find.byKey(const ValueKey('customer-expected-close-from-clear')),
+    );
+    await tester.pumpAndSettle();
+    var filter = harness.container.read(customerFilterProvider);
+    expect(filter.expectedCloseFrom, isNull);
+    expect(filter.expectedCloseTo, DateTime(2026, 8, 31));
+
+    await tester.tap(
+      find.byKey(const ValueKey('customer-expected-close-to-clear')),
+    );
+    await tester.pumpAndSettle();
+    filter = harness.container.read(customerFilterProvider);
+    expect(filter.expectedCloseFrom, isNull);
+    expect(filter.expectedCloseTo, isNull);
+  });
+
+  testWidgets('customer date picker handles dates outside default bounds', (
+    tester,
+  ) async {
+    final harness = await _TestHarness.create(home: const CustomersPage());
+    addTearDown(() => harness.dispose(tester));
+    harness.container
+        .read(customerFilterProvider.notifier)
+        .setExpectedCloseFrom(DateTime(1999, 12, 31));
+    await harness.pump(tester);
+
+    await tester.tap(find.byKey(const ValueKey('open-customer-filters')));
+    await tester.pumpAndSettle();
+    await _ensureCustomerFilterVisible(tester, 'customer-expected-close-from');
+    await tester.tap(
+      find.byKey(const ValueKey('customer-expected-close-from')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DatePickerDialog), findsOneWidget);
+
+    Navigator.of(tester.element(find.byType(DatePickerDialog))).pop();
+    await tester.pumpAndSettle();
+    harness.container
+        .read(customerFilterProvider.notifier)
+        .setExpectedCloseFrom(DateTime(2101, 1, 1));
+    await tester.pumpAndSettle();
+    await _ensureCustomerFilterVisible(tester, 'customer-expected-close-to');
+    await tester.tap(find.byKey(const ValueKey('customer-expected-close-to')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DatePickerDialog), findsOneWidget);
+  });
+
+  testWidgets('customer anomaly multi select', (tester) async {
+    final harness = await _TestHarness.create(home: const CustomersPage());
+    addTearDown(() => harness.dispose(tester));
+    await harness.pump(tester);
+
+    await tester.tap(find.byKey(const ValueKey('open-customer-filters')));
+    await tester.pumpAndSettle();
+    for (final key in [
+      'customer-anomaly-stalled-quote',
+      'customer-anomaly-stalled-sample',
+      'customer-anomaly-long-silence',
+    ]) {
+      await _ensureCustomerFilterVisible(tester, key);
+      await tester.tap(find.byKey(ValueKey(key)));
+      await tester.pumpAndSettle();
+    }
+
+    var filter = harness.container.read(customerFilterProvider);
+    expect(filter.anomalies, CustomerAnomalyFilter.values.toSet());
+    expect(filter.activeFilterCount, 3);
+
+    await _ensureCustomerFilterVisible(
+      tester,
+      'customer-anomaly-stalled-sample',
+    );
+    await tester.tap(
+      find.byKey(const ValueKey('customer-anomaly-stalled-sample')),
+    );
+    await tester.pumpAndSettle();
+    filter = harness.container.read(customerFilterProvider);
+    expect(filter.anomalies, {
+      CustomerAnomalyFilter.stalledQuote,
+      CustomerAnomalyFilter.longSilence,
+    });
+    expect(filter.activeFilterCount, 2);
+  });
+
   testWidgets('CustomersPage filter sheet supports a narrow viewport', (
     tester,
   ) async {
