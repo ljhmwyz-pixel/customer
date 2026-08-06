@@ -54,6 +54,18 @@ class SettingsPage extends StatelessWidget {
           ),
           const Divider(),
           ListTile(
+            leading: const Icon(Icons.science_outlined),
+            title: const Text('示例数据'),
+            subtitle: Text(
+              '导入或整体撤销业务示例',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.go('/settings/sample-data'),
+          ),
+          ListTile(
             leading: const Icon(Icons.backup_outlined),
             title: const Text('备份与恢复'),
             subtitle: Text(

@@ -20,6 +20,7 @@ import 'features/reminders/permission_page.dart';
 import 'features/reminders/reminder_log_page.dart';
 import 'features/reminders/reminder_test_page.dart';
 import 'features/settings/settings_page.dart';
+import 'features/settings/sample_data_page.dart';
 import 'widgets/app_shell.dart';
 
 /// 客户详情页的路由路径。
@@ -268,6 +269,10 @@ final router = GoRouter(
                 GoRoute(
                   path: 'reminder-test',
                   builder: (context, state) => const ReminderTestPage(),
+                ),
+                GoRoute(
+                  path: 'sample-data',
+                  builder: (context, state) => const SampleDataPage(),
                 ),
               ],
             ),
