@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
 import 'data/database_provider.dart';
+import 'services/attachment_service.dart';
+import 'services/attachment_service_providers.dart';
 import 'services/service_providers.dart';
 
 Future<void> main() async {
@@ -13,10 +15,27 @@ Future<void> main() async {
   final container = ProviderContainer();
 
   await _bootstrapReminders(container);
+  await bootstrapAttachmentCleanup(container);
 
   runApp(
     UncontrolledProviderScope(container: container, child: const CustomerApp()),
   );
+}
+
+Future<void> bootstrapAttachmentCleanup(
+  ProviderContainer container, {
+  AttachmentGraphCleaner? cleaner,
+}) async {
+  try {
+    final AttachmentGraphCleaner target =
+        cleaner ?? container.read(attachmentServiceProvider);
+    final report = await target.retryOrphanCleanup();
+    if (report.hasFailures) {
+      debugPrint('附件孤儿清理失败，待下次启动重试：${report.failedPaths}');
+    }
+  } catch (e, stack) {
+    debugPrint('附件孤儿清理初始化失败：$e\n$stack');
+  }
 }
 
 /// 启动时恢复提醒。

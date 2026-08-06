@@ -37,7 +37,48 @@ enum AttachmentOpenResult {
   failed,
 }
 
-class AttachmentService {
+class AttachmentCleanupReport {
+  const AttachmentCleanupReport({
+    this.deletedPaths = const [],
+    this.missingPaths = const [],
+    this.failedPaths = const [],
+  });
+
+  final List<String> deletedPaths;
+  final List<String> missingPaths;
+  final List<String> failedPaths;
+
+  bool get hasFailures => failedPaths.isNotEmpty;
+}
+
+abstract interface class AttachmentGraphCleaner {
+  Future<AttachmentCleanupReport> deleteGraph({
+    required Future<Iterable<AttachmentRow>> Function() loadAttachments,
+    required Future<void> Function() deleteDatabaseGraph,
+  });
+
+  Future<AttachmentCleanupReport> retryOrphanCleanup();
+}
+
+class PassthroughAttachmentGraphCleaner implements AttachmentGraphCleaner {
+  const PassthroughAttachmentGraphCleaner();
+
+  @override
+  Future<AttachmentCleanupReport> deleteGraph({
+    required Future<Iterable<AttachmentRow>> Function() loadAttachments,
+    required Future<void> Function() deleteDatabaseGraph,
+  }) async {
+    await loadAttachments();
+    await deleteDatabaseGraph();
+    return const AttachmentCleanupReport();
+  }
+
+  @override
+  Future<AttachmentCleanupReport> retryOrphanCleanup() async =>
+      const AttachmentCleanupReport();
+}
+
+class AttachmentService implements AttachmentGraphCleaner {
   const AttachmentService({
     required AttachmentDao dao,
     required AttachmentFileStore fileStore,
@@ -96,6 +137,54 @@ class AttachmentService {
         AttachmentDeleteResult.fileNotFound,
       AttachmentFileDeleteResult.failed => AttachmentDeleteResult.cleanupFailed,
     };
+  }
+
+  @override
+  Future<AttachmentCleanupReport> deleteGraph({
+    required Future<Iterable<AttachmentRow>> Function() loadAttachments,
+    required Future<void> Function() deleteDatabaseGraph,
+  }) async {
+    final paths =
+        (await loadAttachments())
+            .map((row) => row.relativePath)
+            .toSet()
+            .toList()
+          ..sort();
+    await deleteDatabaseGraph();
+    return _cleanupPaths(paths);
+  }
+
+  @override
+  Future<AttachmentCleanupReport> retryOrphanCleanup() async {
+    final storedPaths = await _fileStore.listStoredPaths();
+    final referencedPaths = (await _dao.listAll())
+        .map((row) => row.relativePath)
+        .toSet();
+    final orphanedPaths = storedPaths.difference(referencedPaths).toList()
+      ..sort();
+    return _cleanupPaths(orphanedPaths);
+  }
+
+  Future<AttachmentCleanupReport> _cleanupPaths(Iterable<String> paths) async {
+    final deleted = <String>[];
+    final missing = <String>[];
+    final failed = <String>[];
+    for (final path in paths) {
+      final result = await _fileStore.delete(path);
+      switch (result) {
+        case AttachmentFileDeleteResult.deleted:
+          deleted.add(path);
+        case AttachmentFileDeleteResult.notFound:
+          missing.add(path);
+        case AttachmentFileDeleteResult.failed:
+          failed.add(path);
+      }
+    }
+    return AttachmentCleanupReport(
+      deletedPaths: List.unmodifiable(deleted),
+      missingPaths: List.unmodifiable(missing),
+      failedPaths: List.unmodifiable(failed),
+    );
   }
 
   Future<AttachmentOpenResult> open(int attachmentId) async {

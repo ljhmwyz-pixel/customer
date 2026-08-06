@@ -111,6 +111,106 @@ void main() {
     expect(await db.attachmentDao.findById(id), isNull);
   });
 
+  test('deleteGraph 在数据库失败时不删除文件并保留原异常', () async {
+    final id = await seedAttachment();
+
+    await expectLater(
+      service.deleteGraph(
+        loadAttachments: () =>
+            db.attachmentDao.listOf(FollowupAttachmentOwner(followupId)),
+        deleteDatabaseGraph: () => throw StateError('database failed'),
+      ),
+      throwsA(
+        isA<StateError>().having(
+          (error) => error.message,
+          'message',
+          'database failed',
+        ),
+      ),
+    );
+
+    expect(await db.attachmentDao.findById(id), isNotNull);
+    expect(fileStore.deletedPaths, isEmpty);
+  });
+
+  test('deleteGraph 先快照路径和提交数据库，再清理物理文件', () async {
+    final id = await seedAttachment();
+    final events = <String>[];
+    fileStore.onDelete = (path) async {
+      events.add('file:${await db.attachmentDao.findById(id) == null}');
+      return AttachmentFileDeleteResult.deleted;
+    };
+
+    final report = await service.deleteGraph(
+      loadAttachments: () async {
+        events.add('load');
+        return db.attachmentDao.listOf(FollowupAttachmentOwner(followupId));
+      },
+      deleteDatabaseGraph: () async {
+        events.add('database');
+        await db.followupDao.deleteFollowup(followupId);
+      },
+    );
+
+    expect(events, ['load', 'database', 'file:true']);
+    expect(report.deletedPaths, [fileStore.stored.relativePath]);
+    expect(report.missingPaths, isEmpty);
+    expect(report.failedPaths, isEmpty);
+  });
+
+  test('deleteGraph 将缺失文件视为非致命并单独报告失败路径', () async {
+    const missingPath = 'attachments/2026/08/missing.pdf';
+    const failedPath = 'attachments/2026/08/failed.pdf';
+    await db.attachmentDao.insertAttachment(
+      owner: FollowupAttachmentOwner(followupId),
+      relativePath: missingPath,
+      originalName: 'missing.pdf',
+      mimeType: 'application/pdf',
+      sizeBytes: 1,
+    );
+    await db.attachmentDao.insertAttachment(
+      owner: FollowupAttachmentOwner(followupId),
+      relativePath: failedPath,
+      originalName: 'failed.pdf',
+      mimeType: 'application/pdf',
+      sizeBytes: 1,
+    );
+    fileStore.deleteResults[missingPath] = AttachmentFileDeleteResult.notFound;
+    fileStore.deleteResults[failedPath] = AttachmentFileDeleteResult.failed;
+
+    final report = await service.deleteGraph(
+      loadAttachments: () =>
+          db.attachmentDao.listOf(FollowupAttachmentOwner(followupId)),
+      deleteDatabaseGraph: () => db.followupDao.deleteFollowup(followupId),
+    );
+
+    expect(report.missingPaths, [missingPath]);
+    expect(report.failedPaths, [failedPath]);
+    expect(report.hasFailures, isTrue);
+  });
+
+  test('retryOrphanCleanup 只删除磁盘存在但数据库未引用的文件', () async {
+    const referencedPath = 'attachments/2026/08/referenced.pdf';
+    const orphanPath = 'attachments/2026/08/orphan.pdf';
+    const failedOrphanPath = 'attachments/2026/08/failed-orphan.pdf';
+    await db.attachmentDao.insertAttachment(
+      owner: FollowupAttachmentOwner(followupId),
+      relativePath: referencedPath,
+      originalName: 'referenced.pdf',
+      mimeType: 'application/pdf',
+      sizeBytes: 1,
+    );
+    fileStore.storedPaths = {referencedPath, orphanPath, failedOrphanPath};
+    fileStore.deleteResults[failedOrphanPath] =
+        AttachmentFileDeleteResult.failed;
+
+    final report = await service.retryOrphanCleanup();
+
+    expect(fileStore.deletedPaths, [failedOrphanPath, orphanPath]);
+    expect(report.deletedPaths, [orphanPath]);
+    expect(report.failedPaths, [failedOrphanPath]);
+  });
+
   test('open 在记录不存在时不访问文件系统和平台适配器', () async {
     expect(await service.open(999), AttachmentOpenResult.recordNotFound);
     expect(fileStore.existsPaths, isEmpty);
@@ -173,6 +273,9 @@ class _FakeAttachmentFileStore implements AttachmentFileStore {
   final storeCalls = <_StoreCall>[];
   final existsPaths = <String>[];
   final deletedPaths = <String>[];
+  Set<String> storedPaths = {};
+  final deleteResults = <String, AttachmentFileDeleteResult>{};
+  Future<AttachmentFileDeleteResult> Function(String path)? onDelete;
   bool fileExists = true;
   AttachmentFileDeleteResult deleteResult = AttachmentFileDeleteResult.deleted;
 
@@ -197,8 +300,13 @@ class _FakeAttachmentFileStore implements AttachmentFileStore {
   @override
   Future<AttachmentFileDeleteResult> delete(String relativePath) async {
     deletedPaths.add(relativePath);
-    return deleteResult;
+    final callback = onDelete;
+    if (callback != null) return callback(relativePath);
+    return deleteResults[relativePath] ?? deleteResult;
   }
+
+  @override
+  Future<Set<String>> listStoredPaths() async => storedPaths;
 
   @override
   Future<String> absolutePath(String relativePath) async => absolute;

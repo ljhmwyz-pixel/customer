@@ -95,4 +95,7 @@ class SampleDao extends DatabaseAccessor<AppDatabase> with _$SampleDaoMixin {
       ),
     );
   }
+
+  Future<int> deleteSample(int id) =>
+      (delete(samples)..where((t) => t.id.equals(id))).go();
 }

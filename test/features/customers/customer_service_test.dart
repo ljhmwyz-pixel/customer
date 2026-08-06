@@ -1,8 +1,10 @@
 import 'package:customer/data/database.dart';
+import 'package:customer/data/daos/attachment_dao.dart';
 import 'package:customer/features/customers/customer_providers.dart';
 import 'package:customer/features/opportunities/supplier_substitution.dart';
 import 'package:customer/models/enums.dart';
 import 'package:customer/services/reminder_scheduler.dart';
+import 'package:customer/services/attachment_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../data/helpers.dart';
@@ -51,12 +53,18 @@ FollowupDraft _followupDraft({
 void main() {
   late AppDatabase db;
   late _FakeReminderScheduler scheduler;
+  late _RecordingAttachmentCleaner attachmentCleaner;
   late CustomerService service;
 
   setUp(() async {
     db = await openTestDb();
     scheduler = _FakeReminderScheduler();
-    service = CustomerService(db, scheduler);
+    attachmentCleaner = _RecordingAttachmentCleaner();
+    service = CustomerService(
+      db,
+      scheduler,
+      attachmentCleaner: attachmentCleaner,
+    );
   });
 
   tearDown(() => db.close());
@@ -710,7 +718,169 @@ void main() {
       expect(await db.customerDao.findById(customerId), isNotNull);
       expect(await db.planDao.listOf(customerId), hasLength(1));
     });
+
+    test('提交客户树删除后清理六类业务附件', () async {
+      final customerId = await seedCustomer(db);
+      final opportunityId = await _seedOpportunity(
+        db,
+        customerId,
+        name: '完整附件树',
+      );
+      final followupId = await db.followupDao.insertAndTouchCustomer(
+        customerId: customerId,
+        opportunityId: opportunityId,
+        occurredAt: DateTime.utc(2026, 8, 6),
+        method: FollowMethod.phone,
+        content: '跟进',
+      );
+      final orderId = await db.orderDao.insertOrder(
+        customerId: customerId,
+        opportunityId: opportunityId,
+        orderNo: 'TREE-ORDER',
+        orderedAt: DateTime.utc(2026, 8, 6),
+        amountCents: 100,
+      );
+      final quoteId = await db.quoteDao.insertVersion(
+        opportunityId: opportunityId,
+        quoteNo: 'TREE-QUOTE',
+        quantity: 1,
+        quotedAt: DateTime.utc(2026, 8, 6),
+      );
+      final sampleId = await db.sampleDao.insertSample(
+        opportunityId: opportunityId,
+        quantity: 1,
+      );
+      final registrationId = await db.registrationDao.insertRegistration(
+        opportunityId: opportunityId,
+      );
+      final tenderId = await db.tenderDao.insertTender(
+        opportunityId: opportunityId,
+      );
+      final owners = <AttachmentOwner>[
+        FollowupAttachmentOwner(followupId),
+        OrderAttachmentOwner(orderId),
+        QuoteAttachmentOwner(quoteId),
+        SampleAttachmentOwner(sampleId),
+        RegistrationAttachmentOwner(registrationId),
+        TenderAttachmentOwner(tenderId),
+      ];
+      for (var index = 0; index < owners.length; index++) {
+        await db.attachmentDao.insertAttachment(
+          owner: owners[index],
+          relativePath: 'attachments/2026/08/tree-$index.bin',
+          originalName: 'tree-$index.bin',
+          mimeType: 'application/octet-stream',
+          sizeBytes: 1,
+        );
+      }
+      attachmentCleaner.afterDatabaseDelete = () async {
+        expect(await db.customerDao.findById(customerId), isNull);
+        expect(await db.attachmentDao.countAll(), 0);
+      };
+
+      await service.deleteCustomer(customerId);
+
+      expect(attachmentCleaner.databaseCommitted, isTrue);
+      expect(attachmentCleaner.loadedPaths, [
+        for (var index = 0; index < owners.length; index++)
+          'attachments/2026/08/tree-$index.bin',
+      ]);
+    });
+
+    test('客户数据库删除失败时保留数据且不进入文件清理', () async {
+      final customerId = await seedCustomer(db);
+      final opportunityId = await _seedOpportunity(
+        db,
+        customerId,
+        name: '删除失败项目',
+      );
+      final orderId = await db.orderDao.insertOrder(
+        customerId: customerId,
+        opportunityId: opportunityId,
+        orderNo: 'FAIL-DELETE',
+        orderedAt: DateTime.utc(2026, 8, 6),
+        amountCents: 100,
+      );
+      await db.attachmentDao.insertAttachment(
+        owner: OrderAttachmentOwner(orderId),
+        relativePath: 'attachments/2026/08/keep.pdf',
+        originalName: 'keep.pdf',
+        mimeType: 'application/pdf',
+        sizeBytes: 1,
+      );
+      await db.customStatement('''
+        CREATE TRIGGER fail_customer_delete
+        BEFORE DELETE ON customers
+        BEGIN
+          SELECT RAISE(ABORT, 'forced customer delete failure');
+        END
+      ''');
+
+      await expectLater(service.deleteCustomer(customerId), throwsA(anything));
+
+      expect(await db.customerDao.findById(customerId), isNotNull);
+      expect(await db.attachmentDao.countAll(), 1);
+      expect(attachmentCleaner.databaseCommitted, isFalse);
+    });
   });
+
+  test('删除跟进记录时按正确归属清理附件', () async {
+    final customerId = await seedCustomer(db);
+    final otherCustomerId = await seedCustomer(
+      db,
+      name: '其他客户',
+      phone: '13900000000',
+    );
+    final opportunityId = await _seedOpportunity(db, customerId, name: '项目 A');
+    final followupId = await db.followupDao.insertAndTouchCustomer(
+      customerId: customerId,
+      opportunityId: opportunityId,
+      occurredAt: DateTime.utc(2026, 8, 6),
+      method: FollowMethod.phone,
+      content: '待删除跟进',
+    );
+    await db.attachmentDao.insertAttachment(
+      owner: FollowupAttachmentOwner(followupId),
+      relativePath: 'attachments/2026/08/followup.pdf',
+      originalName: 'followup.pdf',
+      mimeType: 'application/pdf',
+      sizeBytes: 1,
+    );
+
+    await expectLater(
+      service.deleteFollowup(otherCustomerId, followupId),
+      throwsA(isA<CustomerValidationException>()),
+    );
+    final report = await service.deleteFollowup(customerId, followupId);
+
+    expect(report.hasFailures, isFalse);
+    expect(await db.followupDao.findById(followupId), isNull);
+    expect(attachmentCleaner.loadedPaths, ['attachments/2026/08/followup.pdf']);
+  });
+}
+
+class _RecordingAttachmentCleaner implements AttachmentGraphCleaner {
+  final loadedPaths = <String>[];
+  Future<void> Function()? afterDatabaseDelete;
+  bool databaseCommitted = false;
+
+  @override
+  Future<AttachmentCleanupReport> deleteGraph({
+    required Future<Iterable<AttachmentRow>> Function() loadAttachments,
+    required Future<void> Function() deleteDatabaseGraph,
+  }) async {
+    loadedPaths.addAll(
+      (await loadAttachments()).map((row) => row.relativePath),
+    );
+    await deleteDatabaseGraph();
+    databaseCommitted = true;
+    await afterDatabaseDelete?.call();
+    return const AttachmentCleanupReport();
+  }
+
+  @override
+  Future<AttachmentCleanupReport> retryOrphanCleanup() async =>
+      const AttachmentCleanupReport();
 }
 
 class _FakeReminderScheduler implements ReminderScheduler {

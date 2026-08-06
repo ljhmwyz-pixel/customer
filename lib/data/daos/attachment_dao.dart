@@ -118,6 +118,66 @@ class AttachmentDao extends DatabaseAccessor<AppDatabase>
   Future<List<AttachmentRow>> listAll() =>
       (select(attachments)..orderBy([(t) => OrderingTerm.asc(t.id)])).get();
 
+  Future<List<AttachmentRow>> listOfCustomer(int customerId) => customSelect(
+    '''
+      SELECT attachment.*
+      FROM attachments attachment
+      WHERE attachment.followup_id IN (
+        SELECT id FROM followups WHERE customer_id = ?
+      ) OR attachment.order_id IN (
+        SELECT id FROM orders WHERE customer_id = ?
+      ) OR attachment.quote_id IN (
+        SELECT quote.id
+        FROM quotes quote
+        JOIN opportunities opportunity ON opportunity.id = quote.opportunity_id
+        WHERE opportunity.customer_id = ?
+      ) OR attachment.sample_id IN (
+        SELECT sample.id
+        FROM samples sample
+        JOIN opportunities opportunity ON opportunity.id = sample.opportunity_id
+        WHERE opportunity.customer_id = ?
+      ) OR attachment.registration_id IN (
+        SELECT registration.id
+        FROM registrations registration
+        JOIN opportunities opportunity
+          ON opportunity.id = registration.opportunity_id
+        WHERE opportunity.customer_id = ?
+      ) OR attachment.tender_id IN (
+        SELECT tender.id
+        FROM tenders tender
+        JOIN opportunities opportunity ON opportunity.id = tender.opportunity_id
+        WHERE opportunity.customer_id = ?
+      )
+      ORDER BY attachment.id
+    ''',
+    variables: List.generate(6, (_) => Variable.withInt(customerId)),
+    readsFrom: {attachments},
+  ).map((row) => attachments.map(row.data)).get();
+
+  Future<List<AttachmentRow>> listOfOpportunity(int opportunityId) =>
+      customSelect(
+        '''
+          SELECT attachment.*
+          FROM attachments attachment
+          WHERE attachment.followup_id IN (
+            SELECT id FROM followups WHERE opportunity_id = ?
+          ) OR attachment.order_id IN (
+            SELECT id FROM orders WHERE opportunity_id = ?
+          ) OR attachment.quote_id IN (
+            SELECT id FROM quotes WHERE opportunity_id = ?
+          ) OR attachment.sample_id IN (
+            SELECT id FROM samples WHERE opportunity_id = ?
+          ) OR attachment.registration_id IN (
+            SELECT id FROM registrations WHERE opportunity_id = ?
+          ) OR attachment.tender_id IN (
+            SELECT id FROM tenders WHERE opportunity_id = ?
+          )
+          ORDER BY attachment.id
+        ''',
+        variables: List.generate(6, (_) => Variable.withInt(opportunityId)),
+        readsFrom: {attachments},
+      ).map((row) => attachments.map(row.data)).get();
+
   Future<int> countAll() async {
     final q = selectOnly(attachments)..addColumns([attachments.id.count()]);
     final row = await q.getSingle();

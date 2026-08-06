@@ -1,11 +1,16 @@
+// ignore_for_file: prefer_initializing_formals
+
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/daos/customer_dao.dart';
+import '../../data/daos/attachment_dao.dart';
 import '../../data/daos/plan_dao.dart';
 import '../../data/database.dart';
 import '../../data/database_provider.dart';
 import '../../models/enums.dart';
+import '../../services/attachment_service.dart';
+import '../../services/attachment_service_providers.dart';
 import '../../services/reminder_scheduler.dart';
 import '../../services/service_providers.dart';
 import '../opportunities/supplier_substitution.dart';
@@ -311,10 +316,16 @@ class DashboardData {
 }
 
 class CustomerService {
-  CustomerService(this._db, this._scheduler);
+  CustomerService(
+    this._db,
+    this._scheduler, {
+    AttachmentGraphCleaner attachmentCleaner =
+        const PassthroughAttachmentGraphCleaner(),
+  }) : _attachmentCleaner = attachmentCleaner;
 
   final AppDatabase _db;
   final ReminderScheduler _scheduler;
+  final AttachmentGraphCleaner _attachmentCleaner;
 
   Future<int> createCustomer(CustomerDraft draft) async {
     final normalized = _normalizeCustomer(draft);
@@ -388,6 +399,24 @@ class CustomerService {
 
   Future<void> deleteContact(int id) async {
     await _db.contactDao.deleteContact(id);
+  }
+
+  Future<AttachmentCleanupReport> deleteFollowup(
+    int customerId,
+    int followupId,
+  ) async {
+    await _requireCustomer(customerId);
+    final followup = await _db.followupDao.findById(followupId);
+    if (followup == null || followup.customerId != customerId) {
+      throw const CustomerValidationException('跟进记录不存在或不属于当前客户');
+    }
+    return _attachmentCleaner.deleteGraph(
+      loadAttachments: () =>
+          _db.attachmentDao.listOf(FollowupAttachmentOwner(followupId)),
+      deleteDatabaseGraph: () => _db.transaction(() async {
+        await _db.followupDao.deleteFollowup(followupId);
+      }),
+    );
   }
 
   Future<WriteResult<int>> createPlan(int customerId, PlanDraft draft) async {
@@ -544,13 +573,18 @@ class CustomerService {
     }
   }
 
-  Future<void> deleteCustomer(int customerId) async {
+  Future<AttachmentCleanupReport> deleteCustomer(int customerId) async {
     await _requireCustomer(customerId);
     final plans = await _db.planDao.listOpenOf(customerId);
     for (final plan in plans) {
       await _scheduler.cancelForPlan(plan.id);
     }
-    await _db.customerDao.deleteCustomer(customerId);
+    return _attachmentCleaner.deleteGraph(
+      loadAttachments: () => _db.attachmentDao.listOfCustomer(customerId),
+      deleteDatabaseGraph: () => _db.transaction(() async {
+        await _db.customerDao.deleteCustomer(customerId);
+      }),
+    );
   }
 
   Future<String?> _schedule(int planId, String customerName) async {
@@ -641,6 +675,7 @@ final customerServiceProvider = Provider<CustomerService>(
   (ref) => CustomerService(
     ref.watch(databaseProvider),
     ref.watch(reminderSchedulerProvider),
+    attachmentCleaner: ref.watch(attachmentServiceProvider),
   ),
 );
 

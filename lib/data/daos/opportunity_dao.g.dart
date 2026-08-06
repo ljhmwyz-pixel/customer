@@ -9,6 +9,10 @@ mixin _$OpportunityDaoMixin on DatabaseAccessor<AppDatabase> {
   $FollowupsTable get followups => attachedDatabase.followups;
   $FollowPlansTable get followPlans => attachedDatabase.followPlans;
   $OrdersTable get orders => attachedDatabase.orders;
+  $QuotesTable get quotes => attachedDatabase.quotes;
+  $SamplesTable get samples => attachedDatabase.samples;
+  $RegistrationsTable get registrations => attachedDatabase.registrations;
+  $TendersTable get tenders => attachedDatabase.tenders;
   OpportunityDaoManager get managers => OpportunityDaoManager(this);
 }
 
@@ -25,4 +29,12 @@ class OpportunityDaoManager {
       $$FollowPlansTableTableManager(_db.attachedDatabase, _db.followPlans);
   $$OrdersTableTableManager get orders =>
       $$OrdersTableTableManager(_db.attachedDatabase, _db.orders);
+  $$QuotesTableTableManager get quotes =>
+      $$QuotesTableTableManager(_db.attachedDatabase, _db.quotes);
+  $$SamplesTableTableManager get samples =>
+      $$SamplesTableTableManager(_db.attachedDatabase, _db.samples);
+  $$RegistrationsTableTableManager get registrations =>
+      $$RegistrationsTableTableManager(_db.attachedDatabase, _db.registrations);
+  $$TendersTableTableManager get tenders =>
+      $$TendersTableTableManager(_db.attachedDatabase, _db.tenders);
 }

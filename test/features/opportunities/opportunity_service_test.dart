@@ -160,4 +160,46 @@ void main() {
       throwsA(isA<OpportunityValidationException>()),
     );
   });
+
+  test('报价、样品、注册或招标任一存在时均拒绝删除项目', () async {
+    final customerId = await seedCustomer(db);
+    final seedLinkedRecord = <Future<void> Function(int)>[
+      (opportunityId) async {
+        await db.quoteDao.insertVersion(
+          opportunityId: opportunityId,
+          quoteNo: 'GUARD-Q-$opportunityId',
+          quantity: 1,
+          quotedAt: DateTime.utc(2026, 8, 6),
+        );
+      },
+      (opportunityId) async {
+        await db.sampleDao.insertSample(
+          opportunityId: opportunityId,
+          quantity: 1,
+        );
+      },
+      (opportunityId) async {
+        await db.registrationDao.insertRegistration(
+          opportunityId: opportunityId,
+        );
+      },
+      (opportunityId) async {
+        await db.tenderDao.insertTender(opportunityId: opportunityId);
+      },
+    ];
+
+    for (var index = 0; index < seedLinkedRecord.length; index++) {
+      final opportunityId = await service.createOpportunity(
+        customerId,
+        OpportunityDraft(name: '守卫项目 $index'),
+      );
+      await seedLinkedRecord[index](opportunityId);
+
+      await expectLater(
+        service.deleteOpportunity(customerId, opportunityId),
+        throwsA(isA<OpportunityValidationException>()),
+      );
+      expect(await db.opportunityDao.findById(opportunityId), isNotNull);
+    }
+  });
 }

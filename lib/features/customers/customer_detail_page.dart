@@ -352,8 +352,13 @@ class CustomerDetailPage extends ConsumerWidget {
     );
     if (!confirmed || !context.mounted) return;
     try {
-      await ref.read(customerServiceProvider).deleteCustomer(customerId);
+      final report = await ref
+          .read(customerServiceProvider)
+          .deleteCustomer(customerId);
       ref.read(customerRevisionProvider.notifier).refresh();
+      if (report.hasFailures && context.mounted) {
+        _showMessage(context, '客户已删除，但附件清理失败，下次启动会自动重试');
+      }
       if (context.mounted) context.go('/customers');
     } catch (_) {
       if (context.mounted) _showMessage(context, '删除失败，请重试');
@@ -439,8 +444,13 @@ class CustomerDetailPage extends ConsumerWidget {
     );
     if (!confirmed || !context.mounted) return;
     try {
-      await ref.read(orderServiceProvider).deleteOrder(customerId, order.id);
+      final report = await ref
+          .read(orderServiceProvider)
+          .deleteOrder(customerId, order.id);
       ref.read(customerRevisionProvider.notifier).refresh();
+      if (report.hasFailures && context.mounted) {
+        _showMessage(context, '订单已删除，但附件清理失败，下次启动会自动重试');
+      }
     } on OrderValidationException catch (error) {
       if (context.mounted) _showMessage(context, error.message);
     } catch (_) {

@@ -1,9 +1,14 @@
+// ignore_for_file: prefer_initializing_formals
+
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/database.dart';
+import '../../data/daos/attachment_dao.dart';
 import '../../data/database_provider.dart';
 import '../../models/enums.dart';
+import '../../services/attachment_service.dart';
+import '../../services/attachment_service_providers.dart';
 
 class OrderDraft {
   const OrderDraft({
@@ -47,9 +52,14 @@ class OrderValidationException implements Exception {
 }
 
 class OrderService {
-  OrderService(this._db);
+  OrderService(
+    this._db, {
+    AttachmentGraphCleaner attachmentCleaner =
+        const PassthroughAttachmentGraphCleaner(),
+  }) : _attachmentCleaner = attachmentCleaner;
 
   final AppDatabase _db;
+  final AttachmentGraphCleaner _attachmentCleaner;
 
   Future<String> nextOrderNo({DateTime? at}) =>
       _db.orderDao.nextOrderNo(at: at);
@@ -138,9 +148,18 @@ class OrderService {
   Future<void> cancelOrder(int customerId, int orderId) =>
       transitionOrder(customerId, orderId, OrderStatus.cancelled);
 
-  Future<void> deleteOrder(int customerId, int orderId) async {
+  Future<AttachmentCleanupReport> deleteOrder(
+    int customerId,
+    int orderId,
+  ) async {
     final order = await _requireOrder(customerId, orderId);
-    await _db.orderDao.deleteOrder(order.id);
+    return _attachmentCleaner.deleteGraph(
+      loadAttachments: () =>
+          _db.attachmentDao.listOf(OrderAttachmentOwner(order.id)),
+      deleteDatabaseGraph: () => _db.transaction(() async {
+        await _db.orderDao.deleteOrder(order.id);
+      }),
+    );
   }
 
   Future<CustomerRow> _requireCustomer(int customerId) async {
@@ -228,5 +247,8 @@ class OrderService {
 }
 
 final orderServiceProvider = Provider<OrderService>(
-  (ref) => OrderService(ref.watch(databaseProvider)),
+  (ref) => OrderService(
+    ref.watch(databaseProvider),
+    attachmentCleaner: ref.watch(attachmentServiceProvider),
+  ),
 );

@@ -62,6 +62,8 @@ abstract interface class AttachmentFileStore {
 
   Future<AttachmentFileDeleteResult> delete(String relativePath);
 
+  Future<Set<String>> listStoredPaths();
+
   Future<String> absolutePath(String relativePath);
 }
 
@@ -141,6 +143,24 @@ class AttachmentFileService implements AttachmentFileStore {
     } on FileSystemException {
       return AttachmentFileDeleteResult.failed;
     }
+  }
+
+  @override
+  Future<Set<String>> listStoredPaths() async {
+    final appDirectory = await _loadAppDirectory();
+    final root = Directory(p.join(appDirectory.path, 'attachments'));
+    if (!await root.exists()) return {};
+
+    final paths = <String>{};
+    await for (final entity in root.list(recursive: true, followLinks: false)) {
+      if (entity is! File) continue;
+      final relativePath = p.join(
+        'attachments',
+        p.relative(entity.path, from: root.path),
+      );
+      paths.add(AttachmentPath.normalizeRelative(relativePath));
+    }
+    return paths;
   }
 
   @override

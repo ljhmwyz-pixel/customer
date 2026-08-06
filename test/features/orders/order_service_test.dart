@@ -1,13 +1,46 @@
 import 'package:customer/data/database.dart';
+import 'package:customer/data/daos/attachment_dao.dart';
 import 'package:customer/features/orders/order_form_page.dart';
 import 'package:customer/features/orders/order_providers.dart';
 import 'package:customer/models/enums.dart';
+import 'package:customer/services/attachment_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../data/helpers.dart';
 
 void main() {
   group('OrderService', () {
+    test('删除订单时按订单归属清理附件', () async {
+      final db = await openTestDb();
+      addTearDown(db.close);
+      final customerId = await seedCustomer(db);
+      final opportunityId = await db.opportunityDao.insertOpportunity(
+        customerId: customerId,
+        name: '附件项目',
+      );
+      final orderId = await db.orderDao.insertOrder(
+        customerId: customerId,
+        opportunityId: opportunityId,
+        orderNo: 'ATTACHMENT-ORDER',
+        orderedAt: testDate,
+        amountCents: 100,
+      );
+      await db.attachmentDao.insertAttachment(
+        owner: OrderAttachmentOwner(orderId),
+        relativePath: 'attachments/2026/08/order.pdf',
+        originalName: 'order.pdf',
+        mimeType: 'application/pdf',
+        sizeBytes: 1,
+      );
+      final cleaner = _RecordingAttachmentCleaner();
+      final service = OrderService(db, attachmentCleaner: cleaner);
+
+      await service.deleteOrder(customerId, orderId);
+
+      expect(await db.orderDao.findById(orderId), isNull);
+      expect(cleaner.loadedPaths, ['attachments/2026/08/order.pdf']);
+    });
+
     test('创建、读取、编辑和删除订单，并规范化文本', () async {
       final db = await openTestDb();
       addTearDown(db.close);
@@ -541,6 +574,26 @@ void main() {
       );
     });
   });
+}
+
+class _RecordingAttachmentCleaner implements AttachmentGraphCleaner {
+  final loadedPaths = <String>[];
+
+  @override
+  Future<AttachmentCleanupReport> deleteGraph({
+    required Future<Iterable<AttachmentRow>> Function() loadAttachments,
+    required Future<void> Function() deleteDatabaseGraph,
+  }) async {
+    loadedPaths.addAll(
+      (await loadAttachments()).map((row) => row.relativePath),
+    );
+    await deleteDatabaseGraph();
+    return const AttachmentCleanupReport();
+  }
+
+  @override
+  Future<AttachmentCleanupReport> retryOrphanCleanup() async =>
+      const AttachmentCleanupReport();
 }
 
 final testDate = DateTime(2026, 8, 5);

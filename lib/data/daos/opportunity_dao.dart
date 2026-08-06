@@ -7,12 +7,26 @@ import '../tables/follow_plans.dart';
 import '../tables/followups.dart';
 import '../tables/opportunities.dart';
 import '../tables/orders.dart';
+import '../tables/quotes.dart';
+import '../tables/registrations.dart';
+import '../tables/samples.dart';
+import '../tables/tenders.dart';
 
 part 'opportunity_dao.g.dart';
 
 /// 客户项目的数据访问层。业务模块通过项目关联报价、样品、跟进与订单。
 @DriftAccessor(
-  tables: [Opportunities, Customers, Followups, FollowPlans, Orders],
+  tables: [
+    Opportunities,
+    Customers,
+    Followups,
+    FollowPlans,
+    Orders,
+    Quotes,
+    Samples,
+    Registrations,
+    Tenders,
+  ],
 )
 class OpportunityDao extends DatabaseAccessor<AppDatabase>
     with _$OpportunityDaoMixin {
@@ -305,6 +319,14 @@ class OpportunityDao extends DatabaseAccessor<AppDatabase>
           SELECT 1 FROM follow_plans WHERE opportunity_id = ?
           UNION ALL
           SELECT 1 FROM orders WHERE opportunity_id = ?
+          UNION ALL
+          SELECT 1 FROM quotes WHERE opportunity_id = ?
+          UNION ALL
+          SELECT 1 FROM samples WHERE opportunity_id = ?
+          UNION ALL
+          SELECT 1 FROM registrations WHERE opportunity_id = ?
+          UNION ALL
+          SELECT 1 FROM tenders WHERE opportunity_id = ?
           LIMIT 1
         ) AS has_records
       ''',
@@ -312,8 +334,20 @@ class OpportunityDao extends DatabaseAccessor<AppDatabase>
         Variable.withInt(id),
         Variable.withInt(id),
         Variable.withInt(id),
+        Variable.withInt(id),
+        Variable.withInt(id),
+        Variable.withInt(id),
+        Variable.withInt(id),
       ],
-      readsFrom: {followups, followPlans, orders},
+      readsFrom: {
+        followups,
+        followPlans,
+        orders,
+        quotes,
+        samples,
+        registrations,
+        tenders,
+      },
     ).getSingle();
     return row.read<int>('has_records') == 1;
   }

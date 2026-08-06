@@ -1,7 +1,9 @@
 import 'package:customer/features/business/business_providers.dart';
+import 'package:customer/data/daos/attachment_dao.dart';
 import 'package:customer/data/database.dart';
 import 'package:customer/features/customers/customer_providers.dart';
 import 'package:customer/models/enums.dart';
+import 'package:customer/services/attachment_service.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 
@@ -9,10 +11,71 @@ import '../../data/helpers.dart';
 
 void main() {
   late AppDatabase db;
+  late _RecordingAttachmentCleaner attachmentCleaner;
   late BusinessService service;
   setUp(() async {
     db = await openTestDb();
-    service = BusinessService(db);
+    attachmentCleaner = _RecordingAttachmentCleaner();
+    service = BusinessService(db, attachmentCleaner: attachmentCleaner);
+  });
+
+  test('报价、样品、注册和招标删除使用各自附件归属', () async {
+    final customerId = await seedCustomer(db);
+    final opportunityId = await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '删除业务记录',
+    );
+    final quoteId = await service.createQuoteVersion(
+      customerId: customerId,
+      opportunityId: opportunityId,
+      quoteNo: 'DELETE-Q',
+      quantity: 1,
+      quotedAt: DateTime.utc(2026, 8, 6),
+    );
+    final sampleId = await service.createSample(
+      customerId: customerId,
+      opportunityId: opportunityId,
+      quantity: 1,
+    );
+    final registrationId = await service.createRegistration(
+      customerId: customerId,
+      opportunityId: opportunityId,
+    );
+    final tenderId = await service.createTender(
+      customerId: customerId,
+      opportunityId: opportunityId,
+    );
+    final owners = <AttachmentOwner>[
+      QuoteAttachmentOwner(quoteId),
+      SampleAttachmentOwner(sampleId),
+      RegistrationAttachmentOwner(registrationId),
+      TenderAttachmentOwner(tenderId),
+    ];
+    for (var index = 0; index < owners.length; index++) {
+      await db.attachmentDao.insertAttachment(
+        owner: owners[index],
+        relativePath: 'attachments/2026/08/business-$index.pdf',
+        originalName: 'business-$index.pdf',
+        mimeType: 'application/pdf',
+        sizeBytes: 1,
+      );
+    }
+
+    await service.deleteQuote(customerId, quoteId);
+    await service.deleteSample(customerId, sampleId);
+    await service.deleteRegistration(customerId, registrationId);
+    await service.deleteTender(customerId, tenderId);
+
+    expect(await db.quoteDao.findById(quoteId), isNull);
+    expect(await db.sampleDao.findById(sampleId), isNull);
+    expect(await db.registrationDao.findById(registrationId), isNull);
+    expect(await db.tenderDao.findById(tenderId), isNull);
+    expect(attachmentCleaner.loadedPaths, [
+      'attachments/2026/08/business-0.pdf',
+      'attachments/2026/08/business-1.pdf',
+      'attachments/2026/08/business-2.pdf',
+      'attachments/2026/08/business-3.pdf',
+    ]);
   });
   tearDown(() async => db.close());
 
@@ -263,4 +326,24 @@ void main() {
       );
     },
   );
+}
+
+class _RecordingAttachmentCleaner implements AttachmentGraphCleaner {
+  final loadedPaths = <String>[];
+
+  @override
+  Future<AttachmentCleanupReport> deleteGraph({
+    required Future<Iterable<AttachmentRow>> Function() loadAttachments,
+    required Future<void> Function() deleteDatabaseGraph,
+  }) async {
+    loadedPaths.addAll(
+      (await loadAttachments()).map((row) => row.relativePath),
+    );
+    await deleteDatabaseGraph();
+    return const AttachmentCleanupReport();
+  }
+
+  @override
+  Future<AttachmentCleanupReport> retryOrphanCleanup() async =>
+      const AttachmentCleanupReport();
 }

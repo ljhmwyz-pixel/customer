@@ -121,6 +121,9 @@ class RegistrationDao extends DatabaseAccessor<AppDatabase>
     );
   }
 
+  Future<int> deleteRegistration(int id) =>
+      (delete(registrations)..where((t) => t.id.equals(id))).go();
+
   Future<List<RegistrationRow>> listDue({
     required DateTime from,
     required DateTime to,

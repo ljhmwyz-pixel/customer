@@ -1042,6 +1042,9 @@ class _FakeAttachmentFileStore implements AttachmentFileStore {
       AttachmentFileDeleteResult.deleted;
 
   @override
+  Future<Set<String>> listStoredPaths() async => {};
+
+  @override
   Future<StoredAttachmentFile> store({
     required File source,
     required String originalName,

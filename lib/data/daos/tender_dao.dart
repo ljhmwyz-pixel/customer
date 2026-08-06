@@ -134,6 +134,9 @@ class TenderDao extends DatabaseAccessor<AppDatabase> with _$TenderDaoMixin {
     );
   }
 
+  Future<int> deleteTender(int id) =>
+      (delete(tenders)..where((t) => t.id.equals(id))).go();
+
   Future<List<TenderRow>> listOpenDeadlines({
     required DateTime from,
     required DateTime to,

@@ -1,14 +1,24 @@
+// ignore_for_file: prefer_initializing_formals
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' show Value;
 
 import '../../data/database.dart';
+import '../../data/daos/attachment_dao.dart';
 import '../../data/database_provider.dart';
 import '../../models/enums.dart';
+import '../../services/attachment_service.dart';
+import '../../services/attachment_service_providers.dart';
 import '../customers/customer_providers.dart';
 
 class BusinessService {
-  BusinessService(this._db);
+  BusinessService(
+    this._db, {
+    AttachmentGraphCleaner attachmentCleaner =
+        const PassthroughAttachmentGraphCleaner(),
+  }) : _attachmentCleaner = attachmentCleaner;
   final AppDatabase _db;
+  final AttachmentGraphCleaner _attachmentCleaner;
 
   Future<int> createQuoteVersion({
     required int customerId,
@@ -363,6 +373,81 @@ class BusinessService {
     );
   }
 
+  Future<AttachmentCleanupReport> deleteQuote(
+    int customerId,
+    int quoteId,
+  ) async {
+    final quote = await _db.quoteDao.findById(quoteId);
+    if (quote == null) throw const CustomerValidationException('报价记录不存在');
+    await _requireRecordOwnership(customerId, quote.opportunityId);
+    return _deleteRecord(
+      owner: QuoteAttachmentOwner(quoteId),
+      deleteRecord: () => _db.quoteDao.deleteQuote(quoteId),
+    );
+  }
+
+  Future<AttachmentCleanupReport> deleteSample(
+    int customerId,
+    int sampleId,
+  ) async {
+    final sample = await _db.sampleDao.findById(sampleId);
+    if (sample == null) throw const CustomerValidationException('样品记录不存在');
+    await _requireRecordOwnership(customerId, sample.opportunityId);
+    return _deleteRecord(
+      owner: SampleAttachmentOwner(sampleId),
+      deleteRecord: () => _db.sampleDao.deleteSample(sampleId),
+    );
+  }
+
+  Future<AttachmentCleanupReport> deleteRegistration(
+    int customerId,
+    int registrationId,
+  ) async {
+    final registration = await _db.registrationDao.findById(registrationId);
+    if (registration == null) {
+      throw const CustomerValidationException('注册记录不存在');
+    }
+    await _requireRecordOwnership(customerId, registration.opportunityId);
+    return _deleteRecord(
+      owner: RegistrationAttachmentOwner(registrationId),
+      deleteRecord: () =>
+          _db.registrationDao.deleteRegistration(registrationId),
+    );
+  }
+
+  Future<AttachmentCleanupReport> deleteTender(
+    int customerId,
+    int tenderId,
+  ) async {
+    final tender = await _db.tenderDao.findById(tenderId);
+    if (tender == null) throw const CustomerValidationException('招标记录不存在');
+    await _requireRecordOwnership(customerId, tender.opportunityId);
+    return _deleteRecord(
+      owner: TenderAttachmentOwner(tenderId),
+      deleteRecord: () => _db.tenderDao.deleteTender(tenderId),
+    );
+  }
+
+  Future<AttachmentCleanupReport> _deleteRecord({
+    required AttachmentOwner owner,
+    required Future<int> Function() deleteRecord,
+  }) => _attachmentCleaner.deleteGraph(
+    loadAttachments: () => _db.attachmentDao.listOf(owner),
+    deleteDatabaseGraph: () => _db.transaction(() async {
+      await deleteRecord();
+    }),
+  );
+
+  Future<void> _requireRecordOwnership(
+    int customerId,
+    int opportunityId,
+  ) async {
+    final opportunity = await _db.opportunityDao.findById(opportunityId);
+    if (opportunity == null || opportunity.customerId != customerId) {
+      throw const CustomerValidationException('记录不存在或不属于当前客户');
+    }
+  }
+
   void _validateRegistration({
     required DateTime? submittedAt,
     required DateTime? expectedCompletedAt,
@@ -455,5 +540,8 @@ class BusinessService {
 }
 
 final businessServiceProvider = Provider<BusinessService>(
-  (ref) => BusinessService(ref.watch(databaseProvider)),
+  (ref) => BusinessService(
+    ref.watch(databaseProvider),
+    attachmentCleaner: ref.watch(attachmentServiceProvider),
+  ),
 );

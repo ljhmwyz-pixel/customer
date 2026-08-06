@@ -9,6 +9,9 @@ part 'quote_dao.g.dart';
 class QuoteDao extends DatabaseAccessor<AppDatabase> with _$QuoteDaoMixin {
   QuoteDao(super.db);
 
+  Future<QuoteRow?> findById(int id) =>
+      (select(quotes)..where((t) => t.id.equals(id))).getSingleOrNull();
+
   Future<int> nextVersion(int opportunityId, String quoteNo) async {
     final max = quotes.version.max();
     final row =
@@ -85,4 +88,7 @@ class QuoteDao extends DatabaseAccessor<AppDatabase> with _$QuoteDaoMixin {
             .get();
     return rows.firstOrNull;
   }
+
+  Future<int> deleteQuote(int id) =>
+      (delete(quotes)..where((t) => t.id.equals(id))).go();
 }

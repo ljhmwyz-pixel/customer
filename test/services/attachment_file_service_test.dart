@@ -236,6 +236,30 @@ void main() {
       AttachmentFileDeleteResult.notFound,
     );
   });
+
+  test('枚举附件根目录下的全部文件并返回规范相对路径', () async {
+    final service = AttachmentFileService(
+      appDirectory: appDirectory,
+      clock: () => DateTime(2026, 8, 6),
+      idGenerator: () => 'listed',
+    );
+    final first = await service.store(
+      source: await source('first.txt', [1]),
+      originalName: 'first.txt',
+      mimeType: 'text/plain',
+    );
+    await Directory(
+      '${appDirectory.path}/attachments/empty',
+    ).create(recursive: true);
+    final nested = File('${appDirectory.path}/attachments/2025/12/manual.pdf');
+    await nested.parent.create(recursive: true);
+    await nested.writeAsBytes([2]);
+
+    expect(await service.listStoredPaths(), {
+      first.relativePath,
+      'attachments/2025/12/manual.pdf',
+    });
+  });
 }
 
 class _RecordingImageProcessor implements AttachmentImageProcessor {
