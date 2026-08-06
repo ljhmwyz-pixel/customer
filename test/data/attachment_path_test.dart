@@ -93,6 +93,32 @@ void main() {
       );
     });
 
+    for (final invalidPath in [
+      '',
+      'attachments',
+      'other/2026/08/a.jpg',
+      'attachments-other/2026/08/a.jpg',
+      '../outside.txt',
+      'attachments/../../outside.txt',
+    ]) {
+      test('拒绝不安全路径：${invalidPath.isEmpty ? '<empty>' : invalidPath}', () {
+        expect(
+          () => AttachmentPath.resolve(appDir: dirA, relativePath: invalidPath),
+          throwsArgumentError,
+        );
+      });
+    }
+
+    test('归一化后仍在附件根目录内', () {
+      expect(
+        AttachmentPath.resolve(
+          appDir: dirA,
+          relativePath: 'attachments/2026/../08/a.jpg',
+        ),
+        '$dirA/attachments/08/a.jpg',
+      );
+    });
+
     test('resolveDir 返回所在目录', () {
       expect(
         AttachmentPath.resolveDir(

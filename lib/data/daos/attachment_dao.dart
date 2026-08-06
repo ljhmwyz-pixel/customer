@@ -55,13 +55,7 @@ class AttachmentDao extends DatabaseAccessor<AppDatabase>
     required int sizeBytes,
     DateTime? now,
   }) {
-    if (relativePath.startsWith('/')) {
-      throw ArgumentError.value(
-        relativePath,
-        'relativePath',
-        '附件表只存相对路径，请用 AttachmentPath.relativeFor 生成',
-      );
-    }
+    final normalizedPath = AttachmentPath.normalizeRelative(relativePath);
 
     final ts = (now ?? DateTime.now()).toUtc().millisecondsSinceEpoch;
     final ownerFields = switch (owner) {
@@ -92,7 +86,7 @@ class AttachmentDao extends DatabaseAccessor<AppDatabase>
         tenderId: ownerFields is ({Value<int> tenderId})
             ? ownerFields.tenderId
             : const Value.absent(),
-        relativePath: relativePath,
+        relativePath: normalizedPath,
         originalName: originalName,
         mimeType: mimeType,
         sizeBytes: sizeBytes,

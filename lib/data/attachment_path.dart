@@ -36,16 +36,37 @@ abstract final class AttachmentPath {
     required String appDir,
     required String relativePath,
   }) {
-    if (p.isAbsolute(relativePath)) {
+    final normalized = normalizeRelative(relativePath);
+    // 用 posix 风格切分，因为库里存的一律是 `/` 分隔。
+    final segments = p.posix.split(normalized);
+    return p.joinAll([appDir, ...segments]);
+  }
+
+  /// 校验并归一化数据库中保存的附件相对路径。
+  ///
+  /// 只接受 `attachments/` 根目录下的文件，避免错误数据把文件操作引到
+  /// 应用私有附件目录之外。返回值始终使用 POSIX 分隔符。
+  static String normalizeRelative(String relativePath) {
+    if (relativePath.isEmpty ||
+        relativePath.contains(r'\') ||
+        p.posix.isAbsolute(relativePath) ||
+        p.isAbsolute(relativePath)) {
       throw ArgumentError.value(
         relativePath,
         'relativePath',
-        '附件路径必须是相对路径，绝对路径在应用重装后会失效',
+        '附件路径必须是 attachments/ 下的 POSIX 相对路径',
       );
     }
-    // 用 posix 风格切分，因为库里存的一律是 `/` 分隔。
-    final segments = p.posix.split(relativePath);
-    return p.joinAll([appDir, ...segments]);
+
+    final normalized = p.posix.normalize(relativePath);
+    if (normalized == rootDirName || !normalized.startsWith('$rootDirName/')) {
+      throw ArgumentError.value(
+        relativePath,
+        'relativePath',
+        '附件路径归一化后必须位于 $rootDirName/ 目录内',
+      );
+    }
+    return normalized;
   }
 
   /// 相对路径所在目录的绝对路径，写文件前需要先建它。
