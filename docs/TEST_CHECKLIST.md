@@ -104,3 +104,17 @@
 ### Target device boundary
 
 - [ ] Verify backup sharing and restore file selection through OnePlus 13 / ColorOS 15 providers.
+
+## Migration and Performance
+
+### Automated gate
+
+- [x] Fresh v8 schema, v1-to-v8 historical migration, v6-to-v7 attachment migration, and v7-to-v8 sample-data migration pass with foreign-key checks.
+- [x] Performance fixture covers 500 customers, 1500 projects, and 5000 follow-ups.
+- [x] In-memory core list, advanced filter, search, stale, and stage-count queries remain below 200 ms.
+- [x] File-backed 500-customer / 5000-follow-up urgency query remains below 200 ms.
+
+### Release preparation
+
+- [x] Release APK builds successfully after the final backup, migration, and performance changes.
+- [ ] Perform the same migration/upgrade flow on the target OnePlus 13 installation.

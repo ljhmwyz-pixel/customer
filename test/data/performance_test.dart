@@ -34,6 +34,7 @@ void main() {
       await db.followupDao.countAll(),
       customerCount * followupPerCustomer,
     );
+    expect(await db.opportunityDao.countAll(), customerCount * 3);
   });
 
   test('listByUrgency 耗时低于 200ms', () async {
@@ -287,8 +288,8 @@ Future<void> _seed(AppDatabase db, int customerCount, int perCustomer) async {
     }
   });
 
-  // 每个客户创建两个项目。非目标客户的主项目固定破坏一个条件，
-  // 次项目补足该条件但破坏另一个条件，以锁定“同一项目完整匹配”的语义。
+  // 每个客户创建三个项目。前两个用于组合筛选语义，第三个扩大到 PRD 要求的
+  // 1500 项目规模但不参与筛选命中。
   await db.batch((b) {
     for (var customerId = 1; customerId <= customerCount; customerId++) {
       final isExpected = expectedAdvancedFilterCustomerIds.contains(customerId);
@@ -344,6 +345,19 @@ Future<void> _seed(AppDatabase db, int customerCount, int perCustomer) async {
           expectedCloseAt: Value(
             DateTime(2026, 9, 15).toUtc().millisecondsSinceEpoch,
           ),
+          createdAt: baseMs,
+          updatedAt: baseMs,
+        ),
+      );
+      b.insert(
+        db.opportunities,
+        OpportunitiesCompanion.insert(
+          id: Value(1000 + customerId),
+          customerId: customerId,
+          name: '性能第三项目 $customerId',
+          productCategory: const Value('其他耗材'),
+          productModel: const Value('PERF-OTHER-3'),
+          status: Value(OpportunityStatus.active.dbValue),
           createdAt: baseMs,
           updatedAt: baseMs,
         ),
