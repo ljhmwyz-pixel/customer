@@ -8,6 +8,8 @@ import '../tables/follow_plans.dart';
 import '../tables/followups.dart';
 import '../tables/opportunities.dart';
 import '../tables/orders.dart';
+import '../tables/quotes.dart';
+import '../tables/samples.dart';
 import '../tables/tags.dart';
 
 part 'customer_dao.g.dart';
@@ -93,6 +95,9 @@ enum DashboardAnomalyKind {
   repurchaseDue,
 }
 
+/// 客户高级筛选中可组合的异常类型。
+enum CustomerAnomalyFilter { stalledQuote, stalledSample, longSilence }
+
 class DashboardAnomaly {
   const DashboardAnomaly({
     required this.customerId,
@@ -124,6 +129,8 @@ class DashboardAnomaly {
     Followups,
     Opportunities,
     Orders,
+    Quotes,
+    Samples,
   ],
 )
 class CustomerDao extends DatabaseAccessor<AppDatabase>
@@ -247,6 +254,9 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
     String? productModel,
     String? equipmentBrand,
     OpportunityStatus? opportunityStatus,
+    DateTime? expectedCloseFrom,
+    DateTime? expectedCloseTo,
+    Set<CustomerAnomalyFilter> anomalies = const {},
     int? limit,
   }) async {
     final nowMs = now.toUtc().millisecondsSinceEpoch;
@@ -315,6 +325,18 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
       conditions.add('c.grade = ?');
       filterVariables.add(Variable.withString(customerGrade.dbValue));
     }
+    if (anomalies.contains(CustomerAnomalyFilter.longSilence)) {
+      conditions.add('''
+        c.stage NOT IN ('deal', 'lost')
+        AND (? - COALESCE(c.last_follow_at, c.created_at)) >=
+          CASE c.grade
+            WHEN 'a' THEN 14 * 86400000
+            WHEN 'b' THEN 30 * 86400000
+            ELSE 60 * 86400000
+          END
+      ''');
+      filterVariables.add(Variable.withInt(nowMs));
+    }
 
     final opportunityConditions = <String>[];
     final opportunityVariables = <Variable<Object>>[];
@@ -349,6 +371,53 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
     if (opportunityStatus != null) {
       opportunityConditions.add('o.status = ?');
       opportunityVariables.add(Variable.withString(opportunityStatus.dbValue));
+    }
+    if (expectedCloseFrom != null) {
+      final fromMs = DateTime(
+        expectedCloseFrom.year,
+        expectedCloseFrom.month,
+        expectedCloseFrom.day,
+      ).toUtc().millisecondsSinceEpoch;
+      opportunityConditions.add('o.expected_close_at >= ?');
+      opportunityVariables.add(Variable.withInt(fromMs));
+    }
+    if (expectedCloseTo != null) {
+      final toExclusiveMs = DateTime(
+        expectedCloseTo.year,
+        expectedCloseTo.month,
+        expectedCloseTo.day + 1,
+      ).toUtc().millisecondsSinceEpoch;
+      opportunityConditions.add('o.expected_close_at < ?');
+      opportunityVariables.add(Variable.withInt(toExclusiveMs));
+    }
+    final stalledCutoffMs = now
+        .subtract(const Duration(days: 30))
+        .toUtc()
+        .millisecondsSinceEpoch;
+    if (anomalies.contains(CustomerAnomalyFilter.stalledQuote)) {
+      opportunityConditions.add('''
+        EXISTS (
+          SELECT 1
+          FROM quotes q
+          WHERE q.opportunity_id = o.id
+            AND q.customer_received = 0
+            AND q.quoted_at <= ?
+        )
+      ''');
+      opportunityVariables.add(Variable.withInt(stalledCutoffMs));
+    }
+    if (anomalies.contains(CustomerAnomalyFilter.stalledSample)) {
+      opportunityConditions.add('''
+        EXISTS (
+          SELECT 1
+          FROM samples s
+          WHERE s.opportunity_id = o.id
+            AND s.delivered_at IS NOT NULL
+            AND s.delivered_at <= ?
+            AND (s.test_result IS NULL OR TRIM(s.test_result) = '')
+        )
+      ''');
+      opportunityVariables.add(Variable.withInt(stalledCutoffMs));
     }
     if (opportunityConditions.isNotEmpty) {
       conditions.add('''
@@ -411,6 +480,8 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
         contacts,
         customerTags,
         db.opportunities,
+        db.quotes,
+        db.samples,
       },
     ).get();
 

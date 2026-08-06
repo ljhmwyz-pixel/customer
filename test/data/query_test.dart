@@ -1,4 +1,5 @@
 import 'package:customer/data/database.dart';
+import 'package:customer/data/daos/customer_dao.dart';
 import 'package:customer/models/enums.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -1059,6 +1060,340 @@ void main() {
         ),
         {target},
       );
+    });
+
+    test('customer expected close date filters', () async {
+      final now = DateTime(2026, 8, 6, 12);
+      final from = DateTime(2026, 9, 10);
+      final to = DateTime(2026, 9, 12);
+
+      Future<int> insertAt(String name, DateTime expectedCloseAt) async {
+        final customerId = await db.customerDao.insertCustomer(
+          name: name,
+          now: now,
+        );
+        await db.opportunityDao.insertOpportunity(
+          customerId: customerId,
+          name: '$name 项目',
+          expectedCloseAt: expectedCloseAt,
+          now: now,
+        );
+        return customerId;
+      }
+
+      final before = await insertAt(
+        '开始日前一刻',
+        from.subtract(const Duration(milliseconds: 1)),
+      );
+      final atStart = await insertAt('开始日零点', from);
+      final atEnd = await insertAt(
+        '结束日最后一刻',
+        DateTime(2026, 9, 12, 23, 59, 59, 999),
+      );
+      final after = await insertAt('结束日次日零点', DateTime(2026, 9, 13));
+      await db.customerDao.insertCustomer(name: '无项目客户', now: now);
+
+      Future<Set<int>> filteredIds({DateTime? start, DateTime? end}) async =>
+          (await db.customerDao.listFilteredByUrgency(
+            now: now,
+            expectedCloseFrom: start,
+            expectedCloseTo: end,
+          )).map((row) => row.customer.id).toSet();
+
+      expect(await filteredIds(start: from, end: to), {atStart, atEnd});
+      expect(await filteredIds(start: from), {atStart, atEnd, after});
+      expect(await filteredIds(end: to), {before, atStart, atEnd});
+    });
+
+    test('customer anomaly filters', () async {
+      final now = DateTime(2026, 8, 6, 12);
+
+      Future<int> insertProjectCustomer(String name) async {
+        final customerId = await db.customerDao.insertCustomer(
+          name: name,
+          now: now,
+        );
+        return db.opportunityDao.insertOpportunity(
+          customerId: customerId,
+          name: '$name 项目',
+          now: now,
+        );
+      }
+
+      Future<int> insertQuoteCase(
+        String name, {
+        required int ageDays,
+        bool customerReceived = false,
+      }) async {
+        final opportunityId = await insertProjectCustomer(name);
+        await db.quoteDao.insertVersion(
+          opportunityId: opportunityId,
+          quoteNo: 'Q-$name',
+          quantity: 1,
+          quotedAt: now.subtract(Duration(days: ageDays)),
+          customerReceived: customerReceived,
+          now: now,
+        );
+        return (await db.opportunityDao.findById(opportunityId))!.customerId;
+      }
+
+      final quote29 = await insertQuoteCase('报价 29 天', ageDays: 29);
+      final quote30 = await insertQuoteCase('报价 30 天', ageDays: 30);
+      final quoteReceived = await insertQuoteCase(
+        '报价已收到',
+        ageDays: 30,
+        customerReceived: true,
+      );
+
+      Future<int> insertSampleCase(
+        String name, {
+        int? deliveredAgeDays,
+        String? testResult,
+      }) async {
+        final opportunityId = await insertProjectCustomer(name);
+        await db.sampleDao.insertSample(
+          opportunityId: opportunityId,
+          quantity: 1,
+          deliveredAt: deliveredAgeDays == null
+              ? null
+              : now.subtract(Duration(days: deliveredAgeDays)),
+          testResult: testResult,
+          now: now,
+        );
+        return (await db.opportunityDao.findById(opportunityId))!.customerId;
+      }
+
+      final sample29 = await insertSampleCase('样品 29 天', deliveredAgeDays: 29);
+      final sample30 = await insertSampleCase('样品 30 天', deliveredAgeDays: 30);
+      final sampleResult = await insertSampleCase(
+        '样品已有结果',
+        deliveredAgeDays: 30,
+        testResult: '通过',
+      );
+      final sampleBlank = await insertSampleCase(
+        '样品空结果',
+        deliveredAgeDays: 30,
+        testResult: '   ',
+      );
+      final sampleUndelivered = await insertSampleCase('样品未交付');
+
+      Future<int> insertSilenceCase(
+        String name, {
+        required CustomerGrade grade,
+        required int ageDays,
+        CustomerStage stage = CustomerStage.potential,
+      }) => db.customerDao.insertCustomer(
+        name: name,
+        grade: grade,
+        stage: stage,
+        now: now.subtract(Duration(days: ageDays)),
+      );
+
+      final a13 = await insertSilenceCase(
+        'A 级 13 天',
+        grade: CustomerGrade.a,
+        ageDays: 13,
+      );
+      final a14 = await insertSilenceCase(
+        'A 级 14 天',
+        grade: CustomerGrade.a,
+        ageDays: 14,
+      );
+      final b29 = await insertSilenceCase(
+        'B 级 29 天',
+        grade: CustomerGrade.b,
+        ageDays: 29,
+      );
+      final b30 = await insertSilenceCase(
+        'B 级 30 天',
+        grade: CustomerGrade.b,
+        ageDays: 30,
+      );
+      final c59 = await insertSilenceCase(
+        'C 级 59 天',
+        grade: CustomerGrade.c,
+        ageDays: 59,
+      );
+      final c60 = await insertSilenceCase(
+        'C 级 60 天',
+        grade: CustomerGrade.c,
+        ageDays: 60,
+      );
+      final d59 = await insertSilenceCase(
+        'D 级 59 天',
+        grade: CustomerGrade.d,
+        ageDays: 59,
+      );
+      final d60 = await insertSilenceCase(
+        'D 级 60 天',
+        grade: CustomerGrade.d,
+        ageDays: 60,
+      );
+      final deal = await insertSilenceCase(
+        '已成交沉默客户',
+        grade: CustomerGrade.a,
+        ageDays: 60,
+        stage: CustomerStage.deal,
+      );
+      final lost = await insertSilenceCase(
+        '已流失沉默客户',
+        grade: CustomerGrade.a,
+        ageDays: 60,
+        stage: CustomerStage.lost,
+      );
+
+      Future<Set<int>> anomalyIds(CustomerAnomalyFilter anomaly) async =>
+          (await db.customerDao.listFilteredByUrgency(
+            now: now,
+            anomalies: {anomaly},
+          )).map((row) => row.customer.id).toSet();
+
+      expect(await anomalyIds(CustomerAnomalyFilter.stalledQuote), {quote30});
+      expect(await anomalyIds(CustomerAnomalyFilter.stalledSample), {
+        sample30,
+        sampleBlank,
+      });
+      expect(await anomalyIds(CustomerAnomalyFilter.longSilence), {
+        a14,
+        b30,
+        c60,
+        d60,
+      });
+
+      expect(
+        {
+          quote29,
+          quoteReceived,
+          sample29,
+          sampleResult,
+          sampleUndelivered,
+          a13,
+          b29,
+          c59,
+          d59,
+          deal,
+          lost,
+        },
+        isNot(
+          contains(anyOf(quote30, sample30, sampleBlank, a14, b30, c60, d60)),
+        ),
+      );
+    });
+
+    test('customer advanced filters require the same opportunity', () async {
+      final now = DateTime(2026, 8, 6, 12);
+      final staleAt = now.subtract(const Duration(days: 30));
+
+      Future<int> insertCustomer(String name) =>
+          db.customerDao.insertCustomer(name: name, now: now);
+
+      Future<void> insertStalledQuote(int opportunityId, String quoteNo) =>
+          db.quoteDao.insertVersion(
+            opportunityId: opportunityId,
+            quoteNo: quoteNo,
+            quantity: 1,
+            quotedAt: staleAt,
+            now: now,
+          );
+
+      Future<void> insertStalledSample(int opportunityId) =>
+          db.sampleDao.insertSample(
+            opportunityId: opportunityId,
+            quantity: 1,
+            deliveredAt: staleAt,
+            now: now,
+          );
+
+      final splitProduct = await insertCustomer('产品与报价拆分');
+      await db.opportunityDao.insertOpportunity(
+        customerId: splitProduct,
+        name: '只满足产品条件',
+        productCategory: '耗材',
+        now: now,
+      );
+      final quoteOnly = await db.opportunityDao.insertOpportunity(
+        customerId: splitProduct,
+        name: '只满足报价异常',
+        productCategory: '设备',
+        now: now,
+      );
+      await insertStalledQuote(quoteOnly, 'Q-SPLIT-PRODUCT');
+
+      final splitAnomalies = await insertCustomer('报价与样品拆分');
+      final quoteProject = await db.opportunityDao.insertOpportunity(
+        customerId: splitAnomalies,
+        name: '只满足报价异常',
+        productCategory: '耗材',
+        now: now,
+      );
+      final sampleProject = await db.opportunityDao.insertOpportunity(
+        customerId: splitAnomalies,
+        name: '只满足样品异常',
+        productCategory: '耗材',
+        now: now,
+      );
+      await insertStalledQuote(quoteProject, 'Q-SPLIT-ANOMALY');
+      await insertStalledSample(sampleProject);
+
+      final same = await insertCustomer('同项目全部满足');
+      final sameProject = await db.opportunityDao.insertOpportunity(
+        customerId: same,
+        name: '同时满足',
+        productCategory: '耗材',
+        now: now,
+      );
+      await insertStalledQuote(sameProject, 'Q-SAME');
+      await insertStalledSample(sameProject);
+
+      final productAndQuote = await db.customerDao.listFilteredByUrgency(
+        now: now,
+        productCategory: '耗材',
+        anomalies: {CustomerAnomalyFilter.stalledQuote},
+      );
+      expect(productAndQuote.map((row) => row.customer.id).toSet(), {
+        splitAnomalies,
+        same,
+      });
+
+      final allProjectConditions = await db.customerDao.listFilteredByUrgency(
+        now: now,
+        productCategory: '耗材',
+        anomalies: {
+          CustomerAnomalyFilter.stalledQuote,
+          CustomerAnomalyFilter.stalledSample,
+        },
+      );
+      expect(allProjectConditions.map((row) => row.customer.id), [same]);
+    });
+
+    test('customer default urgency order remains unchanged', () async {
+      final now = DateTime(2026, 8, 6, 12);
+      final noPlan = await db.customerDao.insertCustomer(
+        name: '默认排序无计划',
+        grade: CustomerGrade.a,
+        now: now,
+      );
+      final future = await db.customerDao.insertCustomer(
+        name: '默认排序未来计划',
+        now: now,
+      );
+      final overdue = await db.customerDao.insertCustomer(
+        name: '默认排序逾期计划',
+        now: now,
+      );
+      await db.planDao.insertPlan(
+        customerId: future,
+        title: '未来计划',
+        planAt: now.add(const Duration(days: 1)),
+      );
+      await db.planDao.insertPlan(
+        customerId: overdue,
+        title: '逾期计划',
+        planAt: now.subtract(const Duration(days: 1)),
+      );
+
+      final rows = await db.customerDao.listFilteredByUrgency(now: now);
+      expect(rows.map((row) => row.customer.id), [overdue, future, noPlan]);
     });
 
     test('筛选后仍保持原有紧急度排序', () async {
