@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../theme/tokens.dart';
 
-/// 设置页。提醒相关入口在阶段 2 接入，备份功能在阶段 5。
+/// 设置页。提醒、示例数据和导出入口集中在这里。
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
@@ -64,6 +64,18 @@ class SettingsPage extends StatelessWidget {
             ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.go('/settings/sample-data'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.table_view_outlined),
+            title: const Text('Excel 导出'),
+            subtitle: Text(
+              '生成并分享四张业务工作表',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.go('/settings/excel-export'),
           ),
           ListTile(
             leading: const Icon(Icons.backup_outlined),

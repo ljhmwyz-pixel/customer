@@ -94,6 +94,13 @@ void main() {
       currency: 'USD',
       now: now,
     );
+    await db.orderDao.insertOrder(
+      customerId: customerId,
+      orderNo: 'O-LEGACY',
+      orderedAt: now.add(const Duration(minutes: 1)),
+      amountCents: 100,
+      now: now,
+    );
 
     final snapshot = await db.exportDao.loadExcelSnapshot(now: now);
 
@@ -114,14 +121,17 @@ void main() {
     expect(snapshot.followups.single.methodLabel, '微信');
     expect(snapshot.followups.single.feedback, '等待采购确认');
 
+    expect(snapshot.businessEvents, hasLength(6));
     expect(
-      snapshot.businessEvents.map((row) => row.type),
+      snapshot.businessEvents.take(5).map((row) => row.type),
       BusinessExportType.values,
     );
     expect(snapshot.businessEvents.first.reference, 'Q-2026-001 v1');
     expect(snapshot.businessEvents.first.amountMinor, 123456);
-    expect(snapshot.businessEvents.last.reference, 'O-001');
-    expect(snapshot.businessEvents.last.amountMinor, 88800);
+    expect(snapshot.businessEvents[4].reference, 'O-001');
+    expect(snapshot.businessEvents[4].amountMinor, 88800);
+    expect(snapshot.businessEvents.last.reference, 'O-LEGACY');
+    expect(snapshot.businessEvents.last.opportunityName, '未关联项目');
   });
 
   test('空库产生四个空列表', () async {

@@ -401,14 +401,15 @@ class ExportDao extends DatabaseAccessor<AppDatabase> with _$ExportDaoMixin {
     type: BusinessExportType.order,
     sql: '''
       SELECT orders.id, orders.ordered_at AS event_at,
-             customer.name AS customer_name, opportunity.name AS opportunity_name,
+             customer.name AS customer_name,
+             COALESCE(opportunity.name, '未关联项目') AS opportunity_name,
              orders.order_no AS reference, orders.order_result AS status_label,
              opportunity.product_model AS product, NULL AS quantity, orders.currency,
              orders.amount_cents AS amount_minor,
              orders.estimated_repurchase_at AS next_at, orders.description AS detail
       FROM orders
       JOIN customers customer ON customer.id = orders.customer_id
-      JOIN opportunities opportunity ON opportunity.id = orders.opportunity_id
+      LEFT JOIN opportunities opportunity ON opportunity.id = orders.opportunity_id
     ''',
     statusLabel: (value) => OrderResult.fromDb(value).label,
   );
