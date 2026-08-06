@@ -388,9 +388,9 @@ flutter test test/features/customers/customer_pages_test.dart
 - Consumes: 完整 F-3 实现。
 - Produces: 500 客户性能证据、全量验证、APK 和模拟器验收记录。
 
-- [ ] 写 `500 customer advanced combined filter completes under 200ms`，构造 500 客户、多项目、多报价、多样品和不同沉默等级。
-- [ ] 组合至少包含产品、型号、品牌、项目状态、预计成交范围、报价停滞和样品停滞；预热一次后测量，要求 `< 200ms`。
-- [ ] 运行性能测试：
+- [x] 写 `500 customer advanced combined filter completes under 200ms`，构造 500 客户、多项目、多报价、多样品和不同沉默等级。
+- [x] 组合至少包含产品、型号、品牌、项目状态、预计成交范围、报价停滞和样品停滞；预热一次后测量，要求 `< 200ms`。
+- [x] 运行性能测试：
 
 ```bash
 flutter test test/data/performance_test.dart --plain-name '500 customer advanced combined filter completes under 200ms'
@@ -398,14 +398,16 @@ flutter test test/data/performance_test.dart --plain-name '500 customer advanced
 
 预期：测试通过并记录实际耗时；失败时检查查询计划，不放宽阈值掩盖问题。
 
-- [ ] 检查差异只包含 F-3 预期文件：
+实测（2026-08-06）：命中预期 5 个客户，稳态查询初测 1.614ms，最终复验 0.886ms，测试通过。
+
+- [x] 检查差异只包含本阶段预期文件：
 
 ```bash
 git status --short
-git diff -- lib/data/daos/customer_dao.dart lib/features/customers/customer_providers.dart lib/features/customers/customers_page.dart test/data/query_test.dart test/data/performance_test.dart test/features/customers/customer_pages_test.dart
+git diff -- docs/superpowers/plans/2026-08-06-customer-advanced-filters.md test/data/performance_test.dart
 ```
 
-- [ ] 运行完整质量门禁：
+- [x] 运行完整质量门禁：
 
 ```bash
 dart format --output=none --set-exit-if-changed lib test
@@ -417,14 +419,14 @@ git diff --check
 
 预期：格式退出码 0；分析为 `No issues found!`；全量测试通过；APK 位于 `build/app/outputs/flutter-apk/app-debug.apk`；无空白错误。
 
-- [ ] 检查现有 Android 设备：
+- [x] 检查现有 Android 设备：
 
 ```bash
 adb devices -l
 flutter devices
 ```
 
-- [ ] 优先对 `emulator-5554` 覆盖安装，保留数据：
+- [x] 优先对 `emulator-5554` 覆盖安装，保留数据：
 
 ```bash
 adb -s emulator-5554 install -r build/app/outputs/flutter-apk/app-debug.apk
@@ -432,16 +434,30 @@ adb -s emulator-5554 install -r build/app/outputs/flutter-apk/app-debug.apk
 
 预期：输出 `Success`。
 
-- [ ] 人工验证面板滚动、产品字段、项目状态、单边/双边日期、反向日期阻止、异常多选、摘要逐项删除、两类清除行为和窄屏布局。
-- [ ] 只记录模拟器现有数据可观察到的结果；缺少异常样本时以自动化边界测试为规则证据，不夸大人工覆盖。
-- [ ] 最终检查：
+实测（2026-08-06）：在 Android 17 / API 37 的 `emulator-5554` 上使用
+`adb install -r` 覆盖安装成功，应用数据和筛选状态保留。
+
+- [x] 人工验证面板滚动、产品字段、项目状态、单边/双边日期、反向日期阻止、异常多选、摘要逐项删除、两类清除行为和窄屏布局。
+- [x] 只记录模拟器现有数据可观察到的结果；缺少异常样本时以自动化边界测试为规则证据，不夸大人工覆盖。
+
+人工验收记录（2026-08-06）：
+
+- 1080×2400（约 360dp 宽）下，筛选面板可滚动至顶部和底部，无明显溢出；产品分类、产品型号、设备品牌入口均可见。
+- 项目状态可选择“活跃”，报价停滞、样品停滞、长期沉默可同时勾选；日期支持仅开始日期和开始/结束双边范围。
+- 开始日期为 2026-08-10 时，结束日期选择器将 2026-08-01 至 2026-08-09 禁用；选择 2026-08-11 后范围正常显示。
+- 项目状态、双边日期和 3 个异常共 6 项时，按钮计数为 6；横向滚动摘要后 6 项均可见，包括“长期沉默”。
+- 逐项删除项目状态后计数由 4 降为 3，其他条件保留；“清空搜索”只清关键字，“清除全部高级筛选”只清高级条件。
+- 验收结束后点击“清除全部”，筛选计数、摘要及空结果提示消失，搜索框仍为空，客户列表恢复。
+- 模拟器现有数据没有可选产品分类，因此产品组合的实际命中以自动测试为证，不宣称人工数据命中覆盖。
+
+- [x] 最终检查：
 
 ```bash
 git diff --check
 git status --short --branch
 ```
 
-- [ ] 汇报改动、测试、性能、APK、模拟器证据和限制，等待用户明确确认后进入 Task 7。
+- [x] 汇报改动、测试、性能、APK、模拟器证据和限制，等待用户明确确认后进入 Task 7。
 
 ---
 
