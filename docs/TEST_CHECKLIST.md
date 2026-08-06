@@ -67,3 +67,20 @@
 
 - Emulator evidence validates Android platform integration but does not replace ColorOS provider, camera, permission, or external-application compatibility checks.
 - Do not mark the attachment feature as target-device complete until every OnePlus 13 / ColorOS 15 item above is checked.
+
+## Excel Export
+
+### Automated gate
+
+- [x] Export snapshot reads all four workspaces transactionally and retains legacy orders without a project link.
+- [x] Workbook contains exactly four named Chinese sheets with typed dates, amounts, percentages, formulas, frozen headers, filters, and status rules.
+- [x] File adapter writes atomically, uses the XLSX MIME type, and keeps a retryable final file when sharing fails.
+- [x] Settings entry requires an explicit tap, blocks duplicate taps while generating, and exposes success/failure states.
+- [x] `flutter analyze` reports no issues; full `flutter test` passes 420 tests.
+- [x] Debug and release APKs build successfully.
+- [x] Empty workbook opens and re-saves successfully through LibreOffice Calc headless.
+
+### OnePlus 13 / ColorOS 15
+
+- [ ] Verify the Android Sharesheet receives the XLSX MIME type and a nonempty workbook.
+- [ ] Verify a compatible spreadsheet application opens all four sheets and preserves Chinese text, formulas, and typed values.

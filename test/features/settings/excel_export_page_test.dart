@@ -1,8 +1,5 @@
 import 'dart:async';
-import 'dart:io';
-
 import 'package:customer/services/excel_export_providers.dart';
-import 'package:customer/services/excel_export_service.dart';
 import 'package:customer/services/excel_file_export_service.dart';
 import 'package:customer/features/settings/excel_export_page.dart';
 import 'package:flutter/material.dart';
@@ -64,14 +61,8 @@ _CountingExcelExportService _fakeService({
   return _CountingExcelExportService(completer: completer);
 }
 
-class _CountingExcelExportService extends ExcelExportService {
-  _CountingExcelExportService({this.completer})
-    : super(
-        loadSnapshot: (_) async => throw StateError('delegate only'),
-        builder: const ExcelWorkbookBuilder(),
-        sharer: const _FakeSharer(),
-        cacheDirectory: () async => throw StateError('delegate only'),
-      );
+class _CountingExcelExportService implements ExcelExportService {
+  _CountingExcelExportService({this.completer});
 
   final Completer<ExcelExportResult>? completer;
   int calls = 0;
@@ -87,11 +78,4 @@ class _CountingExcelExportService extends ExcelExportService {
       ),
     );
   }
-}
-
-class _FakeSharer implements ExcelFileSharer {
-  const _FakeSharer();
-
-  @override
-  Future<void> share(File file) async {}
 }

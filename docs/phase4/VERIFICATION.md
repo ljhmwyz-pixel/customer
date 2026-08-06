@@ -82,3 +82,26 @@ Emulator evidence:
 - After confirmation of whole-batch undo, the page showed `尚未导入` and the SnackBar `已撤销 9 条示例数据`.
 
 The internal batch marker is `phase-f-samples-v1`; it is not user-editable or used as a visible tag, so renaming or adding child records cannot detach a sample graph from undo.
+
+## Phase F Excel Export Evidence
+
+Date: 2026-08-06
+
+Status: automated export and desktop workbook validation pass; Android Sharesheet and OnePlus 13 / ColorOS 15 remain open.
+
+Automated evidence:
+
+- `flutter analyze`: `No issues found!`.
+- `flutter test`: 420 tests passed, zero failures.
+- `flutter build apk --debug`: success, SHA-256 `a85246dc962e690d3ed3e9c25853c7fe076080365f65b29b2412c343aaf6affe`.
+- `flutter build apk --release`: success, 68.1 MB, SHA-256 `69a109e35284ca1f14e0abd6fed47ed82699a579f2890bb0c7ce5064edcc42e9`.
+- Focused export evidence covers snapshot joins, legacy orders with nullable project links, four-sheet OOXML structure, typed cells, formulas, filters, frozen panes, conditional formatting, atomic cache output, MIME sharing, progress, duplicate-tap prevention, and retryable failures.
+
+Independent office validation:
+
+- A Flutter test wrote an empty four-sheet workbook to `/tmp/customer-empty-export.xlsx` (8.5 KB).
+- LibreOffice Calc headless converted it to XLSX successfully (14 KB), confirming the generated archive is accepted by an independent office implementation.
+
+Open boundary:
+
+- AOSP emulator and the target OnePlus 13 / ColorOS 15 Sharesheet have not yet been exercised for this export path. The remaining check is device/provider compatibility, not workbook generation or application logic.

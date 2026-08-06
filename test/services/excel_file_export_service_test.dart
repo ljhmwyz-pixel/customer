@@ -10,7 +10,7 @@ void main() {
     final directory = await Directory.systemTemp.createTemp('xlsx-export-');
     final shared = <File>[];
     try {
-      final service = ExcelExportService(
+      final service = DefaultExcelExportService(
         loadSnapshot: (_) async => const ExcelExportSnapshot(
           todayTasks: [],
           customerProjects: [],
@@ -40,7 +40,7 @@ void main() {
       'xlsx-export-fail-',
     );
     try {
-      final service = ExcelExportService(
+      final service = DefaultExcelExportService(
         loadSnapshot: (_) async => const ExcelExportSnapshot(
           todayTasks: [],
           customerProjects: [],

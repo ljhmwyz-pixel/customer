@@ -7,7 +7,7 @@ import 'excel_file_export_service.dart';
 
 final excelExportServiceProvider = Provider<ExcelExportService>((ref) {
   final db = ref.watch(databaseProvider);
-  return ExcelExportService(
+  return DefaultExcelExportService(
     loadSnapshot: (now) => db.exportDao.loadExcelSnapshot(now: now),
     builder: const ExcelWorkbookBuilder(),
     sharer: const SharePlusExcelFileSharer(),
