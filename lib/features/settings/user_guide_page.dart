@@ -1,0 +1,139 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../theme/tokens.dart';
+
+/// 面向首次使用者的应用内试用说明。
+class UserGuidePage extends StatelessWidget {
+  const UserGuidePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(title: const Text('使用说明')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(
+          AppTokens.s16,
+          AppTokens.s8,
+          AppTokens.s16,
+          AppTokens.s32,
+        ),
+        children: [
+          Text('三分钟开始试用', style: theme.textTheme.titleLarge),
+          const SizedBox(height: AppTokens.s8),
+          Text(
+            '先导入示例数据熟悉流程，再录入自己的客户。数据保存在本机，无需登录。',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: AppTokens.s16),
+          FilledButton.icon(
+            onPressed: () => context.go('/settings/sample-data'),
+            icon: const Icon(Icons.science_outlined),
+            label: const Text('去导入示例数据'),
+          ),
+          const SizedBox(height: AppTokens.s16),
+          _GuideSection(
+            icon: Icons.today_outlined,
+            title: '1. 今日：处理跟进任务',
+            children: const [
+              '打开应用默认进入“今日”，这里集中显示逾期和今天到期的任务。',
+              '点击任务可进入客户详情；完成或取消后，任务会保留在历史记录中。',
+            ],
+          ),
+          _GuideSection(
+            icon: Icons.people_outline,
+            title: '2. 客户：建立客户档案',
+            children: const [
+              '新建客户后，可添加多个联系人和多个产品项目。',
+              '建议一个产品机会建立一个项目，避免不同报价和阶段互相覆盖。',
+            ],
+          ),
+          _GuideSection(
+            icon: Icons.forum_outlined,
+            title: '3. 跟进：记录每次沟通',
+            children: const [
+              '在客户详情点击“记录跟进”，填写客户反馈、项目阶段、下一步行动和下次跟进日期。',
+              '每次沟通新增一条记录，不覆盖历史；保存后系统会同步项目状态并生成提醒。',
+            ],
+          ),
+          _GuideSection(
+            icon: Icons.track_changes_outlined,
+            title: '4. 业务：追踪关键节点',
+            children: const [
+              '在项目下新增报价、样品、注册或招标，在客户下新增订单。',
+              '这些节点会参与今日任务、漏斗统计和异常提醒。',
+            ],
+          ),
+          _GuideSection(
+            icon: Icons.filter_alt_outlined,
+            title: '5. 漏斗：查看整体进度',
+            children: const [
+              '查看客户等级、项目阶段、预计金额和本周跟进数量。',
+              '点击异常入口可定位长期沉默、注册到期、招标临近截止等记录。',
+            ],
+          ),
+          _GuideSection(
+            icon: Icons.notifications_active_outlined,
+            title: '6. 提醒：确保任务按时到达',
+            children: const [
+              '首次使用请在“提醒权限”开启通知、精确闹钟和后台运行权限。',
+              '不确定是否正常时，进入“提醒自检”安排一条测试提醒。',
+            ],
+          ),
+          _GuideSection(
+            icon: Icons.backup_outlined,
+            title: '7. 数据：导出和备份',
+            children: const [
+              '“Excel 导出”用于查阅和分析；Excel 中的修改不会自动回写应用。',
+              '“备份与恢复”包含业务数据和附件，换机或升级前请先备份。',
+            ],
+          ),
+          const SizedBox(height: AppTokens.s8),
+          Text(
+            '推荐习惯：每天打开“今日”，每次沟通后立即记录跟进，每周导出或备份一次。',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GuideSection extends StatelessWidget {
+  const _GuideSection({
+    required this.icon,
+    required this.title,
+    required this.children,
+  });
+
+  final IconData icon;
+  final String title;
+  final List<String> children;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    margin: const EdgeInsets.only(bottom: AppTokens.s8),
+    child: ExpansionTile(
+      leading: Icon(icon),
+      title: Text(title),
+      childrenPadding: const EdgeInsets.fromLTRB(
+        AppTokens.s16,
+        0,
+        AppTokens.s16,
+        AppTokens.s12,
+      ),
+      children: [
+        for (final child in children)
+          Padding(
+            padding: const EdgeInsets.only(top: AppTokens.s8),
+            child: Align(alignment: Alignment.centerLeft, child: Text(child)),
+          ),
+      ],
+    ),
+  );
+}

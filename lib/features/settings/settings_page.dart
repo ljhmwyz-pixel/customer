@@ -54,6 +54,18 @@ class SettingsPage extends StatelessWidget {
           ),
           const Divider(),
           ListTile(
+            leading: const Icon(Icons.menu_book_outlined),
+            title: const Text('使用说明'),
+            subtitle: Text(
+              '快速了解功能并开始试用',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.go('/settings/user-guide'),
+          ),
+          ListTile(
             leading: const Icon(Icons.science_outlined),
             title: const Text('示例数据'),
             subtitle: Text(
