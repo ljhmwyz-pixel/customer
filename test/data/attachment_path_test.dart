@@ -1,4 +1,5 @@
 import 'package:customer/data/attachment_path.dart';
+import 'package:customer/data/daos/attachment_dao.dart';
 import 'package:customer/data/database.dart';
 import 'package:customer/models/enums.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -124,7 +125,7 @@ void main() {
         extension: 'jpg',
       );
       final id = await db.attachmentDao.insertAttachment(
-        followupId: followupId,
+        owner: FollowupAttachmentOwner(followupId),
         relativePath: rel,
         originalName: '合同.jpg',
         mimeType: 'image/jpeg',
@@ -153,7 +154,7 @@ void main() {
 
       for (var i = 0; i < 3; i++) {
         await db.attachmentDao.insertAttachment(
-          orderId: orderId,
+          owner: OrderAttachmentOwner(orderId),
           relativePath: AttachmentPath.relativeFor(
             at: DateTime(2026, 8, 4),
             fileId: 'f$i',

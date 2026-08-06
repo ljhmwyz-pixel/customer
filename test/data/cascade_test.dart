@@ -1,3 +1,4 @@
+import 'package:customer/data/daos/attachment_dao.dart';
 import 'package:customer/data/database.dart';
 import 'package:customer/models/enums.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -53,14 +54,14 @@ void main() {
       amountCents: 10000,
     );
     final followupAttachmentId = await db.attachmentDao.insertAttachment(
-      followupId: followupId,
+      owner: FollowupAttachmentOwner(followupId),
       relativePath: 'attachments/2026/08/f.jpg',
       originalName: 'f.jpg',
       mimeType: 'image/jpeg',
       sizeBytes: 100,
     );
     final orderAttachmentId = await db.attachmentDao.insertAttachment(
-      orderId: orderId,
+      owner: OrderAttachmentOwner(orderId),
       relativePath: 'attachments/2026/08/o.pdf',
       originalName: 'o.pdf',
       mimeType: 'application/pdf',

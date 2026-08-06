@@ -7020,580 +7020,6 @@ class CustomerTagsCompanion extends UpdateCompanion<CustomerTagRow> {
   }
 }
 
-class $AttachmentsTable extends Attachments
-    with TableInfo<$AttachmentsTable, AttachmentRow> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $AttachmentsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
-    aliasedName,
-    false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
-  );
-  static const VerificationMeta _followupIdMeta = const VerificationMeta(
-    'followupId',
-  );
-  @override
-  late final GeneratedColumn<int> followupId = GeneratedColumn<int>(
-    'followup_id',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES followups (id) ON DELETE CASCADE',
-    ),
-  );
-  static const VerificationMeta _orderIdMeta = const VerificationMeta(
-    'orderId',
-  );
-  @override
-  late final GeneratedColumn<int> orderId = GeneratedColumn<int>(
-    'order_id',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES orders (id) ON DELETE CASCADE',
-    ),
-  );
-  static const VerificationMeta _relativePathMeta = const VerificationMeta(
-    'relativePath',
-  );
-  @override
-  late final GeneratedColumn<String> relativePath = GeneratedColumn<String>(
-    'relative_path',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _originalNameMeta = const VerificationMeta(
-    'originalName',
-  );
-  @override
-  late final GeneratedColumn<String> originalName = GeneratedColumn<String>(
-    'original_name',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _mimeTypeMeta = const VerificationMeta(
-    'mimeType',
-  );
-  @override
-  late final GeneratedColumn<String> mimeType = GeneratedColumn<String>(
-    'mime_type',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _sizeBytesMeta = const VerificationMeta(
-    'sizeBytes',
-  );
-  @override
-  late final GeneratedColumn<int> sizeBytes = GeneratedColumn<int>(
-    'size_bytes',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
-  @override
-  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
-  @override
-  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    followupId,
-    orderId,
-    relativePath,
-    originalName,
-    mimeType,
-    sizeBytes,
-    createdAt,
-    updatedAt,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'attachments';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<AttachmentRow> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('followup_id')) {
-      context.handle(
-        _followupIdMeta,
-        followupId.isAcceptableOrUnknown(data['followup_id']!, _followupIdMeta),
-      );
-    }
-    if (data.containsKey('order_id')) {
-      context.handle(
-        _orderIdMeta,
-        orderId.isAcceptableOrUnknown(data['order_id']!, _orderIdMeta),
-      );
-    }
-    if (data.containsKey('relative_path')) {
-      context.handle(
-        _relativePathMeta,
-        relativePath.isAcceptableOrUnknown(
-          data['relative_path']!,
-          _relativePathMeta,
-        ),
-      );
-    } else if (isInserting) {
-      context.missing(_relativePathMeta);
-    }
-    if (data.containsKey('original_name')) {
-      context.handle(
-        _originalNameMeta,
-        originalName.isAcceptableOrUnknown(
-          data['original_name']!,
-          _originalNameMeta,
-        ),
-      );
-    } else if (isInserting) {
-      context.missing(_originalNameMeta);
-    }
-    if (data.containsKey('mime_type')) {
-      context.handle(
-        _mimeTypeMeta,
-        mimeType.isAcceptableOrUnknown(data['mime_type']!, _mimeTypeMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_mimeTypeMeta);
-    }
-    if (data.containsKey('size_bytes')) {
-      context.handle(
-        _sizeBytesMeta,
-        sizeBytes.isAcceptableOrUnknown(data['size_bytes']!, _sizeBytesMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_sizeBytesMeta);
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_createdAtMeta);
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_updatedAtMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  AttachmentRow map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return AttachmentRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      followupId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}followup_id'],
-      ),
-      orderId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}order_id'],
-      ),
-      relativePath: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}relative_path'],
-      )!,
-      originalName: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}original_name'],
-      )!,
-      mimeType: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}mime_type'],
-      )!,
-      sizeBytes: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}size_bytes'],
-      )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}created_at'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}updated_at'],
-      )!,
-    );
-  }
-
-  @override
-  $AttachmentsTable createAlias(String alias) {
-    return $AttachmentsTable(attachedDatabase, alias);
-  }
-}
-
-class AttachmentRow extends DataClass implements Insertable<AttachmentRow> {
-  final int id;
-  final int? followupId;
-  final int? orderId;
-
-  /// 相对应用文档目录的路径，形如 `attachments/2026/08/uuid.jpg`。
-  final String relativePath;
-
-  /// 原始文件名，用于展示与导出时还原。
-  final String originalName;
-  final String mimeType;
-  final int sizeBytes;
-  final int createdAt;
-  final int updatedAt;
-  const AttachmentRow({
-    required this.id,
-    this.followupId,
-    this.orderId,
-    required this.relativePath,
-    required this.originalName,
-    required this.mimeType,
-    required this.sizeBytes,
-    required this.createdAt,
-    required this.updatedAt,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    if (!nullToAbsent || followupId != null) {
-      map['followup_id'] = Variable<int>(followupId);
-    }
-    if (!nullToAbsent || orderId != null) {
-      map['order_id'] = Variable<int>(orderId);
-    }
-    map['relative_path'] = Variable<String>(relativePath);
-    map['original_name'] = Variable<String>(originalName);
-    map['mime_type'] = Variable<String>(mimeType);
-    map['size_bytes'] = Variable<int>(sizeBytes);
-    map['created_at'] = Variable<int>(createdAt);
-    map['updated_at'] = Variable<int>(updatedAt);
-    return map;
-  }
-
-  AttachmentsCompanion toCompanion(bool nullToAbsent) {
-    return AttachmentsCompanion(
-      id: Value(id),
-      followupId: followupId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(followupId),
-      orderId: orderId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(orderId),
-      relativePath: Value(relativePath),
-      originalName: Value(originalName),
-      mimeType: Value(mimeType),
-      sizeBytes: Value(sizeBytes),
-      createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
-    );
-  }
-
-  factory AttachmentRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return AttachmentRow(
-      id: serializer.fromJson<int>(json['id']),
-      followupId: serializer.fromJson<int?>(json['followupId']),
-      orderId: serializer.fromJson<int?>(json['orderId']),
-      relativePath: serializer.fromJson<String>(json['relativePath']),
-      originalName: serializer.fromJson<String>(json['originalName']),
-      mimeType: serializer.fromJson<String>(json['mimeType']),
-      sizeBytes: serializer.fromJson<int>(json['sizeBytes']),
-      createdAt: serializer.fromJson<int>(json['createdAt']),
-      updatedAt: serializer.fromJson<int>(json['updatedAt']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'followupId': serializer.toJson<int?>(followupId),
-      'orderId': serializer.toJson<int?>(orderId),
-      'relativePath': serializer.toJson<String>(relativePath),
-      'originalName': serializer.toJson<String>(originalName),
-      'mimeType': serializer.toJson<String>(mimeType),
-      'sizeBytes': serializer.toJson<int>(sizeBytes),
-      'createdAt': serializer.toJson<int>(createdAt),
-      'updatedAt': serializer.toJson<int>(updatedAt),
-    };
-  }
-
-  AttachmentRow copyWith({
-    int? id,
-    Value<int?> followupId = const Value.absent(),
-    Value<int?> orderId = const Value.absent(),
-    String? relativePath,
-    String? originalName,
-    String? mimeType,
-    int? sizeBytes,
-    int? createdAt,
-    int? updatedAt,
-  }) => AttachmentRow(
-    id: id ?? this.id,
-    followupId: followupId.present ? followupId.value : this.followupId,
-    orderId: orderId.present ? orderId.value : this.orderId,
-    relativePath: relativePath ?? this.relativePath,
-    originalName: originalName ?? this.originalName,
-    mimeType: mimeType ?? this.mimeType,
-    sizeBytes: sizeBytes ?? this.sizeBytes,
-    createdAt: createdAt ?? this.createdAt,
-    updatedAt: updatedAt ?? this.updatedAt,
-  );
-  AttachmentRow copyWithCompanion(AttachmentsCompanion data) {
-    return AttachmentRow(
-      id: data.id.present ? data.id.value : this.id,
-      followupId: data.followupId.present
-          ? data.followupId.value
-          : this.followupId,
-      orderId: data.orderId.present ? data.orderId.value : this.orderId,
-      relativePath: data.relativePath.present
-          ? data.relativePath.value
-          : this.relativePath,
-      originalName: data.originalName.present
-          ? data.originalName.value
-          : this.originalName,
-      mimeType: data.mimeType.present ? data.mimeType.value : this.mimeType,
-      sizeBytes: data.sizeBytes.present ? data.sizeBytes.value : this.sizeBytes,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('AttachmentRow(')
-          ..write('id: $id, ')
-          ..write('followupId: $followupId, ')
-          ..write('orderId: $orderId, ')
-          ..write('relativePath: $relativePath, ')
-          ..write('originalName: $originalName, ')
-          ..write('mimeType: $mimeType, ')
-          ..write('sizeBytes: $sizeBytes, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-    id,
-    followupId,
-    orderId,
-    relativePath,
-    originalName,
-    mimeType,
-    sizeBytes,
-    createdAt,
-    updatedAt,
-  );
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is AttachmentRow &&
-          other.id == this.id &&
-          other.followupId == this.followupId &&
-          other.orderId == this.orderId &&
-          other.relativePath == this.relativePath &&
-          other.originalName == this.originalName &&
-          other.mimeType == this.mimeType &&
-          other.sizeBytes == this.sizeBytes &&
-          other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
-}
-
-class AttachmentsCompanion extends UpdateCompanion<AttachmentRow> {
-  final Value<int> id;
-  final Value<int?> followupId;
-  final Value<int?> orderId;
-  final Value<String> relativePath;
-  final Value<String> originalName;
-  final Value<String> mimeType;
-  final Value<int> sizeBytes;
-  final Value<int> createdAt;
-  final Value<int> updatedAt;
-  const AttachmentsCompanion({
-    this.id = const Value.absent(),
-    this.followupId = const Value.absent(),
-    this.orderId = const Value.absent(),
-    this.relativePath = const Value.absent(),
-    this.originalName = const Value.absent(),
-    this.mimeType = const Value.absent(),
-    this.sizeBytes = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-  });
-  AttachmentsCompanion.insert({
-    this.id = const Value.absent(),
-    this.followupId = const Value.absent(),
-    this.orderId = const Value.absent(),
-    required String relativePath,
-    required String originalName,
-    required String mimeType,
-    required int sizeBytes,
-    required int createdAt,
-    required int updatedAt,
-  }) : relativePath = Value(relativePath),
-       originalName = Value(originalName),
-       mimeType = Value(mimeType),
-       sizeBytes = Value(sizeBytes),
-       createdAt = Value(createdAt),
-       updatedAt = Value(updatedAt);
-  static Insertable<AttachmentRow> custom({
-    Expression<int>? id,
-    Expression<int>? followupId,
-    Expression<int>? orderId,
-    Expression<String>? relativePath,
-    Expression<String>? originalName,
-    Expression<String>? mimeType,
-    Expression<int>? sizeBytes,
-    Expression<int>? createdAt,
-    Expression<int>? updatedAt,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (followupId != null) 'followup_id': followupId,
-      if (orderId != null) 'order_id': orderId,
-      if (relativePath != null) 'relative_path': relativePath,
-      if (originalName != null) 'original_name': originalName,
-      if (mimeType != null) 'mime_type': mimeType,
-      if (sizeBytes != null) 'size_bytes': sizeBytes,
-      if (createdAt != null) 'created_at': createdAt,
-      if (updatedAt != null) 'updated_at': updatedAt,
-    });
-  }
-
-  AttachmentsCompanion copyWith({
-    Value<int>? id,
-    Value<int?>? followupId,
-    Value<int?>? orderId,
-    Value<String>? relativePath,
-    Value<String>? originalName,
-    Value<String>? mimeType,
-    Value<int>? sizeBytes,
-    Value<int>? createdAt,
-    Value<int>? updatedAt,
-  }) {
-    return AttachmentsCompanion(
-      id: id ?? this.id,
-      followupId: followupId ?? this.followupId,
-      orderId: orderId ?? this.orderId,
-      relativePath: relativePath ?? this.relativePath,
-      originalName: originalName ?? this.originalName,
-      mimeType: mimeType ?? this.mimeType,
-      sizeBytes: sizeBytes ?? this.sizeBytes,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
-    }
-    if (followupId.present) {
-      map['followup_id'] = Variable<int>(followupId.value);
-    }
-    if (orderId.present) {
-      map['order_id'] = Variable<int>(orderId.value);
-    }
-    if (relativePath.present) {
-      map['relative_path'] = Variable<String>(relativePath.value);
-    }
-    if (originalName.present) {
-      map['original_name'] = Variable<String>(originalName.value);
-    }
-    if (mimeType.present) {
-      map['mime_type'] = Variable<String>(mimeType.value);
-    }
-    if (sizeBytes.present) {
-      map['size_bytes'] = Variable<int>(sizeBytes.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<int>(createdAt.value);
-    }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<int>(updatedAt.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('AttachmentsCompanion(')
-          ..write('id: $id, ')
-          ..write('followupId: $followupId, ')
-          ..write('orderId: $orderId, ')
-          ..write('relativePath: $relativePath, ')
-          ..write('originalName: $originalName, ')
-          ..write('mimeType: $mimeType, ')
-          ..write('sizeBytes: $sizeBytes, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class $QuotesTable extends Quotes with TableInfo<$QuotesTable, QuoteRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -11817,6 +11243,795 @@ class TendersCompanion extends UpdateCompanion<TenderRow> {
   }
 }
 
+class $AttachmentsTable extends Attachments
+    with TableInfo<$AttachmentsTable, AttachmentRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AttachmentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _followupIdMeta = const VerificationMeta(
+    'followupId',
+  );
+  @override
+  late final GeneratedColumn<int> followupId = GeneratedColumn<int>(
+    'followup_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES followups (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _orderIdMeta = const VerificationMeta(
+    'orderId',
+  );
+  @override
+  late final GeneratedColumn<int> orderId = GeneratedColumn<int>(
+    'order_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES orders (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _quoteIdMeta = const VerificationMeta(
+    'quoteId',
+  );
+  @override
+  late final GeneratedColumn<int> quoteId = GeneratedColumn<int>(
+    'quote_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES quotes (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _sampleIdMeta = const VerificationMeta(
+    'sampleId',
+  );
+  @override
+  late final GeneratedColumn<int> sampleId = GeneratedColumn<int>(
+    'sample_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES samples (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _registrationIdMeta = const VerificationMeta(
+    'registrationId',
+  );
+  @override
+  late final GeneratedColumn<int> registrationId = GeneratedColumn<int>(
+    'registration_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES registrations (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _tenderIdMeta = const VerificationMeta(
+    'tenderId',
+  );
+  @override
+  late final GeneratedColumn<int> tenderId = GeneratedColumn<int>(
+    'tender_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES tenders (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _relativePathMeta = const VerificationMeta(
+    'relativePath',
+  );
+  @override
+  late final GeneratedColumn<String> relativePath = GeneratedColumn<String>(
+    'relative_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _originalNameMeta = const VerificationMeta(
+    'originalName',
+  );
+  @override
+  late final GeneratedColumn<String> originalName = GeneratedColumn<String>(
+    'original_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _mimeTypeMeta = const VerificationMeta(
+    'mimeType',
+  );
+  @override
+  late final GeneratedColumn<String> mimeType = GeneratedColumn<String>(
+    'mime_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sizeBytesMeta = const VerificationMeta(
+    'sizeBytes',
+  );
+  @override
+  late final GeneratedColumn<int> sizeBytes = GeneratedColumn<int>(
+    'size_bytes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    followupId,
+    orderId,
+    quoteId,
+    sampleId,
+    registrationId,
+    tenderId,
+    relativePath,
+    originalName,
+    mimeType,
+    sizeBytes,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'attachments';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AttachmentRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('followup_id')) {
+      context.handle(
+        _followupIdMeta,
+        followupId.isAcceptableOrUnknown(data['followup_id']!, _followupIdMeta),
+      );
+    }
+    if (data.containsKey('order_id')) {
+      context.handle(
+        _orderIdMeta,
+        orderId.isAcceptableOrUnknown(data['order_id']!, _orderIdMeta),
+      );
+    }
+    if (data.containsKey('quote_id')) {
+      context.handle(
+        _quoteIdMeta,
+        quoteId.isAcceptableOrUnknown(data['quote_id']!, _quoteIdMeta),
+      );
+    }
+    if (data.containsKey('sample_id')) {
+      context.handle(
+        _sampleIdMeta,
+        sampleId.isAcceptableOrUnknown(data['sample_id']!, _sampleIdMeta),
+      );
+    }
+    if (data.containsKey('registration_id')) {
+      context.handle(
+        _registrationIdMeta,
+        registrationId.isAcceptableOrUnknown(
+          data['registration_id']!,
+          _registrationIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tender_id')) {
+      context.handle(
+        _tenderIdMeta,
+        tenderId.isAcceptableOrUnknown(data['tender_id']!, _tenderIdMeta),
+      );
+    }
+    if (data.containsKey('relative_path')) {
+      context.handle(
+        _relativePathMeta,
+        relativePath.isAcceptableOrUnknown(
+          data['relative_path']!,
+          _relativePathMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_relativePathMeta);
+    }
+    if (data.containsKey('original_name')) {
+      context.handle(
+        _originalNameMeta,
+        originalName.isAcceptableOrUnknown(
+          data['original_name']!,
+          _originalNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_originalNameMeta);
+    }
+    if (data.containsKey('mime_type')) {
+      context.handle(
+        _mimeTypeMeta,
+        mimeType.isAcceptableOrUnknown(data['mime_type']!, _mimeTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_mimeTypeMeta);
+    }
+    if (data.containsKey('size_bytes')) {
+      context.handle(
+        _sizeBytesMeta,
+        sizeBytes.isAcceptableOrUnknown(data['size_bytes']!, _sizeBytesMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sizeBytesMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AttachmentRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AttachmentRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      followupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}followup_id'],
+      ),
+      orderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}order_id'],
+      ),
+      quoteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}quote_id'],
+      ),
+      sampleId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sample_id'],
+      ),
+      registrationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}registration_id'],
+      ),
+      tenderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}tender_id'],
+      ),
+      relativePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}relative_path'],
+      )!,
+      originalName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}original_name'],
+      )!,
+      mimeType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mime_type'],
+      )!,
+      sizeBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}size_bytes'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $AttachmentsTable createAlias(String alias) {
+    return $AttachmentsTable(attachedDatabase, alias);
+  }
+}
+
+class AttachmentRow extends DataClass implements Insertable<AttachmentRow> {
+  final int id;
+  final int? followupId;
+  final int? orderId;
+  final int? quoteId;
+  final int? sampleId;
+  final int? registrationId;
+  final int? tenderId;
+
+  /// 相对应用文档目录的路径，形如 `attachments/2026/08/uuid.jpg`。
+  final String relativePath;
+
+  /// 原始文件名，用于展示与导出时还原。
+  final String originalName;
+  final String mimeType;
+  final int sizeBytes;
+  final int createdAt;
+  final int updatedAt;
+  const AttachmentRow({
+    required this.id,
+    this.followupId,
+    this.orderId,
+    this.quoteId,
+    this.sampleId,
+    this.registrationId,
+    this.tenderId,
+    required this.relativePath,
+    required this.originalName,
+    required this.mimeType,
+    required this.sizeBytes,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    if (!nullToAbsent || followupId != null) {
+      map['followup_id'] = Variable<int>(followupId);
+    }
+    if (!nullToAbsent || orderId != null) {
+      map['order_id'] = Variable<int>(orderId);
+    }
+    if (!nullToAbsent || quoteId != null) {
+      map['quote_id'] = Variable<int>(quoteId);
+    }
+    if (!nullToAbsent || sampleId != null) {
+      map['sample_id'] = Variable<int>(sampleId);
+    }
+    if (!nullToAbsent || registrationId != null) {
+      map['registration_id'] = Variable<int>(registrationId);
+    }
+    if (!nullToAbsent || tenderId != null) {
+      map['tender_id'] = Variable<int>(tenderId);
+    }
+    map['relative_path'] = Variable<String>(relativePath);
+    map['original_name'] = Variable<String>(originalName);
+    map['mime_type'] = Variable<String>(mimeType);
+    map['size_bytes'] = Variable<int>(sizeBytes);
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  AttachmentsCompanion toCompanion(bool nullToAbsent) {
+    return AttachmentsCompanion(
+      id: Value(id),
+      followupId: followupId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(followupId),
+      orderId: orderId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(orderId),
+      quoteId: quoteId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(quoteId),
+      sampleId: sampleId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sampleId),
+      registrationId: registrationId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(registrationId),
+      tenderId: tenderId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tenderId),
+      relativePath: Value(relativePath),
+      originalName: Value(originalName),
+      mimeType: Value(mimeType),
+      sizeBytes: Value(sizeBytes),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory AttachmentRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AttachmentRow(
+      id: serializer.fromJson<int>(json['id']),
+      followupId: serializer.fromJson<int?>(json['followupId']),
+      orderId: serializer.fromJson<int?>(json['orderId']),
+      quoteId: serializer.fromJson<int?>(json['quoteId']),
+      sampleId: serializer.fromJson<int?>(json['sampleId']),
+      registrationId: serializer.fromJson<int?>(json['registrationId']),
+      tenderId: serializer.fromJson<int?>(json['tenderId']),
+      relativePath: serializer.fromJson<String>(json['relativePath']),
+      originalName: serializer.fromJson<String>(json['originalName']),
+      mimeType: serializer.fromJson<String>(json['mimeType']),
+      sizeBytes: serializer.fromJson<int>(json['sizeBytes']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'followupId': serializer.toJson<int?>(followupId),
+      'orderId': serializer.toJson<int?>(orderId),
+      'quoteId': serializer.toJson<int?>(quoteId),
+      'sampleId': serializer.toJson<int?>(sampleId),
+      'registrationId': serializer.toJson<int?>(registrationId),
+      'tenderId': serializer.toJson<int?>(tenderId),
+      'relativePath': serializer.toJson<String>(relativePath),
+      'originalName': serializer.toJson<String>(originalName),
+      'mimeType': serializer.toJson<String>(mimeType),
+      'sizeBytes': serializer.toJson<int>(sizeBytes),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  AttachmentRow copyWith({
+    int? id,
+    Value<int?> followupId = const Value.absent(),
+    Value<int?> orderId = const Value.absent(),
+    Value<int?> quoteId = const Value.absent(),
+    Value<int?> sampleId = const Value.absent(),
+    Value<int?> registrationId = const Value.absent(),
+    Value<int?> tenderId = const Value.absent(),
+    String? relativePath,
+    String? originalName,
+    String? mimeType,
+    int? sizeBytes,
+    int? createdAt,
+    int? updatedAt,
+  }) => AttachmentRow(
+    id: id ?? this.id,
+    followupId: followupId.present ? followupId.value : this.followupId,
+    orderId: orderId.present ? orderId.value : this.orderId,
+    quoteId: quoteId.present ? quoteId.value : this.quoteId,
+    sampleId: sampleId.present ? sampleId.value : this.sampleId,
+    registrationId: registrationId.present
+        ? registrationId.value
+        : this.registrationId,
+    tenderId: tenderId.present ? tenderId.value : this.tenderId,
+    relativePath: relativePath ?? this.relativePath,
+    originalName: originalName ?? this.originalName,
+    mimeType: mimeType ?? this.mimeType,
+    sizeBytes: sizeBytes ?? this.sizeBytes,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  AttachmentRow copyWithCompanion(AttachmentsCompanion data) {
+    return AttachmentRow(
+      id: data.id.present ? data.id.value : this.id,
+      followupId: data.followupId.present
+          ? data.followupId.value
+          : this.followupId,
+      orderId: data.orderId.present ? data.orderId.value : this.orderId,
+      quoteId: data.quoteId.present ? data.quoteId.value : this.quoteId,
+      sampleId: data.sampleId.present ? data.sampleId.value : this.sampleId,
+      registrationId: data.registrationId.present
+          ? data.registrationId.value
+          : this.registrationId,
+      tenderId: data.tenderId.present ? data.tenderId.value : this.tenderId,
+      relativePath: data.relativePath.present
+          ? data.relativePath.value
+          : this.relativePath,
+      originalName: data.originalName.present
+          ? data.originalName.value
+          : this.originalName,
+      mimeType: data.mimeType.present ? data.mimeType.value : this.mimeType,
+      sizeBytes: data.sizeBytes.present ? data.sizeBytes.value : this.sizeBytes,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AttachmentRow(')
+          ..write('id: $id, ')
+          ..write('followupId: $followupId, ')
+          ..write('orderId: $orderId, ')
+          ..write('quoteId: $quoteId, ')
+          ..write('sampleId: $sampleId, ')
+          ..write('registrationId: $registrationId, ')
+          ..write('tenderId: $tenderId, ')
+          ..write('relativePath: $relativePath, ')
+          ..write('originalName: $originalName, ')
+          ..write('mimeType: $mimeType, ')
+          ..write('sizeBytes: $sizeBytes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    followupId,
+    orderId,
+    quoteId,
+    sampleId,
+    registrationId,
+    tenderId,
+    relativePath,
+    originalName,
+    mimeType,
+    sizeBytes,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AttachmentRow &&
+          other.id == this.id &&
+          other.followupId == this.followupId &&
+          other.orderId == this.orderId &&
+          other.quoteId == this.quoteId &&
+          other.sampleId == this.sampleId &&
+          other.registrationId == this.registrationId &&
+          other.tenderId == this.tenderId &&
+          other.relativePath == this.relativePath &&
+          other.originalName == this.originalName &&
+          other.mimeType == this.mimeType &&
+          other.sizeBytes == this.sizeBytes &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class AttachmentsCompanion extends UpdateCompanion<AttachmentRow> {
+  final Value<int> id;
+  final Value<int?> followupId;
+  final Value<int?> orderId;
+  final Value<int?> quoteId;
+  final Value<int?> sampleId;
+  final Value<int?> registrationId;
+  final Value<int?> tenderId;
+  final Value<String> relativePath;
+  final Value<String> originalName;
+  final Value<String> mimeType;
+  final Value<int> sizeBytes;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  const AttachmentsCompanion({
+    this.id = const Value.absent(),
+    this.followupId = const Value.absent(),
+    this.orderId = const Value.absent(),
+    this.quoteId = const Value.absent(),
+    this.sampleId = const Value.absent(),
+    this.registrationId = const Value.absent(),
+    this.tenderId = const Value.absent(),
+    this.relativePath = const Value.absent(),
+    this.originalName = const Value.absent(),
+    this.mimeType = const Value.absent(),
+    this.sizeBytes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  AttachmentsCompanion.insert({
+    this.id = const Value.absent(),
+    this.followupId = const Value.absent(),
+    this.orderId = const Value.absent(),
+    this.quoteId = const Value.absent(),
+    this.sampleId = const Value.absent(),
+    this.registrationId = const Value.absent(),
+    this.tenderId = const Value.absent(),
+    required String relativePath,
+    required String originalName,
+    required String mimeType,
+    required int sizeBytes,
+    required int createdAt,
+    required int updatedAt,
+  }) : relativePath = Value(relativePath),
+       originalName = Value(originalName),
+       mimeType = Value(mimeType),
+       sizeBytes = Value(sizeBytes),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<AttachmentRow> custom({
+    Expression<int>? id,
+    Expression<int>? followupId,
+    Expression<int>? orderId,
+    Expression<int>? quoteId,
+    Expression<int>? sampleId,
+    Expression<int>? registrationId,
+    Expression<int>? tenderId,
+    Expression<String>? relativePath,
+    Expression<String>? originalName,
+    Expression<String>? mimeType,
+    Expression<int>? sizeBytes,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (followupId != null) 'followup_id': followupId,
+      if (orderId != null) 'order_id': orderId,
+      if (quoteId != null) 'quote_id': quoteId,
+      if (sampleId != null) 'sample_id': sampleId,
+      if (registrationId != null) 'registration_id': registrationId,
+      if (tenderId != null) 'tender_id': tenderId,
+      if (relativePath != null) 'relative_path': relativePath,
+      if (originalName != null) 'original_name': originalName,
+      if (mimeType != null) 'mime_type': mimeType,
+      if (sizeBytes != null) 'size_bytes': sizeBytes,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  AttachmentsCompanion copyWith({
+    Value<int>? id,
+    Value<int?>? followupId,
+    Value<int?>? orderId,
+    Value<int?>? quoteId,
+    Value<int?>? sampleId,
+    Value<int?>? registrationId,
+    Value<int?>? tenderId,
+    Value<String>? relativePath,
+    Value<String>? originalName,
+    Value<String>? mimeType,
+    Value<int>? sizeBytes,
+    Value<int>? createdAt,
+    Value<int>? updatedAt,
+  }) {
+    return AttachmentsCompanion(
+      id: id ?? this.id,
+      followupId: followupId ?? this.followupId,
+      orderId: orderId ?? this.orderId,
+      quoteId: quoteId ?? this.quoteId,
+      sampleId: sampleId ?? this.sampleId,
+      registrationId: registrationId ?? this.registrationId,
+      tenderId: tenderId ?? this.tenderId,
+      relativePath: relativePath ?? this.relativePath,
+      originalName: originalName ?? this.originalName,
+      mimeType: mimeType ?? this.mimeType,
+      sizeBytes: sizeBytes ?? this.sizeBytes,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (followupId.present) {
+      map['followup_id'] = Variable<int>(followupId.value);
+    }
+    if (orderId.present) {
+      map['order_id'] = Variable<int>(orderId.value);
+    }
+    if (quoteId.present) {
+      map['quote_id'] = Variable<int>(quoteId.value);
+    }
+    if (sampleId.present) {
+      map['sample_id'] = Variable<int>(sampleId.value);
+    }
+    if (registrationId.present) {
+      map['registration_id'] = Variable<int>(registrationId.value);
+    }
+    if (tenderId.present) {
+      map['tender_id'] = Variable<int>(tenderId.value);
+    }
+    if (relativePath.present) {
+      map['relative_path'] = Variable<String>(relativePath.value);
+    }
+    if (originalName.present) {
+      map['original_name'] = Variable<String>(originalName.value);
+    }
+    if (mimeType.present) {
+      map['mime_type'] = Variable<String>(mimeType.value);
+    }
+    if (sizeBytes.present) {
+      map['size_bytes'] = Variable<int>(sizeBytes.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AttachmentsCompanion(')
+          ..write('id: $id, ')
+          ..write('followupId: $followupId, ')
+          ..write('orderId: $orderId, ')
+          ..write('quoteId: $quoteId, ')
+          ..write('sampleId: $sampleId, ')
+          ..write('registrationId: $registrationId, ')
+          ..write('tenderId: $tenderId, ')
+          ..write('relativePath: $relativePath, ')
+          ..write('originalName: $originalName, ')
+          ..write('mimeType: $mimeType, ')
+          ..write('sizeBytes: $sizeBytes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -11828,11 +12043,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $OrdersTable orders = $OrdersTable(this);
   late final $TagsTable tags = $TagsTable(this);
   late final $CustomerTagsTable customerTags = $CustomerTagsTable(this);
-  late final $AttachmentsTable attachments = $AttachmentsTable(this);
   late final $QuotesTable quotes = $QuotesTable(this);
   late final $SamplesTable samples = $SamplesTable(this);
   late final $RegistrationsTable registrations = $RegistrationsTable(this);
   late final $TendersTable tenders = $TendersTable(this);
+  late final $AttachmentsTable attachments = $AttachmentsTable(this);
   late final CustomerDao customerDao = CustomerDao(this as AppDatabase);
   late final ContactDao contactDao = ContactDao(this as AppDatabase);
   late final FollowupDao followupDao = FollowupDao(this as AppDatabase);
@@ -11861,11 +12076,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     orders,
     tags,
     customerTags,
-    attachments,
     quotes,
     samples,
     registrations,
     tenders,
+    attachments,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -11941,20 +12156,6 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
-        'followups',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('attachments', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'orders',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('attachments', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
         'opportunities',
         limitUpdateKind: UpdateKind.delete,
       ),
@@ -11980,6 +12181,48 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('tenders', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'followups',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('attachments', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'orders',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('attachments', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'quotes',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('attachments', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'samples',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('attachments', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'registrations',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('attachments', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'tenders',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('attachments', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -17702,483 +17945,6 @@ typedef $$CustomerTagsTableProcessedTableManager =
       CustomerTagRow,
       PrefetchHooks Function({bool customerId, bool tagId})
     >;
-typedef $$AttachmentsTableCreateCompanionBuilder =
-    AttachmentsCompanion Function({
-      Value<int> id,
-      Value<int?> followupId,
-      Value<int?> orderId,
-      required String relativePath,
-      required String originalName,
-      required String mimeType,
-      required int sizeBytes,
-      required int createdAt,
-      required int updatedAt,
-    });
-typedef $$AttachmentsTableUpdateCompanionBuilder =
-    AttachmentsCompanion Function({
-      Value<int> id,
-      Value<int?> followupId,
-      Value<int?> orderId,
-      Value<String> relativePath,
-      Value<String> originalName,
-      Value<String> mimeType,
-      Value<int> sizeBytes,
-      Value<int> createdAt,
-      Value<int> updatedAt,
-    });
-
-final class $$AttachmentsTableReferences
-    extends BaseReferences<_$AppDatabase, $AttachmentsTable, AttachmentRow> {
-  $$AttachmentsTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static $FollowupsTable _followupIdTable(_$AppDatabase db) =>
-      db.followups.createAlias('attachments__followup_id__followups__id');
-
-  $$FollowupsTableProcessedTableManager? get followupId {
-    final $_column = $_itemColumn<int>('followup_id');
-    if ($_column == null) return null;
-    final manager = $$FollowupsTableTableManager(
-      $_db,
-      $_db.followups,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_followupIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-
-  static $OrdersTable _orderIdTable(_$AppDatabase db) =>
-      db.orders.createAlias('attachments__order_id__orders__id');
-
-  $$OrdersTableProcessedTableManager? get orderId {
-    final $_column = $_itemColumn<int>('order_id');
-    if ($_column == null) return null;
-    final manager = $$OrdersTableTableManager(
-      $_db,
-      $_db.orders,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_orderIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
-
-class $$AttachmentsTableFilterComposer
-    extends Composer<_$AppDatabase, $AttachmentsTable> {
-  $$AttachmentsTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get relativePath => $composableBuilder(
-    column: $table.relativePath,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get originalName => $composableBuilder(
-    column: $table.originalName,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get mimeType => $composableBuilder(
-    column: $table.mimeType,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get sizeBytes => $composableBuilder(
-    column: $table.sizeBytes,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  $$FollowupsTableFilterComposer get followupId {
-    final $$FollowupsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.followupId,
-      referencedTable: $db.followups,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$FollowupsTableFilterComposer(
-            $db: $db,
-            $table: $db.followups,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  $$OrdersTableFilterComposer get orderId {
-    final $$OrdersTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.orderId,
-      referencedTable: $db.orders,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$OrdersTableFilterComposer(
-            $db: $db,
-            $table: $db.orders,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $$AttachmentsTableOrderingComposer
-    extends Composer<_$AppDatabase, $AttachmentsTable> {
-  $$AttachmentsTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get relativePath => $composableBuilder(
-    column: $table.relativePath,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get originalName => $composableBuilder(
-    column: $table.originalName,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get mimeType => $composableBuilder(
-    column: $table.mimeType,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get sizeBytes => $composableBuilder(
-    column: $table.sizeBytes,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  $$FollowupsTableOrderingComposer get followupId {
-    final $$FollowupsTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.followupId,
-      referencedTable: $db.followups,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$FollowupsTableOrderingComposer(
-            $db: $db,
-            $table: $db.followups,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  $$OrdersTableOrderingComposer get orderId {
-    final $$OrdersTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.orderId,
-      referencedTable: $db.orders,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$OrdersTableOrderingComposer(
-            $db: $db,
-            $table: $db.orders,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $$AttachmentsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $AttachmentsTable> {
-  $$AttachmentsTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<String> get relativePath => $composableBuilder(
-    column: $table.relativePath,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get originalName => $composableBuilder(
-    column: $table.originalName,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get mimeType =>
-      $composableBuilder(column: $table.mimeType, builder: (column) => column);
-
-  GeneratedColumn<int> get sizeBytes =>
-      $composableBuilder(column: $table.sizeBytes, builder: (column) => column);
-
-  GeneratedColumn<int> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  GeneratedColumn<int> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  $$FollowupsTableAnnotationComposer get followupId {
-    final $$FollowupsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.followupId,
-      referencedTable: $db.followups,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$FollowupsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.followups,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  $$OrdersTableAnnotationComposer get orderId {
-    final $$OrdersTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.orderId,
-      referencedTable: $db.orders,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$OrdersTableAnnotationComposer(
-            $db: $db,
-            $table: $db.orders,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $$AttachmentsTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $AttachmentsTable,
-          AttachmentRow,
-          $$AttachmentsTableFilterComposer,
-          $$AttachmentsTableOrderingComposer,
-          $$AttachmentsTableAnnotationComposer,
-          $$AttachmentsTableCreateCompanionBuilder,
-          $$AttachmentsTableUpdateCompanionBuilder,
-          (AttachmentRow, $$AttachmentsTableReferences),
-          AttachmentRow,
-          PrefetchHooks Function({bool followupId, bool orderId})
-        > {
-  $$AttachmentsTableTableManager(_$AppDatabase db, $AttachmentsTable table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$AttachmentsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$AttachmentsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$AttachmentsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<int?> followupId = const Value.absent(),
-                Value<int?> orderId = const Value.absent(),
-                Value<String> relativePath = const Value.absent(),
-                Value<String> originalName = const Value.absent(),
-                Value<String> mimeType = const Value.absent(),
-                Value<int> sizeBytes = const Value.absent(),
-                Value<int> createdAt = const Value.absent(),
-                Value<int> updatedAt = const Value.absent(),
-              }) => AttachmentsCompanion(
-                id: id,
-                followupId: followupId,
-                orderId: orderId,
-                relativePath: relativePath,
-                originalName: originalName,
-                mimeType: mimeType,
-                sizeBytes: sizeBytes,
-                createdAt: createdAt,
-                updatedAt: updatedAt,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<int?> followupId = const Value.absent(),
-                Value<int?> orderId = const Value.absent(),
-                required String relativePath,
-                required String originalName,
-                required String mimeType,
-                required int sizeBytes,
-                required int createdAt,
-                required int updatedAt,
-              }) => AttachmentsCompanion.insert(
-                id: id,
-                followupId: followupId,
-                orderId: orderId,
-                relativePath: relativePath,
-                originalName: originalName,
-                mimeType: mimeType,
-                sizeBytes: sizeBytes,
-                createdAt: createdAt,
-                updatedAt: updatedAt,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$AttachmentsTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
-          prefetchHooksCallback: ({followupId = false, orderId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (followupId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.followupId,
-                                referencedTable: $$AttachmentsTableReferences
-                                    ._followupIdTable(db),
-                                referencedColumn: $$AttachmentsTableReferences
-                                    ._followupIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
-                    if (orderId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.orderId,
-                                referencedTable: $$AttachmentsTableReferences
-                                    ._orderIdTable(db),
-                                referencedColumn: $$AttachmentsTableReferences
-                                    ._orderIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
-
-                    return state;
-                  },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
-        ),
-      );
-}
-
-typedef $$AttachmentsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $AttachmentsTable,
-      AttachmentRow,
-      $$AttachmentsTableFilterComposer,
-      $$AttachmentsTableOrderingComposer,
-      $$AttachmentsTableAnnotationComposer,
-      $$AttachmentsTableCreateCompanionBuilder,
-      $$AttachmentsTableUpdateCompanionBuilder,
-      (AttachmentRow, $$AttachmentsTableReferences),
-      AttachmentRow,
-      PrefetchHooks Function({bool followupId, bool orderId})
-    >;
 typedef $$QuotesTableCreateCompanionBuilder =
     QuotesCompanion Function({
       Value<int> id,
@@ -18238,6 +18004,24 @@ final class $$QuotesTableReferences
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$AttachmentsTable, List<AttachmentRow>>
+  _attachmentsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.attachments,
+    aliasName: 'quotes__id__attachments__quote_id',
+  );
+
+  $$AttachmentsTableProcessedTableManager get attachmentsRefs {
+    final manager = $$AttachmentsTableTableManager(
+      $_db,
+      $_db.attachments,
+    ).filter((f) => f.quoteId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_attachmentsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
     );
   }
 }
@@ -18352,6 +18136,31 @@ class $$QuotesTableFilterComposer
           ),
     );
     return composer;
+  }
+
+  Expression<bool> attachmentsRefs(
+    Expression<bool> Function($$AttachmentsTableFilterComposer f) f,
+  ) {
+    final $$AttachmentsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.attachments,
+      getReferencedColumn: (t) => t.quoteId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AttachmentsTableFilterComposer(
+            $db: $db,
+            $table: $db.attachments,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 }
 
@@ -18561,6 +18370,31 @@ class $$QuotesTableAnnotationComposer
     );
     return composer;
   }
+
+  Expression<T> attachmentsRefs<T extends Object>(
+    Expression<T> Function($$AttachmentsTableAnnotationComposer a) f,
+  ) {
+    final $$AttachmentsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.attachments,
+      getReferencedColumn: (t) => t.quoteId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AttachmentsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.attachments,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$QuotesTableTableManager
@@ -18576,7 +18410,7 @@ class $$QuotesTableTableManager
           $$QuotesTableUpdateCompanionBuilder,
           (QuoteRow, $$QuotesTableReferences),
           QuoteRow,
-          PrefetchHooks Function({bool opportunityId})
+          PrefetchHooks Function({bool opportunityId, bool attachmentsRefs})
         > {
   $$QuotesTableTableManager(_$AppDatabase db, $QuotesTable table)
     : super(
@@ -18671,47 +18505,72 @@ class $$QuotesTableTableManager
                     (e.readTable(table), $$QuotesTableReferences(db, table, e)),
               )
               .toList(),
-          prefetchHooksCallback: ({opportunityId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (opportunityId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.opportunityId,
-                                referencedTable: $$QuotesTableReferences
-                                    ._opportunityIdTable(db),
-                                referencedColumn: $$QuotesTableReferences
-                                    ._opportunityIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
+          prefetchHooksCallback:
+              ({opportunityId = false, attachmentsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (attachmentsRefs) db.attachments,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (opportunityId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.opportunityId,
+                                    referencedTable: $$QuotesTableReferences
+                                        ._opportunityIdTable(db),
+                                    referencedColumn: $$QuotesTableReferences
+                                        ._opportunityIdTable(db)
+                                        .id,
+                                  )
+                                  as T;
+                        }
 
-                    return state;
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (attachmentsRefs)
+                        await $_getPrefetchedData<
+                          QuoteRow,
+                          $QuotesTable,
+                          AttachmentRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$QuotesTableReferences
+                              ._attachmentsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$QuotesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).attachmentsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.quoteId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
                   },
-              getPrefetchedDataCallback: (items) async {
-                return [];
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -18728,7 +18587,7 @@ typedef $$QuotesTableProcessedTableManager =
       $$QuotesTableUpdateCompanionBuilder,
       (QuoteRow, $$QuotesTableReferences),
       QuoteRow,
-      PrefetchHooks Function({bool opportunityId})
+      PrefetchHooks Function({bool opportunityId, bool attachmentsRefs})
     >;
 typedef $$SamplesTableCreateCompanionBuilder =
     SamplesCompanion Function({
@@ -18790,6 +18649,24 @@ final class $$SamplesTableReferences
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$AttachmentsTable, List<AttachmentRow>>
+  _attachmentsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.attachments,
+    aliasName: 'samples__id__attachments__sample_id',
+  );
+
+  $$AttachmentsTableProcessedTableManager get attachmentsRefs {
+    final manager = $$AttachmentsTableTableManager(
+      $_db,
+      $_db.attachments,
+    ).filter((f) => f.sampleId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_attachmentsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
     );
   }
 }
@@ -18904,6 +18781,31 @@ class $$SamplesTableFilterComposer
           ),
     );
     return composer;
+  }
+
+  Expression<bool> attachmentsRefs(
+    Expression<bool> Function($$AttachmentsTableFilterComposer f) f,
+  ) {
+    final $$AttachmentsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.attachments,
+      getReferencedColumn: (t) => t.sampleId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AttachmentsTableFilterComposer(
+            $db: $db,
+            $table: $db.attachments,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 }
 
@@ -19111,6 +19013,31 @@ class $$SamplesTableAnnotationComposer
     );
     return composer;
   }
+
+  Expression<T> attachmentsRefs<T extends Object>(
+    Expression<T> Function($$AttachmentsTableAnnotationComposer a) f,
+  ) {
+    final $$AttachmentsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.attachments,
+      getReferencedColumn: (t) => t.sampleId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AttachmentsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.attachments,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$SamplesTableTableManager
@@ -19126,7 +19053,7 @@ class $$SamplesTableTableManager
           $$SamplesTableUpdateCompanionBuilder,
           (SampleRow, $$SamplesTableReferences),
           SampleRow,
-          PrefetchHooks Function({bool opportunityId})
+          PrefetchHooks Function({bool opportunityId, bool attachmentsRefs})
         > {
   $$SamplesTableTableManager(_$AppDatabase db, $SamplesTable table)
     : super(
@@ -19223,47 +19150,72 @@ class $$SamplesTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({opportunityId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (opportunityId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.opportunityId,
-                                referencedTable: $$SamplesTableReferences
-                                    ._opportunityIdTable(db),
-                                referencedColumn: $$SamplesTableReferences
-                                    ._opportunityIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
+          prefetchHooksCallback:
+              ({opportunityId = false, attachmentsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (attachmentsRefs) db.attachments,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (opportunityId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.opportunityId,
+                                    referencedTable: $$SamplesTableReferences
+                                        ._opportunityIdTable(db),
+                                    referencedColumn: $$SamplesTableReferences
+                                        ._opportunityIdTable(db)
+                                        .id,
+                                  )
+                                  as T;
+                        }
 
-                    return state;
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (attachmentsRefs)
+                        await $_getPrefetchedData<
+                          SampleRow,
+                          $SamplesTable,
+                          AttachmentRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$SamplesTableReferences
+                              ._attachmentsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$SamplesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).attachmentsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.sampleId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
                   },
-              getPrefetchedDataCallback: (items) async {
-                return [];
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -19280,7 +19232,7 @@ typedef $$SamplesTableProcessedTableManager =
       $$SamplesTableUpdateCompanionBuilder,
       (SampleRow, $$SamplesTableReferences),
       SampleRow,
-      PrefetchHooks Function({bool opportunityId})
+      PrefetchHooks Function({bool opportunityId, bool attachmentsRefs})
     >;
 typedef $$RegistrationsTableCreateCompanionBuilder =
     RegistrationsCompanion Function({
@@ -19349,6 +19301,24 @@ final class $$RegistrationsTableReferences
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$AttachmentsTable, List<AttachmentRow>>
+  _attachmentsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.attachments,
+    aliasName: 'registrations__id__attachments__registration_id',
+  );
+
+  $$AttachmentsTableProcessedTableManager get attachmentsRefs {
+    final manager = $$AttachmentsTableTableManager(
+      $_db,
+      $_db.attachments,
+    ).filter((f) => f.registrationId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_attachmentsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
     );
   }
 }
@@ -19468,6 +19438,31 @@ class $$RegistrationsTableFilterComposer
           ),
     );
     return composer;
+  }
+
+  Expression<bool> attachmentsRefs(
+    Expression<bool> Function($$AttachmentsTableFilterComposer f) f,
+  ) {
+    final $$AttachmentsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.attachments,
+      getReferencedColumn: (t) => t.registrationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AttachmentsTableFilterComposer(
+            $db: $db,
+            $table: $db.attachments,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 }
 
@@ -19695,6 +19690,31 @@ class $$RegistrationsTableAnnotationComposer
     );
     return composer;
   }
+
+  Expression<T> attachmentsRefs<T extends Object>(
+    Expression<T> Function($$AttachmentsTableAnnotationComposer a) f,
+  ) {
+    final $$AttachmentsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.attachments,
+      getReferencedColumn: (t) => t.registrationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AttachmentsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.attachments,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$RegistrationsTableTableManager
@@ -19710,7 +19730,7 @@ class $$RegistrationsTableTableManager
           $$RegistrationsTableUpdateCompanionBuilder,
           (RegistrationRow, $$RegistrationsTableReferences),
           RegistrationRow,
-          PrefetchHooks Function({bool opportunityId})
+          PrefetchHooks Function({bool opportunityId, bool attachmentsRefs})
         > {
   $$RegistrationsTableTableManager(_$AppDatabase db, $RegistrationsTable table)
     : super(
@@ -19811,47 +19831,74 @@ class $$RegistrationsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({opportunityId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (opportunityId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.opportunityId,
-                                referencedTable: $$RegistrationsTableReferences
-                                    ._opportunityIdTable(db),
-                                referencedColumn: $$RegistrationsTableReferences
-                                    ._opportunityIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
+          prefetchHooksCallback:
+              ({opportunityId = false, attachmentsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (attachmentsRefs) db.attachments,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (opportunityId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.opportunityId,
+                                    referencedTable:
+                                        $$RegistrationsTableReferences
+                                            ._opportunityIdTable(db),
+                                    referencedColumn:
+                                        $$RegistrationsTableReferences
+                                            ._opportunityIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
 
-                    return state;
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (attachmentsRefs)
+                        await $_getPrefetchedData<
+                          RegistrationRow,
+                          $RegistrationsTable,
+                          AttachmentRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$RegistrationsTableReferences
+                              ._attachmentsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$RegistrationsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).attachmentsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.registrationId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
                   },
-              getPrefetchedDataCallback: (items) async {
-                return [];
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -19868,7 +19915,7 @@ typedef $$RegistrationsTableProcessedTableManager =
       $$RegistrationsTableUpdateCompanionBuilder,
       (RegistrationRow, $$RegistrationsTableReferences),
       RegistrationRow,
-      PrefetchHooks Function({bool opportunityId})
+      PrefetchHooks Function({bool opportunityId, bool attachmentsRefs})
     >;
 typedef $$TendersTableCreateCompanionBuilder =
     TendersCompanion Function({
@@ -19938,6 +19985,24 @@ final class $$TendersTableReferences
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$AttachmentsTable, List<AttachmentRow>>
+  _attachmentsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.attachments,
+    aliasName: 'tenders__id__attachments__tender_id',
+  );
+
+  $$AttachmentsTableProcessedTableManager get attachmentsRefs {
+    final manager = $$AttachmentsTableTableManager(
+      $_db,
+      $_db.attachments,
+    ).filter((f) => f.tenderId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_attachmentsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
     );
   }
 }
@@ -20072,6 +20137,31 @@ class $$TendersTableFilterComposer
           ),
     );
     return composer;
+  }
+
+  Expression<bool> attachmentsRefs(
+    Expression<bool> Function($$AttachmentsTableFilterComposer f) f,
+  ) {
+    final $$AttachmentsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.attachments,
+      getReferencedColumn: (t) => t.tenderId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AttachmentsTableFilterComposer(
+            $db: $db,
+            $table: $db.attachments,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 }
 
@@ -20323,6 +20413,31 @@ class $$TendersTableAnnotationComposer
     );
     return composer;
   }
+
+  Expression<T> attachmentsRefs<T extends Object>(
+    Expression<T> Function($$AttachmentsTableAnnotationComposer a) f,
+  ) {
+    final $$AttachmentsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.attachments,
+      getReferencedColumn: (t) => t.tenderId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AttachmentsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.attachments,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$TendersTableTableManager
@@ -20338,7 +20453,7 @@ class $$TendersTableTableManager
           $$TendersTableUpdateCompanionBuilder,
           (TenderRow, $$TendersTableReferences),
           TenderRow,
-          PrefetchHooks Function({bool opportunityId})
+          PrefetchHooks Function({bool opportunityId, bool attachmentsRefs})
         > {
   $$TendersTableTableManager(_$AppDatabase db, $TendersTable table)
     : super(
@@ -20451,47 +20566,72 @@ class $$TendersTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({opportunityId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (opportunityId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.opportunityId,
-                                referencedTable: $$TendersTableReferences
-                                    ._opportunityIdTable(db),
-                                referencedColumn: $$TendersTableReferences
-                                    ._opportunityIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
+          prefetchHooksCallback:
+              ({opportunityId = false, attachmentsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (attachmentsRefs) db.attachments,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (opportunityId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.opportunityId,
+                                    referencedTable: $$TendersTableReferences
+                                        ._opportunityIdTable(db),
+                                    referencedColumn: $$TendersTableReferences
+                                        ._opportunityIdTable(db)
+                                        .id,
+                                  )
+                                  as T;
+                        }
 
-                    return state;
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (attachmentsRefs)
+                        await $_getPrefetchedData<
+                          TenderRow,
+                          $TendersTable,
+                          AttachmentRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$TendersTableReferences
+                              ._attachmentsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$TendersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).attachmentsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.tenderId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
                   },
-              getPrefetchedDataCallback: (items) async {
-                return [];
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -20508,7 +20648,939 @@ typedef $$TendersTableProcessedTableManager =
       $$TendersTableUpdateCompanionBuilder,
       (TenderRow, $$TendersTableReferences),
       TenderRow,
-      PrefetchHooks Function({bool opportunityId})
+      PrefetchHooks Function({bool opportunityId, bool attachmentsRefs})
+    >;
+typedef $$AttachmentsTableCreateCompanionBuilder =
+    AttachmentsCompanion Function({
+      Value<int> id,
+      Value<int?> followupId,
+      Value<int?> orderId,
+      Value<int?> quoteId,
+      Value<int?> sampleId,
+      Value<int?> registrationId,
+      Value<int?> tenderId,
+      required String relativePath,
+      required String originalName,
+      required String mimeType,
+      required int sizeBytes,
+      required int createdAt,
+      required int updatedAt,
+    });
+typedef $$AttachmentsTableUpdateCompanionBuilder =
+    AttachmentsCompanion Function({
+      Value<int> id,
+      Value<int?> followupId,
+      Value<int?> orderId,
+      Value<int?> quoteId,
+      Value<int?> sampleId,
+      Value<int?> registrationId,
+      Value<int?> tenderId,
+      Value<String> relativePath,
+      Value<String> originalName,
+      Value<String> mimeType,
+      Value<int> sizeBytes,
+      Value<int> createdAt,
+      Value<int> updatedAt,
+    });
+
+final class $$AttachmentsTableReferences
+    extends BaseReferences<_$AppDatabase, $AttachmentsTable, AttachmentRow> {
+  $$AttachmentsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $FollowupsTable _followupIdTable(_$AppDatabase db) =>
+      db.followups.createAlias('attachments__followup_id__followups__id');
+
+  $$FollowupsTableProcessedTableManager? get followupId {
+    final $_column = $_itemColumn<int>('followup_id');
+    if ($_column == null) return null;
+    final manager = $$FollowupsTableTableManager(
+      $_db,
+      $_db.followups,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_followupIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $OrdersTable _orderIdTable(_$AppDatabase db) =>
+      db.orders.createAlias('attachments__order_id__orders__id');
+
+  $$OrdersTableProcessedTableManager? get orderId {
+    final $_column = $_itemColumn<int>('order_id');
+    if ($_column == null) return null;
+    final manager = $$OrdersTableTableManager(
+      $_db,
+      $_db.orders,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_orderIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $QuotesTable _quoteIdTable(_$AppDatabase db) =>
+      db.quotes.createAlias('attachments__quote_id__quotes__id');
+
+  $$QuotesTableProcessedTableManager? get quoteId {
+    final $_column = $_itemColumn<int>('quote_id');
+    if ($_column == null) return null;
+    final manager = $$QuotesTableTableManager(
+      $_db,
+      $_db.quotes,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_quoteIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $SamplesTable _sampleIdTable(_$AppDatabase db) =>
+      db.samples.createAlias('attachments__sample_id__samples__id');
+
+  $$SamplesTableProcessedTableManager? get sampleId {
+    final $_column = $_itemColumn<int>('sample_id');
+    if ($_column == null) return null;
+    final manager = $$SamplesTableTableManager(
+      $_db,
+      $_db.samples,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_sampleIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $RegistrationsTable _registrationIdTable(_$AppDatabase db) => db
+      .registrations
+      .createAlias('attachments__registration_id__registrations__id');
+
+  $$RegistrationsTableProcessedTableManager? get registrationId {
+    final $_column = $_itemColumn<int>('registration_id');
+    if ($_column == null) return null;
+    final manager = $$RegistrationsTableTableManager(
+      $_db,
+      $_db.registrations,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_registrationIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $TendersTable _tenderIdTable(_$AppDatabase db) =>
+      db.tenders.createAlias('attachments__tender_id__tenders__id');
+
+  $$TendersTableProcessedTableManager? get tenderId {
+    final $_column = $_itemColumn<int>('tender_id');
+    if ($_column == null) return null;
+    final manager = $$TendersTableTableManager(
+      $_db,
+      $_db.tenders,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_tenderIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$AttachmentsTableFilterComposer
+    extends Composer<_$AppDatabase, $AttachmentsTable> {
+  $$AttachmentsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get relativePath => $composableBuilder(
+    column: $table.relativePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get originalName => $composableBuilder(
+    column: $table.originalName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mimeType => $composableBuilder(
+    column: $table.mimeType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sizeBytes => $composableBuilder(
+    column: $table.sizeBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$FollowupsTableFilterComposer get followupId {
+    final $$FollowupsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.followupId,
+      referencedTable: $db.followups,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FollowupsTableFilterComposer(
+            $db: $db,
+            $table: $db.followups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$OrdersTableFilterComposer get orderId {
+    final $$OrdersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.orderId,
+      referencedTable: $db.orders,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrdersTableFilterComposer(
+            $db: $db,
+            $table: $db.orders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$QuotesTableFilterComposer get quoteId {
+    final $$QuotesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.quoteId,
+      referencedTable: $db.quotes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$QuotesTableFilterComposer(
+            $db: $db,
+            $table: $db.quotes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SamplesTableFilterComposer get sampleId {
+    final $$SamplesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sampleId,
+      referencedTable: $db.samples,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SamplesTableFilterComposer(
+            $db: $db,
+            $table: $db.samples,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RegistrationsTableFilterComposer get registrationId {
+    final $$RegistrationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.registrationId,
+      referencedTable: $db.registrations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegistrationsTableFilterComposer(
+            $db: $db,
+            $table: $db.registrations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$TendersTableFilterComposer get tenderId {
+    final $$TendersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.tenderId,
+      referencedTable: $db.tenders,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TendersTableFilterComposer(
+            $db: $db,
+            $table: $db.tenders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$AttachmentsTableOrderingComposer
+    extends Composer<_$AppDatabase, $AttachmentsTable> {
+  $$AttachmentsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get relativePath => $composableBuilder(
+    column: $table.relativePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get originalName => $composableBuilder(
+    column: $table.originalName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mimeType => $composableBuilder(
+    column: $table.mimeType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sizeBytes => $composableBuilder(
+    column: $table.sizeBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$FollowupsTableOrderingComposer get followupId {
+    final $$FollowupsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.followupId,
+      referencedTable: $db.followups,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FollowupsTableOrderingComposer(
+            $db: $db,
+            $table: $db.followups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$OrdersTableOrderingComposer get orderId {
+    final $$OrdersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.orderId,
+      referencedTable: $db.orders,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrdersTableOrderingComposer(
+            $db: $db,
+            $table: $db.orders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$QuotesTableOrderingComposer get quoteId {
+    final $$QuotesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.quoteId,
+      referencedTable: $db.quotes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$QuotesTableOrderingComposer(
+            $db: $db,
+            $table: $db.quotes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SamplesTableOrderingComposer get sampleId {
+    final $$SamplesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sampleId,
+      referencedTable: $db.samples,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SamplesTableOrderingComposer(
+            $db: $db,
+            $table: $db.samples,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RegistrationsTableOrderingComposer get registrationId {
+    final $$RegistrationsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.registrationId,
+      referencedTable: $db.registrations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegistrationsTableOrderingComposer(
+            $db: $db,
+            $table: $db.registrations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$TendersTableOrderingComposer get tenderId {
+    final $$TendersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.tenderId,
+      referencedTable: $db.tenders,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TendersTableOrderingComposer(
+            $db: $db,
+            $table: $db.tenders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$AttachmentsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AttachmentsTable> {
+  $$AttachmentsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get relativePath => $composableBuilder(
+    column: $table.relativePath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get originalName => $composableBuilder(
+    column: $table.originalName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get mimeType =>
+      $composableBuilder(column: $table.mimeType, builder: (column) => column);
+
+  GeneratedColumn<int> get sizeBytes =>
+      $composableBuilder(column: $table.sizeBytes, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$FollowupsTableAnnotationComposer get followupId {
+    final $$FollowupsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.followupId,
+      referencedTable: $db.followups,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FollowupsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.followups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$OrdersTableAnnotationComposer get orderId {
+    final $$OrdersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.orderId,
+      referencedTable: $db.orders,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrdersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.orders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$QuotesTableAnnotationComposer get quoteId {
+    final $$QuotesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.quoteId,
+      referencedTable: $db.quotes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$QuotesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.quotes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SamplesTableAnnotationComposer get sampleId {
+    final $$SamplesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sampleId,
+      referencedTable: $db.samples,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SamplesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.samples,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RegistrationsTableAnnotationComposer get registrationId {
+    final $$RegistrationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.registrationId,
+      referencedTable: $db.registrations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegistrationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.registrations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$TendersTableAnnotationComposer get tenderId {
+    final $$TendersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.tenderId,
+      referencedTable: $db.tenders,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TendersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.tenders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$AttachmentsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AttachmentsTable,
+          AttachmentRow,
+          $$AttachmentsTableFilterComposer,
+          $$AttachmentsTableOrderingComposer,
+          $$AttachmentsTableAnnotationComposer,
+          $$AttachmentsTableCreateCompanionBuilder,
+          $$AttachmentsTableUpdateCompanionBuilder,
+          (AttachmentRow, $$AttachmentsTableReferences),
+          AttachmentRow,
+          PrefetchHooks Function({
+            bool followupId,
+            bool orderId,
+            bool quoteId,
+            bool sampleId,
+            bool registrationId,
+            bool tenderId,
+          })
+        > {
+  $$AttachmentsTableTableManager(_$AppDatabase db, $AttachmentsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AttachmentsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AttachmentsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AttachmentsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int?> followupId = const Value.absent(),
+                Value<int?> orderId = const Value.absent(),
+                Value<int?> quoteId = const Value.absent(),
+                Value<int?> sampleId = const Value.absent(),
+                Value<int?> registrationId = const Value.absent(),
+                Value<int?> tenderId = const Value.absent(),
+                Value<String> relativePath = const Value.absent(),
+                Value<String> originalName = const Value.absent(),
+                Value<String> mimeType = const Value.absent(),
+                Value<int> sizeBytes = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+              }) => AttachmentsCompanion(
+                id: id,
+                followupId: followupId,
+                orderId: orderId,
+                quoteId: quoteId,
+                sampleId: sampleId,
+                registrationId: registrationId,
+                tenderId: tenderId,
+                relativePath: relativePath,
+                originalName: originalName,
+                mimeType: mimeType,
+                sizeBytes: sizeBytes,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int?> followupId = const Value.absent(),
+                Value<int?> orderId = const Value.absent(),
+                Value<int?> quoteId = const Value.absent(),
+                Value<int?> sampleId = const Value.absent(),
+                Value<int?> registrationId = const Value.absent(),
+                Value<int?> tenderId = const Value.absent(),
+                required String relativePath,
+                required String originalName,
+                required String mimeType,
+                required int sizeBytes,
+                required int createdAt,
+                required int updatedAt,
+              }) => AttachmentsCompanion.insert(
+                id: id,
+                followupId: followupId,
+                orderId: orderId,
+                quoteId: quoteId,
+                sampleId: sampleId,
+                registrationId: registrationId,
+                tenderId: tenderId,
+                relativePath: relativePath,
+                originalName: originalName,
+                mimeType: mimeType,
+                sizeBytes: sizeBytes,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$AttachmentsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({
+                followupId = false,
+                orderId = false,
+                quoteId = false,
+                sampleId = false,
+                registrationId = false,
+                tenderId = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (followupId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.followupId,
+                                    referencedTable:
+                                        $$AttachmentsTableReferences
+                                            ._followupIdTable(db),
+                                    referencedColumn:
+                                        $$AttachmentsTableReferences
+                                            ._followupIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (orderId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.orderId,
+                                    referencedTable:
+                                        $$AttachmentsTableReferences
+                                            ._orderIdTable(db),
+                                    referencedColumn:
+                                        $$AttachmentsTableReferences
+                                            ._orderIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (quoteId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.quoteId,
+                                    referencedTable:
+                                        $$AttachmentsTableReferences
+                                            ._quoteIdTable(db),
+                                    referencedColumn:
+                                        $$AttachmentsTableReferences
+                                            ._quoteIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (sampleId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.sampleId,
+                                    referencedTable:
+                                        $$AttachmentsTableReferences
+                                            ._sampleIdTable(db),
+                                    referencedColumn:
+                                        $$AttachmentsTableReferences
+                                            ._sampleIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (registrationId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.registrationId,
+                                    referencedTable:
+                                        $$AttachmentsTableReferences
+                                            ._registrationIdTable(db),
+                                    referencedColumn:
+                                        $$AttachmentsTableReferences
+                                            ._registrationIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (tenderId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.tenderId,
+                                    referencedTable:
+                                        $$AttachmentsTableReferences
+                                            ._tenderIdTable(db),
+                                    referencedColumn:
+                                        $$AttachmentsTableReferences
+                                            ._tenderIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$AttachmentsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AttachmentsTable,
+      AttachmentRow,
+      $$AttachmentsTableFilterComposer,
+      $$AttachmentsTableOrderingComposer,
+      $$AttachmentsTableAnnotationComposer,
+      $$AttachmentsTableCreateCompanionBuilder,
+      $$AttachmentsTableUpdateCompanionBuilder,
+      (AttachmentRow, $$AttachmentsTableReferences),
+      AttachmentRow,
+      PrefetchHooks Function({
+        bool followupId,
+        bool orderId,
+        bool quoteId,
+        bool sampleId,
+        bool registrationId,
+        bool tenderId,
+      })
     >;
 
 class $AppDatabaseManager {
@@ -20529,8 +21601,6 @@ class $AppDatabaseManager {
   $$TagsTableTableManager get tags => $$TagsTableTableManager(_db, _db.tags);
   $$CustomerTagsTableTableManager get customerTags =>
       $$CustomerTagsTableTableManager(_db, _db.customerTags);
-  $$AttachmentsTableTableManager get attachments =>
-      $$AttachmentsTableTableManager(_db, _db.attachments);
   $$QuotesTableTableManager get quotes =>
       $$QuotesTableTableManager(_db, _db.quotes);
   $$SamplesTableTableManager get samples =>
@@ -20539,4 +21609,6 @@ class $AppDatabaseManager {
       $$RegistrationsTableTableManager(_db, _db.registrations);
   $$TendersTableTableManager get tenders =>
       $$TendersTableTableManager(_db, _db.tenders);
+  $$AttachmentsTableTableManager get attachments =>
+      $$AttachmentsTableTableManager(_db, _db.attachments);
 }

@@ -8,6 +8,10 @@ mixin _$AttachmentDaoMixin on DatabaseAccessor<AppDatabase> {
   $OpportunitiesTable get opportunities => attachedDatabase.opportunities;
   $FollowupsTable get followups => attachedDatabase.followups;
   $OrdersTable get orders => attachedDatabase.orders;
+  $QuotesTable get quotes => attachedDatabase.quotes;
+  $SamplesTable get samples => attachedDatabase.samples;
+  $RegistrationsTable get registrations => attachedDatabase.registrations;
+  $TendersTable get tenders => attachedDatabase.tenders;
   $AttachmentsTable get attachments => attachedDatabase.attachments;
   AttachmentDaoManager get managers => AttachmentDaoManager(this);
 }
@@ -23,6 +27,14 @@ class AttachmentDaoManager {
       $$FollowupsTableTableManager(_db.attachedDatabase, _db.followups);
   $$OrdersTableTableManager get orders =>
       $$OrdersTableTableManager(_db.attachedDatabase, _db.orders);
+  $$QuotesTableTableManager get quotes =>
+      $$QuotesTableTableManager(_db.attachedDatabase, _db.quotes);
+  $$SamplesTableTableManager get samples =>
+      $$SamplesTableTableManager(_db.attachedDatabase, _db.samples);
+  $$RegistrationsTableTableManager get registrations =>
+      $$RegistrationsTableTableManager(_db.attachedDatabase, _db.registrations);
+  $$TendersTableTableManager get tenders =>
+      $$TendersTableTableManager(_db.attachedDatabase, _db.tenders);
   $$AttachmentsTableTableManager get attachments =>
       $$AttachmentsTableTableManager(_db.attachedDatabase, _db.attachments);
 }

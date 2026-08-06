@@ -72,7 +72,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -81,6 +81,7 @@ class AppDatabase extends _$AppDatabase {
       await _createIndexes();
       await _createQuoteSampleIndexes();
       await _createRegistrationTenderOrderIndexes();
+      await _createAttachmentOwnerIndexes();
     },
     onUpgrade: (m, from, to) async {
       if (from < 2) {
@@ -97,6 +98,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 6) {
         await _migrateV5ToV6(m);
+      }
+      if (from < 7) {
+        await _migrateV6ToV7(m);
       }
     },
     beforeOpen: (details) async {
@@ -380,6 +384,41 @@ class AppDatabase extends _$AppDatabase {
     await _createRegistrationTenderOrderIndexes();
   }
 
+  /// 把原先只能归属跟进或订单的附件扩展为六类业务归属。
+  ///
+  /// SQLite 不能直接修改 CHECK 约束，因此重建附件表。复制时显式列出 v6
+  /// 字段，新增加的四个归属列自然保持 NULL，原有 id、路径和时间戳均不变。
+  Future<void> _migrateV6ToV7(Migrator m) async {
+    await customStatement('ALTER TABLE attachments RENAME TO attachments_v6');
+    await m.createTable(attachments);
+    await customStatement('''
+      INSERT INTO attachments (
+        id,
+        followup_id,
+        order_id,
+        relative_path,
+        original_name,
+        mime_type,
+        size_bytes,
+        created_at,
+        updated_at
+      )
+      SELECT
+        id,
+        followup_id,
+        order_id,
+        relative_path,
+        original_name,
+        mime_type,
+        size_bytes,
+        created_at,
+        updated_at
+      FROM attachments_v6
+    ''');
+    await customStatement('DROP TABLE attachments_v6');
+    await _createAttachmentOwnerIndexes();
+  }
+
   Future<void> _createQuoteSampleIndexes() async {
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_quotes_opportunity_date '
@@ -423,6 +462,33 @@ class AppDatabase extends _$AppDatabase {
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_orders_estimated_repurchase '
       'ON orders(estimated_repurchase_at)',
+    );
+  }
+
+  Future<void> _createAttachmentOwnerIndexes() async {
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_attachments_followup '
+      'ON attachments(followup_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_attachments_order '
+      'ON attachments(order_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_attachments_quote '
+      'ON attachments(quote_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_attachments_sample '
+      'ON attachments(sample_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_attachments_registration '
+      'ON attachments(registration_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_attachments_tender '
+      'ON attachments(tender_id)',
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:customer/data/daos/attachment_dao.dart';
 import 'package:customer/data/database.dart';
 import 'package:customer/models/enums.dart';
 import 'package:drift/drift.dart' show Value;
@@ -377,7 +378,7 @@ void main() {
       );
 
       final id = await db.attachmentDao.insertAttachment(
-        followupId: followupId,
+        owner: FollowupAttachmentOwner(followupId),
         relativePath: 'attachments/2026/08/abc.jpg',
         originalName: '名片.jpg',
         mimeType: 'image/jpeg',
@@ -388,7 +389,9 @@ void main() {
       expect(row!.relativePath, 'attachments/2026/08/abc.jpg');
       expect(row.followupId, followupId);
       expect(row.orderId, isNull);
-      expect((await db.attachmentDao.listOfFollowup(followupId)).length, 1);
+      final owner = FollowupAttachmentOwner(followupId);
+      expect(await db.attachmentDao.listOf(owner), hasLength(1));
+      expect(await db.attachmentDao.countOf(owner), 1);
       expect(await db.attachmentDao.countAll(), 1);
       expect(await db.attachmentDao.totalSizeBytes(), 2048);
 
@@ -406,7 +409,7 @@ void main() {
       );
 
       await db.attachmentDao.insertAttachment(
-        orderId: orderId,
+        owner: OrderAttachmentOwner(orderId),
         relativePath: 'attachments/2026/08/contract.pdf',
         originalName: '合同.pdf',
         mimeType: 'application/pdf',
@@ -414,42 +417,19 @@ void main() {
       );
 
       expect(
-        (await db.attachmentDao.listOfOrder(orderId)).single.orderId,
+        (await db.attachmentDao.listOf(
+          OrderAttachmentOwner(orderId),
+        )).single.orderId,
         orderId,
       );
+      expect(await db.attachmentDao.countOf(OrderAttachmentOwner(orderId)), 1);
       expect(await db.attachmentDao.listAll(), hasLength(1));
-    });
-
-    test('归属不明确时拒绝写入', () async {
-      // 两个外键都空。
-      expect(
-        () => db.attachmentDao.insertAttachment(
-          relativePath: 'attachments/2026/08/x.jpg',
-          originalName: 'x.jpg',
-          mimeType: 'image/jpeg',
-          sizeBytes: 1,
-        ),
-        throwsArgumentError,
-      );
-
-      // 两个外键都有值。
-      expect(
-        () => db.attachmentDao.insertAttachment(
-          followupId: 1,
-          orderId: 1,
-          relativePath: 'attachments/2026/08/x.jpg',
-          originalName: 'x.jpg',
-          mimeType: 'image/jpeg',
-          sizeBytes: 1,
-        ),
-        throwsArgumentError,
-      );
     });
 
     test('拒绝绝对路径', () async {
       expect(
         () => db.attachmentDao.insertAttachment(
-          followupId: 1,
+          owner: const FollowupAttachmentOwner(1),
           relativePath: '/data/user/0/app/files/x.jpg',
           originalName: 'x.jpg',
           mimeType: 'image/jpeg',

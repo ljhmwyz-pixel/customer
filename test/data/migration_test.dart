@@ -7,16 +7,16 @@ import 'package:sqlite3/sqlite3.dart' as sqlite;
 
 import 'helpers.dart';
 
-/// v6 数据库初始化与 v1/v2/v3/v5 真库升级。
+/// v7 数据库初始化与 v1/v2/v3/v5 真库升级。
 void main() {
   late AppDatabase db;
 
-  group('v6 新库', () {
+  group('v7 新库', () {
     setUp(() async => db = await openTestDb());
     tearDown(() async => db.close());
 
-    test('schemaVersion 为 6', () {
-      expect(db.schemaVersion, 6);
+    test('schemaVersion 为 7', () {
+      expect(db.schemaVersion, 7);
     });
 
     test('空库初始化后十三张表全部建成', () async {
@@ -57,6 +57,10 @@ void main() {
       expect(indexes, {
         'idx_attachments_followup',
         'idx_attachments_order',
+        'idx_attachments_quote',
+        'idx_attachments_sample',
+        'idx_attachments_registration',
+        'idx_attachments_tender',
         'idx_customers_last_follow',
         'idx_customers_phone',
         'idx_customers_stage',
@@ -85,7 +89,7 @@ void main() {
       });
     });
 
-    test('v3 跟进、v4 任务、v5 报价样品和 v6 业务字段已建成', () async {
+    test('v3 跟进、v4 任务、v5 报价样品和 v6/v7 业务字段已建成', () async {
       expect(
         await _columnNames(db, 'followups'),
         containsAll({
@@ -137,11 +141,11 @@ void main() {
       );
     });
 
-    test('user_version 写入为 6', () async {
+    test('user_version 写入为 7', () async {
       // drift 用 SQLite 的 user_version 记录 schema 版本，
       // 这个值不对的话后续 onUpgrade 会走错分支。
       final row = await db.customSelect('PRAGMA user_version').getSingle();
-      expect(row.data.values.first, 6);
+      expect(row.data.values.first, 7);
     });
 
     test('外键约束在 beforeOpen 后处于开启状态', () async {
@@ -161,6 +165,10 @@ void main() {
       expect(sql, contains('CHECK'));
       expect(sql, contains('followup_id'));
       expect(sql, contains('order_id'));
+      expect(sql, contains('quote_id'));
+      expect(sql, contains('sample_id'));
+      expect(sql, contains('registration_id'));
+      expect(sql, contains('tender_id'));
     });
 
     test('空库各表记录数为 0，且可立刻写入', () async {
@@ -189,7 +197,7 @@ void main() {
           )
           .get();
       // 索引没有被重复创建成两条。
-      expect(rows.length, 27);
+      expect(rows.length, 31);
     });
   });
 
@@ -212,7 +220,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 6);
+      expect(version.data.values.first, 7);
 
       final opportunities = await migrated.customSelect('''
             SELECT customer_id, name, stage, status, is_legacy_default
@@ -313,7 +321,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 6);
+      expect(version.data.values.first, 7);
 
       final followup = await migrated.customSelect('''
             SELECT opportunity_id, content, conclusion, feedback, stage,
@@ -395,7 +403,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 6);
+      expect(version.data.values.first, 7);
       await _expectLegacyTaskBackfill(migrated);
 
       final followup = await migrated.customSelect('''
@@ -415,7 +423,7 @@ void main() {
     }
   });
 
-  test('v5 真库升级按固定规则拆分订单状态并保留原字段', () async {
+  test('v5 真库升级到 v7 后无损保留订单和附件', () async {
     final directory = await Directory.systemTemp.createTemp('customer-v5-');
     final file = File('${directory.path}/customer.sqlite');
     final raw = sqlite.sqlite3.open(file.path);
@@ -432,7 +440,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 6);
+      expect(version.data.values.first, 7);
 
       final orders = await migrated.customSelect('''
             SELECT customer_id, opportunity_id, order_no, ordered_at,
@@ -468,6 +476,50 @@ void main() {
         expect(row.read<String>('order_result'), expected.$5);
         expect(row.read<int>('created_at'), 1785888000100 + index);
         expect(row.read<int>('updated_at'), 1785888000200 + index);
+      }
+
+      final attachments = await migrated.customSelect('''
+            SELECT id, followup_id, order_id, quote_id, sample_id,
+                   registration_id, tender_id, relative_path, original_name,
+                   mime_type, size_bytes, created_at, updated_at
+            FROM attachments
+            ORDER BY id
+          ''').get();
+      expect(attachments, hasLength(2));
+
+      final followupAttachment = attachments[0];
+      expect(followupAttachment.read<int>('id'), 41);
+      expect(followupAttachment.read<int>('followup_id'), 1);
+      expect(followupAttachment.read<int?>('order_id'), isNull);
+      expect(
+        followupAttachment.read<String>('relative_path'),
+        'attachments/2026/08/followup.jpg',
+      );
+      expect(followupAttachment.read<String>('original_name'), '客户现场.jpg');
+      expect(followupAttachment.read<String>('mime_type'), 'image/jpeg');
+      expect(followupAttachment.read<int>('size_bytes'), 123456);
+      expect(followupAttachment.read<int>('created_at'), 1785888000101);
+      expect(followupAttachment.read<int>('updated_at'), 1785888000201);
+
+      final orderAttachment = attachments[1];
+      expect(orderAttachment.read<int>('id'), 42);
+      expect(orderAttachment.read<int?>('followup_id'), isNull);
+      expect(orderAttachment.read<int>('order_id'), 1);
+      expect(
+        orderAttachment.read<String>('relative_path'),
+        'attachments/2026/08/order.pdf',
+      );
+      expect(orderAttachment.read<String>('original_name'), 'PI-2026-001.pdf');
+      expect(orderAttachment.read<String>('mime_type'), 'application/pdf');
+      expect(orderAttachment.read<int>('size_bytes'), 654321);
+      expect(orderAttachment.read<int>('created_at'), 1785888000102);
+      expect(orderAttachment.read<int>('updated_at'), 1785888000202);
+
+      for (final attachment in attachments) {
+        expect(attachment.read<int?>('quote_id'), isNull);
+        expect(attachment.read<int?>('sample_id'), isNull);
+        expect(attachment.read<int?>('registration_id'), isNull);
+        expect(attachment.read<int?>('tender_id'), isNull);
       }
 
       final foreignKeyErrors = await migrated
@@ -753,6 +805,24 @@ void _createV5Fixture(sqlite.Database db) {
     )
   ''');
   db.execute('''
+    CREATE TABLE followups (
+      id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      customer_id INTEGER NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+      opportunity_id INTEGER REFERENCES opportunities(id) ON DELETE SET NULL,
+      occurred_at INTEGER NOT NULL,
+      method TEXT NOT NULL,
+      content TEXT NOT NULL,
+      conclusion TEXT,
+      feedback TEXT,
+      stage TEXT,
+      next_action TEXT,
+      next_follow_at INTEGER,
+      pause_reason TEXT,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    )
+  ''');
+  db.execute('''
     CREATE TABLE orders (
       id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
       customer_id INTEGER NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
@@ -766,6 +836,45 @@ void _createV5Fixture(sqlite.Database db) {
       updated_at INTEGER NOT NULL
     )
   ''');
+  db.execute('''
+    CREATE TABLE quotes (
+      id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      opportunity_id INTEGER NOT NULL REFERENCES opportunities(id) ON DELETE CASCADE,
+      quote_no TEXT NOT NULL,
+      version INTEGER NOT NULL,
+      quantity INTEGER NOT NULL,
+      currency TEXT NOT NULL,
+      quoted_at INTEGER NOT NULL,
+      customer_received INTEGER NOT NULL DEFAULT 0,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    )
+  ''');
+  db.execute('''
+    CREATE TABLE samples (
+      id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      opportunity_id INTEGER NOT NULL REFERENCES opportunities(id) ON DELETE CASCADE,
+      quantity INTEGER NOT NULL,
+      status TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    )
+  ''');
+  db.execute('''
+    CREATE TABLE attachments (
+      id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+      followup_id INTEGER REFERENCES followups(id) ON DELETE CASCADE,
+      order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
+      relative_path TEXT NOT NULL,
+      original_name TEXT NOT NULL,
+      mime_type TEXT NOT NULL,
+      size_bytes INTEGER NOT NULL,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      CHECK ((followup_id IS NOT NULL AND order_id IS NULL)
+        OR (followup_id IS NULL AND order_id IS NOT NULL))
+    )
+  ''');
 
   db.execute('''
     INSERT INTO customers (id, name, created_at, updated_at)
@@ -774,6 +883,31 @@ void _createV5Fixture(sqlite.Database db) {
   db.execute('''
     INSERT INTO opportunities (id, customer_id, name, created_at, updated_at)
     VALUES (1, 1, 'v5 项目', 1785888000000, 1785888000000)
+  ''');
+  db.execute('''
+    INSERT INTO followups (
+      id, customer_id, opportunity_id, occurred_at, method, content,
+      created_at, updated_at
+    ) VALUES (
+      1, 1, 1, 1785888000000, 'email', 'v5 跟进',
+      1785888000000, 1785888000000
+    )
+  ''');
+  db.execute('''
+    INSERT INTO quotes (
+      id, opportunity_id, quote_no, version, quantity, currency, quoted_at,
+      customer_received, created_at, updated_at
+    ) VALUES (
+      1, 1, 'V5-Q-001', 1, 100, 'USD', 1785888000000,
+      1, 1785888000000, 1785888000000
+    )
+  ''');
+  db.execute('''
+    INSERT INTO samples (
+      id, opportunity_id, quantity, status, created_at, updated_at
+    ) VALUES (
+      1, 1, 2, 'sent', 1785888000000, 1785888000000
+    )
   ''');
 
   const statuses = ['pending', 'shipped', 'paid', 'completed', 'cancelled'];
@@ -798,5 +932,23 @@ void _createV5Fixture(sqlite.Database db) {
       ],
     );
   }
+  db.execute('''
+    INSERT INTO attachments (
+      id, followup_id, relative_path, original_name, mime_type, size_bytes,
+      created_at, updated_at
+    ) VALUES (
+      41, 1, 'attachments/2026/08/followup.jpg', '客户现场.jpg', 'image/jpeg',
+      123456, 1785888000101, 1785888000201
+    )
+  ''');
+  db.execute('''
+    INSERT INTO attachments (
+      id, order_id, relative_path, original_name, mime_type, size_bytes,
+      created_at, updated_at
+    ) VALUES (
+      42, 1, 'attachments/2026/08/order.pdf', 'PI-2026-001.pdf',
+      'application/pdf', 654321, 1785888000102, 1785888000202
+    )
+  ''');
   db.execute('PRAGMA user_version = 5');
 }

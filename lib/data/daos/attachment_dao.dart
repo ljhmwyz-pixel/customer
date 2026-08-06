@@ -6,6 +6,37 @@ import '../tables/attachments.dart';
 
 part 'attachment_dao.g.dart';
 
+/// 附件的业务归属。使用封闭类型层次，让调用方无法表达零归属或多重归属。
+sealed class AttachmentOwner {
+  const AttachmentOwner(this.id);
+
+  final int id;
+}
+
+final class FollowupAttachmentOwner extends AttachmentOwner {
+  const FollowupAttachmentOwner(super.id);
+}
+
+final class OrderAttachmentOwner extends AttachmentOwner {
+  const OrderAttachmentOwner(super.id);
+}
+
+final class QuoteAttachmentOwner extends AttachmentOwner {
+  const QuoteAttachmentOwner(super.id);
+}
+
+final class SampleAttachmentOwner extends AttachmentOwner {
+  const SampleAttachmentOwner(super.id);
+}
+
+final class RegistrationAttachmentOwner extends AttachmentOwner {
+  const RegistrationAttachmentOwner(super.id);
+}
+
+final class TenderAttachmentOwner extends AttachmentOwner {
+  const TenderAttachmentOwner(super.id);
+}
+
 /// 附件数据访问。
 ///
 /// 只管数据库记录，不碰文件本身。文件的写入与删除在阶段 4 由上层服务负责，
@@ -15,25 +46,15 @@ class AttachmentDao extends DatabaseAccessor<AppDatabase>
     with _$AttachmentDaoMixin {
   AttachmentDao(super.db);
 
-  /// 写入附件记录。[followupId] 与 [orderId] 必须恰好一个非空。
-  ///
-  /// 在 Dart 层先挡一道，是为了报出能看懂的错误信息；
-  /// 表上的 CHECK 约束仍然保留作为兜底，防止绕过 DAO 的写入路径。
+  /// 写入附件记录。[owner] 在类型层保证恰好一个归属。
   Future<int> insertAttachment({
-    int? followupId,
-    int? orderId,
+    required AttachmentOwner owner,
     required String relativePath,
     required String originalName,
     required String mimeType,
     required int sizeBytes,
     DateTime? now,
   }) {
-    if ((followupId == null) == (orderId == null)) {
-      throw ArgumentError(
-        '附件归属必须明确：followupId 与 orderId 恰好一个非空，'
-        '当前 followupId=$followupId, orderId=$orderId',
-      );
-    }
     if (relativePath.startsWith('/')) {
       throw ArgumentError.value(
         relativePath,
@@ -43,10 +64,34 @@ class AttachmentDao extends DatabaseAccessor<AppDatabase>
     }
 
     final ts = (now ?? DateTime.now()).toUtc().millisecondsSinceEpoch;
+    final ownerFields = switch (owner) {
+      FollowupAttachmentOwner() => (followupId: Value(owner.id)),
+      OrderAttachmentOwner() => (orderId: Value(owner.id)),
+      QuoteAttachmentOwner() => (quoteId: Value(owner.id)),
+      SampleAttachmentOwner() => (sampleId: Value(owner.id)),
+      RegistrationAttachmentOwner() => (registrationId: Value(owner.id)),
+      TenderAttachmentOwner() => (tenderId: Value(owner.id)),
+    };
     return into(attachments).insert(
       AttachmentsCompanion.insert(
-        followupId: Value(followupId),
-        orderId: Value(orderId),
+        followupId: ownerFields is ({Value<int> followupId})
+            ? ownerFields.followupId
+            : const Value.absent(),
+        orderId: ownerFields is ({Value<int> orderId})
+            ? ownerFields.orderId
+            : const Value.absent(),
+        quoteId: ownerFields is ({Value<int> quoteId})
+            ? ownerFields.quoteId
+            : const Value.absent(),
+        sampleId: ownerFields is ({Value<int> sampleId})
+            ? ownerFields.sampleId
+            : const Value.absent(),
+        registrationId: ownerFields is ({Value<int> registrationId})
+            ? ownerFields.registrationId
+            : const Value.absent(),
+        tenderId: ownerFields is ({Value<int> tenderId})
+            ? ownerFields.tenderId
+            : const Value.absent(),
         relativePath: relativePath,
         originalName: originalName,
         mimeType: mimeType,
@@ -60,17 +105,20 @@ class AttachmentDao extends DatabaseAccessor<AppDatabase>
   Future<AttachmentRow?> findById(int id) =>
       (select(attachments)..where((t) => t.id.equals(id))).getSingleOrNull();
 
-  Future<List<AttachmentRow>> listOfFollowup(int followupId) =>
+  Future<List<AttachmentRow>> listOf(AttachmentOwner owner) =>
       (select(attachments)
-            ..where((t) => t.followupId.equals(followupId))
+            ..where((t) => _ownerPredicate(t, owner))
             ..orderBy([(t) => OrderingTerm.asc(t.id)]))
           .get();
 
-  Future<List<AttachmentRow>> listOfOrder(int orderId) =>
-      (select(attachments)
-            ..where((t) => t.orderId.equals(orderId))
-            ..orderBy([(t) => OrderingTerm.asc(t.id)]))
-          .get();
+  Future<int> countOf(AttachmentOwner owner) async {
+    final count = attachments.id.count();
+    final query = selectOnly(attachments)
+      ..addColumns([count])
+      ..where(_ownerPredicate(attachments, owner));
+    final row = await query.getSingle();
+    return row.read(count) ?? 0;
+  }
 
   /// 全部附件记录。备份打包时遍历用。
   Future<List<AttachmentRow>> listAll() =>
@@ -99,4 +147,16 @@ class AttachmentDao extends DatabaseAccessor<AppDatabase>
 
   Future<int> deleteAttachment(int id) =>
       (delete(attachments)..where((t) => t.id.equals(id))).go();
+
+  Expression<bool> _ownerPredicate(
+    $AttachmentsTable table,
+    AttachmentOwner owner,
+  ) => switch (owner) {
+    FollowupAttachmentOwner() => table.followupId.equals(owner.id),
+    OrderAttachmentOwner() => table.orderId.equals(owner.id),
+    QuoteAttachmentOwner() => table.quoteId.equals(owner.id),
+    SampleAttachmentOwner() => table.sampleId.equals(owner.id),
+    RegistrationAttachmentOwner() => table.registrationId.equals(owner.id),
+    TenderAttachmentOwner() => table.tenderId.equals(owner.id),
+  };
 }
