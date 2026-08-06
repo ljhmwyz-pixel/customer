@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'features/attachments/attachment_page.dart';
+import 'features/attachments/attachment_preview_page.dart';
+import 'features/attachments/attachment_providers.dart';
 import 'features/customers/customer_detail_page.dart';
 import 'features/business/quote_form_page.dart';
 import 'features/business/registration_form_page.dart';
@@ -34,6 +37,29 @@ String customerDetailLocation(int customerId) => '/customers/$customerId';
 final router = GoRouter(
   initialLocation: '/',
   routes: [
+    GoRoute(
+      path: '/attachments/preview/:id',
+      builder: (context, state) {
+        final attachmentId = int.tryParse(state.pathParameters['id'] ?? '');
+        if (attachmentId == null || attachmentId <= 0) {
+          return const _RouteErrorPage(message: '附件编号无效');
+        }
+        return AttachmentPreviewPage(attachmentId: attachmentId);
+      },
+    ),
+    GoRoute(
+      path: '/attachments/:ownerType/:ownerId',
+      builder: (context, state) {
+        final owner = AttachmentOwnerRoute.tryParse(
+          state.pathParameters['ownerType'] ?? '',
+          state.pathParameters['ownerId'] ?? '',
+        );
+        if (owner == null) {
+          return const _RouteErrorPage(message: '附件归属无效');
+        }
+        return AttachmentPage(owner: owner);
+      },
+    ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
           AppShell(navigationShell: navigationShell),
