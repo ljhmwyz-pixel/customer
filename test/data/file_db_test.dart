@@ -72,9 +72,9 @@ void main() {
 
     expect(rows, hasLength(1));
     expect(rows.single.name, '持久化客户');
-    // 重开后 user_version 仍是 7，不会重跑 onCreate。
+    // 重开后 user_version 仍是 8，不会重跑 onCreate。
     final v = await db.customSelect('PRAGMA user_version').getSingle();
-    expect(v.data.values.first, 7);
+    expect(v.data.values.first, 8);
   });
 
   test('落盘库在 500 客户 + 5000 跟进下排序仍低于 200ms', () async {

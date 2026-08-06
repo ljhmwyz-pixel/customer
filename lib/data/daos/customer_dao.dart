@@ -148,6 +148,7 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
     String? note,
     CustomerStage stage = CustomerStage.potential,
     CustomerGrade grade = CustomerGrade.c,
+    String? sampleBatchId,
     DateTime? now,
   }) {
     final ts = (now ?? DateTime.now()).toUtc().millisecondsSinceEpoch;
@@ -163,6 +164,7 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
         note: Value(note),
         stage: Value(stage.dbValue),
         grade: Value(grade.dbValue),
+        sampleBatchId: Value(sampleBatchId),
         createdAt: ts,
         updatedAt: ts,
       ),
@@ -173,6 +175,21 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
       (select(customers)..where((t) => t.id.equals(id))).getSingleOrNull();
 
   Future<List<CustomerRow>> allCustomers() => select(customers).get();
+
+  Future<List<CustomerRow>> listBySampleBatch(String batchId) =>
+      (select(customers)..where((t) => t.sampleBatchId.equals(batchId))).get();
+
+  Future<int> countBySampleBatch(String batchId) async {
+    final count = customers.id.count();
+    final query = selectOnly(customers)
+      ..addColumns([count])
+      ..where(customers.sampleBatchId.equals(batchId));
+    return (await query.getSingle()).read(count) ?? 0;
+  }
+
+  /// 删除一个示例批次的客户根；所有业务子记录由外键级联删除。
+  Future<int> deleteSampleBatchRoots(String batchId) =>
+      (delete(customers)..where((t) => t.sampleBatchId.equals(batchId))).go();
 
   Future<int> countAll() async {
     final q = selectOnly(customers)..addColumns([customers.id.count()]);

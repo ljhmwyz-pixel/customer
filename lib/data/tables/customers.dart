@@ -33,6 +33,9 @@ class Customers extends Table {
   /// 客户分级，存 CustomerGrade.dbValue。
   TextColumn get grade => text().withDefault(const Constant('c'))();
 
+  /// 可整体撤销的示例数据批次。正式客户始终为空，不在界面中暴露。
+  TextColumn get sampleBatchId => text().nullable()();
+
   /// 最后一次跟进时间，UTC 毫秒。
   ///
   /// 冗余字段，由 FollowupDao 在写入跟进记录时同步维护。

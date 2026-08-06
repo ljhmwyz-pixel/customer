@@ -72,7 +72,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -82,6 +82,7 @@ class AppDatabase extends _$AppDatabase {
       await _createQuoteSampleIndexes();
       await _createRegistrationTenderOrderIndexes();
       await _createAttachmentOwnerIndexes();
+      await _createSampleDataIndexes();
     },
     onUpgrade: (m, from, to) async {
       if (from < 2) {
@@ -102,6 +103,9 @@ class AppDatabase extends _$AppDatabase {
       if (from < 7) {
         await _migrateV6ToV7(m);
       }
+      if (from < 8) {
+        await _migrateV7ToV8(m);
+      }
     },
     beforeOpen: (details) async {
       // SQLite 默认不开外键约束，不执行这句的话级联删除会静默失效，
@@ -112,6 +116,23 @@ class AppDatabase extends _$AppDatabase {
       await customStatement('PRAGMA foreign_keys = ON');
     },
   );
+
+  Future<void> _createSampleDataIndexes() async {
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_customers_sample_batch '
+      'ON customers(sample_batch_id) '
+      'WHERE sample_batch_id IS NOT NULL',
+    );
+  }
+
+  Future<void> _migrateV7ToV8(Migrator m) async {
+    final customerTable = await customSelect(
+      "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'customers'",
+    ).get();
+    if (customerTable.isEmpty) return;
+    await m.addColumn(customers, customers.sampleBatchId);
+    await _createSampleDataIndexes();
+  }
 
   /// 业务查询依赖的索引。
   ///

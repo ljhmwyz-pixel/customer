@@ -25,9 +25,9 @@ void main() {
   tearDown(() async => db.close());
 
   test('schema v7 包含注册招标表、订单生命周期列和六个索引', () async {
-    expect(db.schemaVersion, 7);
+    expect(db.schemaVersion, 8);
     final version = await db.customSelect('PRAGMA user_version').getSingle();
-    expect(version.data.values.first, 7);
+    expect(version.data.values.first, 8);
 
     final tables = await _objectNames(db, 'table');
     expect(tables, containsAll({'registrations', 'tenders'}));

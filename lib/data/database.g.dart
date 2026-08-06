@@ -124,6 +124,17 @@ class $CustomersTable extends Customers
     requiredDuringInsert: false,
     defaultValue: const Constant('c'),
   );
+  static const VerificationMeta _sampleBatchIdMeta = const VerificationMeta(
+    'sampleBatchId',
+  );
+  @override
+  late final GeneratedColumn<String> sampleBatchId = GeneratedColumn<String>(
+    'sample_batch_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _lastFollowAtMeta = const VerificationMeta(
     'lastFollowAt',
   );
@@ -170,6 +181,7 @@ class $CustomersTable extends Customers
     note,
     stage,
     grade,
+    sampleBatchId,
     lastFollowAt,
     createdAt,
     updatedAt,
@@ -251,6 +263,15 @@ class $CustomersTable extends Customers
         grade.isAcceptableOrUnknown(data['grade']!, _gradeMeta),
       );
     }
+    if (data.containsKey('sample_batch_id')) {
+      context.handle(
+        _sampleBatchIdMeta,
+        sampleBatchId.isAcceptableOrUnknown(
+          data['sample_batch_id']!,
+          _sampleBatchIdMeta,
+        ),
+      );
+    }
     if (data.containsKey('last_follow_at')) {
       context.handle(
         _lastFollowAtMeta,
@@ -329,6 +350,10 @@ class $CustomersTable extends Customers
         DriftSqlType.string,
         data['${effectivePrefix}grade'],
       )!,
+      sampleBatchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sample_batch_id'],
+      ),
       lastFollowAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}last_follow_at'],
@@ -375,6 +400,9 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
   /// 客户分级，存 CustomerGrade.dbValue。
   final String grade;
 
+  /// 可整体撤销的示例数据批次。正式客户始终为空，不在界面中暴露。
+  final String? sampleBatchId;
+
   /// 最后一次跟进时间，UTC 毫秒。
   ///
   /// 冗余字段，由 FollowupDao 在写入跟进记录时同步维护。
@@ -394,6 +422,7 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
     this.note,
     required this.stage,
     required this.grade,
+    this.sampleBatchId,
     this.lastFollowAt,
     required this.createdAt,
     required this.updatedAt,
@@ -426,6 +455,9 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
     }
     map['stage'] = Variable<String>(stage);
     map['grade'] = Variable<String>(grade);
+    if (!nullToAbsent || sampleBatchId != null) {
+      map['sample_batch_id'] = Variable<String>(sampleBatchId);
+    }
     if (!nullToAbsent || lastFollowAt != null) {
       map['last_follow_at'] = Variable<int>(lastFollowAt);
     }
@@ -459,6 +491,9 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
       stage: Value(stage),
       grade: Value(grade),
+      sampleBatchId: sampleBatchId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sampleBatchId),
       lastFollowAt: lastFollowAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastFollowAt),
@@ -484,6 +519,7 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
       note: serializer.fromJson<String?>(json['note']),
       stage: serializer.fromJson<String>(json['stage']),
       grade: serializer.fromJson<String>(json['grade']),
+      sampleBatchId: serializer.fromJson<String?>(json['sampleBatchId']),
       lastFollowAt: serializer.fromJson<int?>(json['lastFollowAt']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
@@ -504,6 +540,7 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
       'note': serializer.toJson<String?>(note),
       'stage': serializer.toJson<String>(stage),
       'grade': serializer.toJson<String>(grade),
+      'sampleBatchId': serializer.toJson<String?>(sampleBatchId),
       'lastFollowAt': serializer.toJson<int?>(lastFollowAt),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
@@ -522,6 +559,7 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
     Value<String?> note = const Value.absent(),
     String? stage,
     String? grade,
+    Value<String?> sampleBatchId = const Value.absent(),
     Value<int?> lastFollowAt = const Value.absent(),
     int? createdAt,
     int? updatedAt,
@@ -537,6 +575,9 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
     note: note.present ? note.value : this.note,
     stage: stage ?? this.stage,
     grade: grade ?? this.grade,
+    sampleBatchId: sampleBatchId.present
+        ? sampleBatchId.value
+        : this.sampleBatchId,
     lastFollowAt: lastFollowAt.present ? lastFollowAt.value : this.lastFollowAt,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -554,6 +595,9 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
       note: data.note.present ? data.note.value : this.note,
       stage: data.stage.present ? data.stage.value : this.stage,
       grade: data.grade.present ? data.grade.value : this.grade,
+      sampleBatchId: data.sampleBatchId.present
+          ? data.sampleBatchId.value
+          : this.sampleBatchId,
       lastFollowAt: data.lastFollowAt.present
           ? data.lastFollowAt.value
           : this.lastFollowAt,
@@ -576,6 +620,7 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
           ..write('note: $note, ')
           ..write('stage: $stage, ')
           ..write('grade: $grade, ')
+          ..write('sampleBatchId: $sampleBatchId, ')
           ..write('lastFollowAt: $lastFollowAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -596,6 +641,7 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
     note,
     stage,
     grade,
+    sampleBatchId,
     lastFollowAt,
     createdAt,
     updatedAt,
@@ -615,6 +661,7 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
           other.note == this.note &&
           other.stage == this.stage &&
           other.grade == this.grade &&
+          other.sampleBatchId == this.sampleBatchId &&
           other.lastFollowAt == this.lastFollowAt &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -632,6 +679,7 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
   final Value<String?> note;
   final Value<String> stage;
   final Value<String> grade;
+  final Value<String?> sampleBatchId;
   final Value<int?> lastFollowAt;
   final Value<int> createdAt;
   final Value<int> updatedAt;
@@ -647,6 +695,7 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
     this.note = const Value.absent(),
     this.stage = const Value.absent(),
     this.grade = const Value.absent(),
+    this.sampleBatchId = const Value.absent(),
     this.lastFollowAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -663,6 +712,7 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
     this.note = const Value.absent(),
     this.stage = const Value.absent(),
     this.grade = const Value.absent(),
+    this.sampleBatchId = const Value.absent(),
     this.lastFollowAt = const Value.absent(),
     required int createdAt,
     required int updatedAt,
@@ -681,6 +731,7 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
     Expression<String>? note,
     Expression<String>? stage,
     Expression<String>? grade,
+    Expression<String>? sampleBatchId,
     Expression<int>? lastFollowAt,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
@@ -697,6 +748,7 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
       if (note != null) 'note': note,
       if (stage != null) 'stage': stage,
       if (grade != null) 'grade': grade,
+      if (sampleBatchId != null) 'sample_batch_id': sampleBatchId,
       if (lastFollowAt != null) 'last_follow_at': lastFollowAt,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -715,6 +767,7 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
     Value<String?>? note,
     Value<String>? stage,
     Value<String>? grade,
+    Value<String?>? sampleBatchId,
     Value<int?>? lastFollowAt,
     Value<int>? createdAt,
     Value<int>? updatedAt,
@@ -731,6 +784,7 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
       note: note ?? this.note,
       stage: stage ?? this.stage,
       grade: grade ?? this.grade,
+      sampleBatchId: sampleBatchId ?? this.sampleBatchId,
       lastFollowAt: lastFollowAt ?? this.lastFollowAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -773,6 +827,9 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
     if (grade.present) {
       map['grade'] = Variable<String>(grade.value);
     }
+    if (sampleBatchId.present) {
+      map['sample_batch_id'] = Variable<String>(sampleBatchId.value);
+    }
     if (lastFollowAt.present) {
       map['last_follow_at'] = Variable<int>(lastFollowAt.value);
     }
@@ -799,6 +856,7 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
           ..write('note: $note, ')
           ..write('stage: $stage, ')
           ..write('grade: $grade, ')
+          ..write('sampleBatchId: $sampleBatchId, ')
           ..write('lastFollowAt: $lastFollowAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -12240,6 +12298,7 @@ typedef $$CustomersTableCreateCompanionBuilder =
       Value<String?> note,
       Value<String> stage,
       Value<String> grade,
+      Value<String?> sampleBatchId,
       Value<int?> lastFollowAt,
       required int createdAt,
       required int updatedAt,
@@ -12257,6 +12316,7 @@ typedef $$CustomersTableUpdateCompanionBuilder =
       Value<String?> note,
       Value<String> stage,
       Value<String> grade,
+      Value<String?> sampleBatchId,
       Value<int?> lastFollowAt,
       Value<int> createdAt,
       Value<int> updatedAt,
@@ -12437,6 +12497,11 @@ class $$CustomersTableFilterComposer
 
   ColumnFilters<String> get grade => $composableBuilder(
     column: $table.grade,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sampleBatchId => $composableBuilder(
+    column: $table.sampleBatchId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -12670,6 +12735,11 @@ class $$CustomersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get sampleBatchId => $composableBuilder(
+    column: $table.sampleBatchId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get lastFollowAt => $composableBuilder(
     column: $table.lastFollowAt,
     builder: (column) => ColumnOrderings(column),
@@ -12727,6 +12797,11 @@ class $$CustomersTableAnnotationComposer
 
   GeneratedColumn<String> get grade =>
       $composableBuilder(column: $table.grade, builder: (column) => column);
+
+  GeneratedColumn<String> get sampleBatchId => $composableBuilder(
+    column: $table.sampleBatchId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get lastFollowAt => $composableBuilder(
     column: $table.lastFollowAt,
@@ -12936,6 +13011,7 @@ class $$CustomersTableTableManager
                 Value<String?> note = const Value.absent(),
                 Value<String> stage = const Value.absent(),
                 Value<String> grade = const Value.absent(),
+                Value<String?> sampleBatchId = const Value.absent(),
                 Value<int?> lastFollowAt = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
@@ -12951,6 +13027,7 @@ class $$CustomersTableTableManager
                 note: note,
                 stage: stage,
                 grade: grade,
+                sampleBatchId: sampleBatchId,
                 lastFollowAt: lastFollowAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -12968,6 +13045,7 @@ class $$CustomersTableTableManager
                 Value<String?> note = const Value.absent(),
                 Value<String> stage = const Value.absent(),
                 Value<String> grade = const Value.absent(),
+                Value<String?> sampleBatchId = const Value.absent(),
                 Value<int?> lastFollowAt = const Value.absent(),
                 required int createdAt,
                 required int updatedAt,
@@ -12983,6 +13061,7 @@ class $$CustomersTableTableManager
                 note: note,
                 stage: stage,
                 grade: grade,
+                sampleBatchId: sampleBatchId,
                 lastFollowAt: lastFollowAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
