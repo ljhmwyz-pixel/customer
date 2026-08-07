@@ -90,6 +90,7 @@ class UserGuidePage extends StatelessWidget {
             title: '7. 数据：导出和备份',
             children: const [
               '“Excel 导出”用于查阅和分析；Excel 中的修改不会自动回写应用。',
+              '“客户/联系人导入”可下载模板并导入 UTF-8 CSV 或 Excel 第一张工作表；导入前先预览错误并建议先备份。客户编号优先匹配，联系人按客户和姓名匹配。',
               '“备份与恢复”包含业务数据和附件，换机或升级前请先备份。',
             ],
           ),

@@ -25,6 +25,7 @@ import 'features/reminders/reminder_test_page.dart';
 import 'features/settings/settings_page.dart';
 import 'features/settings/sample_data_page.dart';
 import 'features/settings/excel_export_page.dart';
+import 'features/settings/customer_contact_import_page.dart';
 import 'features/settings/backup_restore_page.dart';
 import 'features/settings/user_guide_page.dart';
 import 'widgets/app_shell.dart';
@@ -358,6 +359,11 @@ final router = GoRouter(
                 GoRoute(
                   path: 'excel-export',
                   builder: (context, state) => const ExcelExportPage(),
+                ),
+                GoRoute(
+                  path: 'customer-contact-import',
+                  builder: (context, state) =>
+                      const CustomerContactImportPage(),
                 ),
                 GoRoute(
                   path: 'backup-restore',

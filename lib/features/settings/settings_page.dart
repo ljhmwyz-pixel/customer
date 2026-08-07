@@ -90,6 +90,13 @@ class SettingsPage extends StatelessWidget {
             onTap: () => context.go('/settings/excel-export'),
           ),
           ListTile(
+            leading: const Icon(Icons.upload_file_outlined),
+            title: const Text('客户/联系人导入'),
+            subtitle: const Text('从 Excel 或 CSV 批量迁移客户资料'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.go('/settings/customer-contact-import'),
+          ),
+          ListTile(
             leading: const Icon(Icons.backup_outlined),
             title: const Text('备份与恢复'),
             subtitle: Text(
