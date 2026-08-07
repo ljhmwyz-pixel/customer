@@ -26,16 +26,6 @@ void main() {
       ),
     );
 
-    for (final key in _registrationKeys) {
-      expect(find.byKey(ValueKey(key)), findsOneWidget, reason: key);
-    }
-    expect(
-      _dropdownWidget<RegistrationDocumentStatus>(
-        tester,
-        'registration-document-status',
-      ).initialValue,
-      RegistrationDocumentStatus.pending,
-    );
     expect(
       _dropdownWidget<RegistrationStatus>(
         tester,
@@ -43,6 +33,19 @@ void main() {
       ).initialValue,
       RegistrationStatus.preparing,
     );
+    expect(find.text('资料清单'), findsNothing);
+    await _expandSection(tester, 'form-section-header-registration-documents');
+    expect(find.text('资料清单'), findsOneWidget);
+    expect(
+      _dropdownWidget<RegistrationDocumentStatus>(
+        tester,
+        'registration-document-status',
+      ).initialValue,
+      RegistrationDocumentStatus.pending,
+    );
+    for (final key in _registrationKeys) {
+      expect(find.byKey(ValueKey(key)), findsOneWidget, reason: key);
+    }
 
     await _tapSave(tester, 'registration-save');
     expect(
@@ -87,6 +90,19 @@ void main() {
       ),
     );
 
+    for (final key in [
+      'tender-project-no',
+      'tender-name',
+      'tender-deadline-at',
+      'tender-status',
+      'tender-save',
+    ]) {
+      expect(find.byKey(ValueKey(key)), findsOneWidget, reason: key);
+    }
+    expect(find.text('投标资格'), findsNothing);
+    await _expandSection(tester, 'form-section-header-tender-qualification');
+    expect(find.text('投标资格'), findsOneWidget);
+    await _expandSection(tester, 'form-section-header-tender-risk');
     for (final key in _tenderKeys) {
       expect(find.byKey(ValueKey(key)), findsOneWidget, reason: key);
     }
@@ -123,6 +139,8 @@ void main() {
       ),
     );
 
+    await _expandSection(tester, 'form-section-header-tender-qualification');
+
     await _selectDropdown(
       tester,
       'tender-document-status',
@@ -151,6 +169,7 @@ void main() {
       'tender-funding-status',
       TenderVerificationStatus.confirmed,
     );
+    await _expandSection(tester, 'form-section-header-tender-risk');
     await _selectDropdown(tester, 'tender-risk-level', TenderRiskLevel.high);
     await tester.enterText(
       find.byKey(const ValueKey('tender-floor-price-support')),
@@ -199,6 +218,8 @@ void main() {
         opportunityId: fixture.opportunityId,
       ),
     );
+
+    await _expandSection(tester, 'form-section-header-tender-qualification');
 
     final date = find.byKey(const ValueKey('tender-deadline-at'));
     final dropdown = find.byKey(const ValueKey('tender-document-status'));
@@ -482,6 +503,14 @@ Future<void> _selectDropdown<T>(
   final item = find.byKey(appDropdownMenuItemKey(value));
   expect(item, findsOneWidget, reason: 'menu item for $key');
   await tester.tapAt(tester.getCenter(item));
+  await tester.pumpAndSettle();
+}
+
+Future<void> _expandSection(WidgetTester tester, String key) async {
+  final finder = find.byKey(ValueKey(key));
+  await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
+  await tester.tap(finder);
   await tester.pumpAndSettle();
 }
 
