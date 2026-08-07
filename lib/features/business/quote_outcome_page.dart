@@ -7,6 +7,9 @@ import '../../data/database.dart';
 import '../../data/database_provider.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/app_form_fields.dart';
+import '../../widgets/business_record_actions.dart';
+import '../../widgets/sticky_form_scaffold.dart';
+import '../attachments/attachment_providers.dart';
 import '../customers/customer_providers.dart';
 import 'business_providers.dart';
 
@@ -34,6 +37,7 @@ class _QuoteOutcomePageState extends ConsumerState<QuoteOutcomePage> {
   bool _received = false;
   bool _loading = true;
   bool _saving = false;
+  bool _deleting = false;
   String? _error;
 
   @override
@@ -120,67 +124,94 @@ class _QuoteOutcomePageState extends ConsumerState<QuoteOutcomePage> {
         ? const Center(child: CircularProgressIndicator())
         : _error != null
         ? Center(child: Text(_error!))
-        : ListView(
-            padding: const EdgeInsets.all(AppTokens.s16),
-            children: [
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.lock_outline),
-                title: Text('${_quote!.quoteNo} · v${_quote!.version}'),
-                subtitle: const Text('报价编号、版本和金额不可修改；价格变化请新增版本。'),
-              ),
-              SwitchListTile(
-                key: const ValueKey('quote-customer-received'),
-                contentPadding: EdgeInsets.zero,
-                title: const Text('客户已收到报价'),
-                value: _received,
-                onChanged: _saving
-                    ? null
-                    : (value) => setState(() => _received = value),
-              ),
-              const SizedBox(height: AppTokens.s12),
-              TextField(
-                key: const ValueKey('quote-customer-feedback'),
-                controller: _feedback,
-                maxLines: 3,
-                decoration: const InputDecoration(labelText: '客户反馈'),
-              ),
-              const SizedBox(height: AppTokens.s12),
-              AppDateFormField(
-                fieldKey: const ValueKey('quote-next-follow-at'),
-                label: '下次跟进日期',
-                value: _nextFollowAt,
-                onTap: _pickNextFollowAt,
-                onClear: _nextFollowAt == null
-                    ? null
-                    : () => setState(() => _nextFollowAt = null),
-              ),
-              const SizedBox(height: AppTokens.s12),
-              TextField(
-                key: const ValueKey('quote-result'),
-                controller: _result,
-                maxLines: 2,
-                decoration: const InputDecoration(labelText: '报价结果'),
-              ),
-              const SizedBox(height: AppTokens.s24),
-              FilledButton.icon(
-                key: const ValueKey('quote-outcome-save'),
-                onPressed: _saving ? null : _save,
-                icon: const Icon(Icons.save_outlined),
-                label: Text(_saving ? '保存中' : '保存结果'),
-              ),
-              const SizedBox(height: AppTokens.s8),
-              OutlinedButton.icon(
-                key: const ValueKey('quote-new-version'),
-                onPressed: _saving
-                    ? null
-                    : () => context.push(
-                        '/customers/${widget.customerId}/opportunities/${widget.opportunityId}/quotes/new?from=${widget.quoteId}',
-                      ),
-                icon: const Icon(Icons.copy_outlined),
-                label: const Text('基于此报价新增版本'),
-              ),
-            ],
+        : StickyFormScaffold(
+            submitting: _saving,
+            enabled: !_deleting,
+            submitKey: const ValueKey('quote-outcome-save'),
+            submitLabel: '保存结果',
+            onSubmit: _save,
+            body: ListView(
+              padding: const EdgeInsets.all(AppTokens.s16),
+              children: [
+                BusinessRecordActions(
+                  title: '${_quote!.quoteNo} · v${_quote!.version}',
+                  statusLabel: _received ? '客户已收到' : '待客户确认收悉',
+                  contextLabel: '报价记录',
+                  attachmentOwner: AttachmentOwnerRoute(
+                    type: AttachmentOwnerType.quote,
+                    id: widget.quoteId,
+                  ),
+                  enabled: !_saving,
+                  onDeletingChanged: (value) =>
+                      setState(() => _deleting = value),
+                  onDelete: () => ref
+                      .read(businessServiceProvider)
+                      .deleteQuote(widget.customerId, widget.quoteId),
+                  onDeleted: (report) {
+                    ref.read(customerRevisionProvider.notifier).refresh();
+                    final messenger = ScaffoldMessenger.of(context);
+                    context.go('/customers/${widget.customerId}');
+                    if (report.hasFailures) {
+                      messenger.showSnackBar(
+                        const SnackBar(
+                          content: Text('报价已删除，但附件清理失败，下次启动会自动重试'),
+                        ),
+                      );
+                    }
+                  },
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.lock_outline),
+                  title: const Text('报价内容已锁定'),
+                  subtitle: const Text('报价编号、版本和金额不可修改；价格变化请新增版本。'),
+                ),
+                SwitchListTile(
+                  key: const ValueKey('quote-customer-received'),
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('客户已收到报价'),
+                  value: _received,
+                  onChanged: _saving
+                      ? null
+                      : (value) => setState(() => _received = value),
+                ),
+                const SizedBox(height: AppTokens.s12),
+                TextField(
+                  key: const ValueKey('quote-customer-feedback'),
+                  controller: _feedback,
+                  maxLines: 3,
+                  decoration: const InputDecoration(labelText: '客户反馈'),
+                ),
+                const SizedBox(height: AppTokens.s12),
+                AppDateFormField(
+                  fieldKey: const ValueKey('quote-next-follow-at'),
+                  label: '下次跟进日期',
+                  value: _nextFollowAt,
+                  onTap: _pickNextFollowAt,
+                  onClear: _nextFollowAt == null
+                      ? null
+                      : () => setState(() => _nextFollowAt = null),
+                ),
+                const SizedBox(height: AppTokens.s12),
+                TextField(
+                  key: const ValueKey('quote-result'),
+                  controller: _result,
+                  maxLines: 2,
+                  decoration: const InputDecoration(labelText: '报价结果'),
+                ),
+                const SizedBox(height: AppTokens.s8),
+                OutlinedButton.icon(
+                  key: const ValueKey('quote-new-version'),
+                  onPressed: _saving
+                      ? null
+                      : () => context.push(
+                          '/customers/${widget.customerId}/opportunities/${widget.opportunityId}/quotes/new?from=${widget.quoteId}',
+                        ),
+                  icon: const Icon(Icons.copy_outlined),
+                  label: const Text('基于此报价新增版本'),
+                ),
+              ],
+            ),
           ),
   );
 }

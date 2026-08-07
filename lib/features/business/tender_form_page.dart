@@ -8,6 +8,9 @@ import '../../models/enums.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/app_dropdown_form_field.dart';
 import '../../widgets/app_form_fields.dart';
+import '../../widgets/business_record_actions.dart';
+import '../../widgets/sticky_form_scaffold.dart';
+import '../attachments/attachment_providers.dart';
 import '../customers/customer_providers.dart';
 import 'business_providers.dart';
 
@@ -49,6 +52,7 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
   TenderStatus _status = TenderStatus.preparing;
   bool _riskAcknowledged = false;
   bool _saving = false;
+  bool _deleting = false;
 
   bool get _editing => widget.tenderId != null;
 
@@ -207,161 +211,198 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(_editing ? '编辑招标' : '新增招标')),
-    body: SingleChildScrollView(
-      padding: const EdgeInsets.all(AppTokens.s16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _textField(
-            key: 'tender-project-no',
-            controller: _projectNo,
-            label: '招标项目编号',
-          ),
-          _textField(key: 'tender-name', controller: _name, label: '招标名称'),
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppTokens.s12),
-            child: AppDateFormField(
-              fieldKey: const ValueKey('tender-deadline-at'),
-              label: '投标截止日期',
-              value: _deadlineAt,
-              onTap: () => _pickDate(
-                initialValue: _deadlineAt,
-                onChanged: (value) => setState(() => _deadlineAt = value),
+    body: StickyFormScaffold(
+      submitting: _saving,
+      enabled: !_deleting,
+      submitKey: const ValueKey('tender-save'),
+      submitLabel: '保存招标',
+      onSubmit: _save,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppTokens.s16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_editing)
+              BusinessRecordActions(
+                title: _name.text.trim().isNotEmpty
+                    ? _name.text
+                    : _projectNo.text.trim().isNotEmpty
+                    ? _projectNo.text
+                    : '未命名招标',
+                statusLabel: _status.label,
+                contextLabel: '招标记录',
+                attachmentOwner: AttachmentOwnerRoute(
+                  type: AttachmentOwnerType.tender,
+                  id: widget.tenderId!,
+                ),
+                enabled: !_saving,
+                onDeletingChanged: (value) => setState(() => _deleting = value),
+                onDelete: () => ref
+                    .read(businessServiceProvider)
+                    .deleteTender(widget.customerId, widget.tenderId!),
+                onDeleted: (report) {
+                  ref.read(customerRevisionProvider.notifier).refresh();
+                  final messenger = ScaffoldMessenger.of(context);
+                  context.go('/customers/${widget.customerId}');
+                  if (report.hasFailures) {
+                    messenger.showSnackBar(
+                      const SnackBar(content: Text('招标已删除，但附件清理失败，下次启动会自动重试')),
+                    );
+                  }
+                },
               ),
-              clearKey: const ValueKey('tender-deadline-at-clear'),
-              onClear: _deadlineAt == null
-                  ? null
-                  : () => setState(() => _deadlineAt = null),
+            _textField(
+              key: 'tender-project-no',
+              controller: _projectNo,
+              label: '招标项目编号',
             ),
-          ),
-          _dropdown<TenderDocumentStatus>(
-            key: 'tender-document-status',
-            label: '资料状态',
-            value: _documentStatus,
-            values: TenderDocumentStatus.values,
-            text: (value) => value.label,
-            onChanged: (value) => setState(() => _documentStatus = value),
-          ),
-          _dropdown<TenderQualificationStatus>(
-            key: 'tender-qualification-status',
-            label: '投标资格',
-            value: _qualificationStatus,
-            values: TenderQualificationStatus.values,
-            text: (value) => value.label,
-            onChanged: (value) => setState(() => _qualificationStatus = value),
-          ),
-          _textField(key: 'tender-bidder', controller: _bidder, label: '投标主体'),
-          _textField(
-            key: 'tender-deposit-minor',
-            controller: _depositMinor,
-            label: '保证金（最小货币单位）',
-            keyboardType: TextInputType.number,
-          ),
-          _textField(
-            key: 'tender-customer-experience',
-            controller: _customerExperience,
-            label: '客户经验',
-            maxLines: 2,
-          ),
-          _dropdown<TenderVerificationStatus>(
-            key: 'tender-local-team-status',
-            label: '当地团队确认',
-            value: _localTeamStatus,
-            values: TenderVerificationStatus.values,
-            text: (value) => value.label,
-            onChanged: (value) => setState(() => _localTeamStatus = value),
-          ),
-          _dropdown<TenderVerificationStatus>(
-            key: 'tender-funding-status',
-            label: '资金确认',
-            value: _fundingStatus,
-            values: TenderVerificationStatus.values,
-            text: (value) => value.label,
-            onChanged: (value) => setState(() => _fundingStatus = value),
-          ),
-          _dropdown<TenderRiskLevel>(
-            key: 'tender-risk-level',
-            label: '风险级别',
-            value: _riskLevel,
-            values: TenderRiskLevel.values,
-            text: (value) => value.label,
-            onChanged: _setRiskLevel,
-          ),
-          _dropdown<TenderAuthorizationType>(
-            key: 'tender-authorization-type',
-            label: '授权类型',
-            value: _authorizationType,
-            values: TenderAuthorizationType.values,
-            text: (value) => value.label,
-            onChanged: _setAuthorizationType,
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppTokens.s12),
-            child: AppDateFormField(
-              fieldKey: const ValueKey('tender-authorization-expires-at'),
-              label: '授权有效期',
-              value: _authorizationExpiresAt,
-              onTap: () => _pickDate(
-                initialValue: _authorizationExpiresAt,
-                onChanged: (value) =>
-                    setState(() => _authorizationExpiresAt = value),
+            _textField(key: 'tender-name', controller: _name, label: '招标名称'),
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppTokens.s12),
+              child: AppDateFormField(
+                fieldKey: const ValueKey('tender-deadline-at'),
+                label: '投标截止日期',
+                value: _deadlineAt,
+                onTap: () => _pickDate(
+                  initialValue: _deadlineAt,
+                  onChanged: (value) => setState(() => _deadlineAt = value),
+                ),
+                clearKey: const ValueKey('tender-deadline-at-clear'),
+                onClear: _deadlineAt == null
+                    ? null
+                    : () => setState(() => _deadlineAt = null),
               ),
-              clearKey: const ValueKey('tender-authorization-expires-at-clear'),
-              onClear: _authorizationExpiresAt == null
-                  ? null
-                  : () => setState(() => _authorizationExpiresAt = null),
             ),
-          ),
-          _textField(
-            key: 'tender-exclusive-quote-scope',
-            controller: _exclusiveQuoteScope,
-            label: '独家报价范围',
-            maxLines: 2,
-          ),
-          _textField(
-            key: 'tender-floor-price-support',
-            controller: _floorPriceSupport,
-            label: '底价支持',
-            maxLines: 2,
-          ),
-          _dropdown<TenderStatus>(
-            key: 'tender-status',
-            label: '招标状态',
-            value: _status,
-            values: TenderStatus.values,
-            text: (value) => value.label,
-            onChanged: (value) => setState(() => _status = value),
-          ),
-          _textField(
-            key: 'tender-next-action',
-            controller: _nextAction,
-            label: '下一步行动',
-            maxLines: 2,
-          ),
-          if (_requiresRiskAcknowledgement) ...[
-            Container(
-              key: const ValueKey('tender-risk-warning'),
-              margin: const EdgeInsets.only(bottom: AppTokens.s12),
-              padding: const EdgeInsets.all(AppTokens.s12),
-              color: Theme.of(context).colorScheme.errorContainer,
-              child: const Text('当前为高风险授权或底价支持，请确认已充分了解风险。'),
+            _dropdown<TenderDocumentStatus>(
+              key: 'tender-document-status',
+              label: '资料状态',
+              value: _documentStatus,
+              values: TenderDocumentStatus.values,
+              text: (value) => value.label,
+              onChanged: (value) => setState(() => _documentStatus = value),
             ),
-            CheckboxListTile(
-              key: const ValueKey('tender-risk-acknowledged'),
-              value: _riskAcknowledged,
-              contentPadding: EdgeInsets.zero,
-              title: const Text('我已确认风险'),
+            _dropdown<TenderQualificationStatus>(
+              key: 'tender-qualification-status',
+              label: '投标资格',
+              value: _qualificationStatus,
+              values: TenderQualificationStatus.values,
+              text: (value) => value.label,
               onChanged: (value) =>
-                  setState(() => _riskAcknowledged = value ?? false),
+                  setState(() => _qualificationStatus = value),
             ),
+            _textField(
+              key: 'tender-bidder',
+              controller: _bidder,
+              label: '投标主体',
+            ),
+            _textField(
+              key: 'tender-deposit-minor',
+              controller: _depositMinor,
+              label: '保证金（最小货币单位）',
+              keyboardType: TextInputType.number,
+            ),
+            _textField(
+              key: 'tender-customer-experience',
+              controller: _customerExperience,
+              label: '客户经验',
+              maxLines: 2,
+            ),
+            _dropdown<TenderVerificationStatus>(
+              key: 'tender-local-team-status',
+              label: '当地团队确认',
+              value: _localTeamStatus,
+              values: TenderVerificationStatus.values,
+              text: (value) => value.label,
+              onChanged: (value) => setState(() => _localTeamStatus = value),
+            ),
+            _dropdown<TenderVerificationStatus>(
+              key: 'tender-funding-status',
+              label: '资金确认',
+              value: _fundingStatus,
+              values: TenderVerificationStatus.values,
+              text: (value) => value.label,
+              onChanged: (value) => setState(() => _fundingStatus = value),
+            ),
+            _dropdown<TenderRiskLevel>(
+              key: 'tender-risk-level',
+              label: '风险级别',
+              value: _riskLevel,
+              values: TenderRiskLevel.values,
+              text: (value) => value.label,
+              onChanged: _setRiskLevel,
+            ),
+            _dropdown<TenderAuthorizationType>(
+              key: 'tender-authorization-type',
+              label: '授权类型',
+              value: _authorizationType,
+              values: TenderAuthorizationType.values,
+              text: (value) => value.label,
+              onChanged: _setAuthorizationType,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppTokens.s12),
+              child: AppDateFormField(
+                fieldKey: const ValueKey('tender-authorization-expires-at'),
+                label: '授权有效期',
+                value: _authorizationExpiresAt,
+                onTap: () => _pickDate(
+                  initialValue: _authorizationExpiresAt,
+                  onChanged: (value) =>
+                      setState(() => _authorizationExpiresAt = value),
+                ),
+                clearKey: const ValueKey(
+                  'tender-authorization-expires-at-clear',
+                ),
+                onClear: _authorizationExpiresAt == null
+                    ? null
+                    : () => setState(() => _authorizationExpiresAt = null),
+              ),
+            ),
+            _textField(
+              key: 'tender-exclusive-quote-scope',
+              controller: _exclusiveQuoteScope,
+              label: '独家报价范围',
+              maxLines: 2,
+            ),
+            _textField(
+              key: 'tender-floor-price-support',
+              controller: _floorPriceSupport,
+              label: '底价支持',
+              maxLines: 2,
+            ),
+            _dropdown<TenderStatus>(
+              key: 'tender-status',
+              label: '招标状态',
+              value: _status,
+              values: TenderStatus.values,
+              text: (value) => value.label,
+              onChanged: (value) => setState(() => _status = value),
+            ),
+            _textField(
+              key: 'tender-next-action',
+              controller: _nextAction,
+              label: '下一步行动',
+              maxLines: 2,
+            ),
+            if (_requiresRiskAcknowledgement) ...[
+              Container(
+                key: const ValueKey('tender-risk-warning'),
+                margin: const EdgeInsets.only(bottom: AppTokens.s12),
+                padding: const EdgeInsets.all(AppTokens.s12),
+                color: Theme.of(context).colorScheme.errorContainer,
+                child: const Text('当前为高风险授权或底价支持，请确认已充分了解风险。'),
+              ),
+              CheckboxListTile(
+                key: const ValueKey('tender-risk-acknowledged'),
+                value: _riskAcknowledged,
+                contentPadding: EdgeInsets.zero,
+                title: const Text('我已确认风险'),
+                onChanged: (value) =>
+                    setState(() => _riskAcknowledged = value ?? false),
+              ),
+            ],
           ],
-          const SizedBox(height: AppTokens.s24),
-          FilledButton(
-            key: const ValueKey('tender-save'),
-            onPressed: _saving ? null : _save,
-            child: const Text('保存招标'),
-          ),
-        ],
+        ),
       ),
     ),
   );

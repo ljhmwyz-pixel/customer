@@ -6,6 +6,9 @@ import 'package:drift/drift.dart' show Value;
 import '../../data/database_provider.dart';
 import '../../models/enums.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/business_record_actions.dart';
+import '../../widgets/sticky_form_scaffold.dart';
+import '../attachments/attachment_providers.dart';
 import '../customers/customer_providers.dart';
 import 'business_providers.dart';
 
@@ -28,6 +31,7 @@ class _SampleFormPageState extends ConsumerState<SampleFormPage> {
   final model = TextEditingController();
   final quantity = TextEditingController(text: '1');
   bool saving = false;
+  bool deleting = false;
   SampleStatus status = SampleStatus.preparing;
   final result = TextEditingController();
   final nextAction = TextEditingController();
@@ -107,55 +111,83 @@ class _SampleFormPageState extends ConsumerState<SampleFormPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(editing ? '更新样品节点' : '新增样品')),
-    body: ListView(
-      padding: const EdgeInsets.all(AppTokens.s16),
-      children: [
-        TextField(
-          key: const ValueKey('sample-milestone-model'),
-          controller: model,
-          decoration: const InputDecoration(labelText: '样品型号'),
-        ),
-        const SizedBox(height: AppTokens.s12),
-        DropdownButtonFormField<SampleStatus>(
-          key: const ValueKey('sample-milestone-status'),
-          initialValue: status,
-          decoration: const InputDecoration(labelText: '样品节点'),
-          items: SampleStatus.values
-              .map(
-                (value) =>
-                    DropdownMenuItem(value: value, child: Text(value.label)),
-              )
-              .toList(growable: false),
-          onChanged: saving ? null : (value) => setState(() => status = value!),
-        ),
-        const SizedBox(height: AppTokens.s12),
-        TextField(
-          key: const ValueKey('sample-milestone-result'),
-          controller: result,
-          maxLines: 2,
-          decoration: const InputDecoration(labelText: '测试结果'),
-        ),
-        const SizedBox(height: AppTokens.s12),
-        TextField(
-          key: const ValueKey('sample-milestone-next-action'),
-          controller: nextAction,
-          maxLines: 2,
-          decoration: const InputDecoration(labelText: '下一步行动'),
-        ),
-        const SizedBox(height: AppTokens.s12),
-        TextField(
-          key: const ValueKey('sample-milestone-quantity'),
-          controller: quantity,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: '数量'),
-        ),
-        const SizedBox(height: AppTokens.s24),
-        FilledButton(
-          key: const ValueKey('business-save-sample'),
-          onPressed: saving ? null : _save,
-          child: Text(editing ? '保存节点' : '保存样品'),
-        ),
-      ],
+    body: StickyFormScaffold(
+      submitting: saving,
+      enabled: !deleting,
+      submitKey: const ValueKey('business-save-sample'),
+      submitLabel: editing ? '保存节点' : '保存样品',
+      onSubmit: _save,
+      body: ListView(
+        padding: const EdgeInsets.all(AppTokens.s16),
+        children: [
+          if (editing)
+            BusinessRecordActions(
+              title: model.text.trim().isEmpty ? '未命名样品' : model.text,
+              statusLabel: status.label,
+              contextLabel: '样品记录',
+              attachmentOwner: AttachmentOwnerRoute(
+                type: AttachmentOwnerType.sample,
+                id: widget.sampleId!,
+              ),
+              enabled: !saving,
+              onDeletingChanged: (value) => setState(() => deleting = value),
+              onDelete: () => ref
+                  .read(businessServiceProvider)
+                  .deleteSample(widget.customerId, widget.sampleId!),
+              onDeleted: (report) {
+                ref.read(customerRevisionProvider.notifier).refresh();
+                final messenger = ScaffoldMessenger.of(context);
+                context.go('/customers/${widget.customerId}');
+                if (report.hasFailures) {
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text('样品已删除，但附件清理失败，下次启动会自动重试')),
+                  );
+                }
+              },
+            ),
+          TextField(
+            key: const ValueKey('sample-milestone-model'),
+            controller: model,
+            decoration: const InputDecoration(labelText: '样品型号'),
+          ),
+          const SizedBox(height: AppTokens.s12),
+          DropdownButtonFormField<SampleStatus>(
+            key: const ValueKey('sample-milestone-status'),
+            initialValue: status,
+            decoration: const InputDecoration(labelText: '样品节点'),
+            items: SampleStatus.values
+                .map(
+                  (value) =>
+                      DropdownMenuItem(value: value, child: Text(value.label)),
+                )
+                .toList(growable: false),
+            onChanged: saving
+                ? null
+                : (value) => setState(() => status = value!),
+          ),
+          const SizedBox(height: AppTokens.s12),
+          TextField(
+            key: const ValueKey('sample-milestone-result'),
+            controller: result,
+            maxLines: 2,
+            decoration: const InputDecoration(labelText: '测试结果'),
+          ),
+          const SizedBox(height: AppTokens.s12),
+          TextField(
+            key: const ValueKey('sample-milestone-next-action'),
+            controller: nextAction,
+            maxLines: 2,
+            decoration: const InputDecoration(labelText: '下一步行动'),
+          ),
+          const SizedBox(height: AppTokens.s12),
+          TextField(
+            key: const ValueKey('sample-milestone-quantity'),
+            controller: quantity,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: '数量'),
+          ),
+        ],
+      ),
     ),
   );
 }

@@ -8,6 +8,9 @@ import '../../models/enums.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/app_dropdown_form_field.dart';
 import '../../widgets/app_form_fields.dart';
+import '../../widgets/business_record_actions.dart';
+import '../../widgets/sticky_form_scaffold.dart';
+import '../attachments/attachment_providers.dart';
 import '../customers/customer_providers.dart';
 import 'business_providers.dart';
 
@@ -46,6 +49,7 @@ class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
   DateTime? _documentDueAt;
   DateTime? _milestoneAt;
   bool _saving = false;
+  bool _deleting = false;
 
   bool get _editing => widget.registrationId != null;
 
@@ -152,133 +156,165 @@ class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(_editing ? '编辑注册' : '新增注册')),
-    body: SingleChildScrollView(
-      padding: const EdgeInsets.all(AppTokens.s16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _textField(
-            key: 'registration-country',
-            controller: _country,
-            label: '注册国家/地区',
-          ),
-          _textField(
-            key: 'registration-requirements',
-            controller: _requirements,
-            label: '注册要求',
-            maxLines: 3,
-          ),
-          _textField(
-            key: 'registration-document-checklist',
-            controller: _documentChecklist,
-            label: '资料清单',
-            maxLines: 3,
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppTokens.s12),
-            child: AppDropdownFormField<RegistrationDocumentStatus>(
-              fieldKey: const ValueKey('registration-document-status'),
-              initialValue: _documentStatus,
-              decoration: const InputDecoration(labelText: '资料状态'),
-              items: RegistrationDocumentStatus.values
-                  .map(
-                    (value) => DropdownMenuItem(
-                      value: value,
-                      child: Text(
-                        value.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+    body: StickyFormScaffold(
+      submitting: _saving,
+      enabled: !_deleting,
+      submitKey: const ValueKey('registration-save'),
+      submitLabel: '保存注册',
+      onSubmit: _save,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppTokens.s16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_editing)
+              BusinessRecordActions(
+                title: _country.text.trim().isEmpty
+                    ? '未填写国家/地区'
+                    : _country.text,
+                statusLabel: _status.label,
+                contextLabel: '注册记录',
+                attachmentOwner: AttachmentOwnerRoute(
+                  type: AttachmentOwnerType.registration,
+                  id: widget.registrationId!,
+                ),
+                enabled: !_saving,
+                onDeletingChanged: (value) => setState(() => _deleting = value),
+                onDelete: () => ref
+                    .read(businessServiceProvider)
+                    .deleteRegistration(
+                      widget.customerId,
+                      widget.registrationId!,
                     ),
-                  )
-                  .toList(),
-              onChanged: (value) {
-                if (value != null) setState(() => _documentStatus = value);
-              },
+                onDeleted: (report) {
+                  ref.read(customerRevisionProvider.notifier).refresh();
+                  final messenger = ScaffoldMessenger.of(context);
+                  context.go('/customers/${widget.customerId}');
+                  if (report.hasFailures) {
+                    messenger.showSnackBar(
+                      const SnackBar(content: Text('注册已删除，但附件清理失败，下次启动会自动重试')),
+                    );
+                  }
+                },
+              ),
+            _textField(
+              key: 'registration-country',
+              controller: _country,
+              label: '注册国家/地区',
             ),
-          ),
-          _dateField(
-            fieldKey: const ValueKey('registration-submitted-at'),
-            label: '提交日期',
-            value: _submittedAt,
-            onChanged: (value) => setState(() => _submittedAt = value),
-          ),
-          _dateField(
-            fieldKey: const ValueKey('registration-expected-completed-at'),
-            label: '预计完成日期',
-            value: _expectedCompletedAt,
-            onChanged: (value) => setState(() => _expectedCompletedAt = value),
-          ),
-          _dateField(
-            fieldKey: const ValueKey('registration-actual-completed-at'),
-            label: '实际完成日期',
-            value: _actualCompletedAt,
-            onChanged: (value) => setState(() => _actualCompletedAt = value),
-          ),
-          _textField(
-            key: 'registration-cost-bearer',
-            controller: _costBearer,
-            label: '费用承担方',
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppTokens.s12),
-            child: AppDropdownFormField<RegistrationStatus>(
-              fieldKey: const ValueKey('registration-status'),
-              initialValue: _status,
-              decoration: const InputDecoration(labelText: '注册状态'),
-              items: RegistrationStatus.values
-                  .map(
-                    (value) => DropdownMenuItem(
-                      value: value,
-                      child: Text(
-                        value.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+            _textField(
+              key: 'registration-requirements',
+              controller: _requirements,
+              label: '注册要求',
+              maxLines: 3,
+            ),
+            _textField(
+              key: 'registration-document-checklist',
+              controller: _documentChecklist,
+              label: '资料清单',
+              maxLines: 3,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppTokens.s12),
+              child: AppDropdownFormField<RegistrationDocumentStatus>(
+                fieldKey: const ValueKey('registration-document-status'),
+                initialValue: _documentStatus,
+                decoration: const InputDecoration(labelText: '资料状态'),
+                items: RegistrationDocumentStatus.values
+                    .map(
+                      (value) => DropdownMenuItem(
+                        value: value,
+                        child: Text(
+                          value.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (value) {
-                if (value != null) setState(() => _status = value);
-              },
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) setState(() => _documentStatus = value);
+                },
+              ),
             ),
-          ),
-          _textField(
-            key: 'registration-current-obstacle',
-            controller: _currentObstacle,
-            label: '当前障碍',
-            maxLines: 2,
-          ),
-          _textField(
-            key: 'registration-next-action',
-            controller: _nextAction,
-            label: '下一步行动',
-            maxLines: 2,
-          ),
-          _dateField(
-            fieldKey: const ValueKey('registration-document-due-at'),
-            label: '资料截止日期',
-            value: _documentDueAt,
-            onChanged: (value) => setState(() => _documentDueAt = value),
-          ),
-          _dateField(
-            fieldKey: const ValueKey('registration-milestone-at'),
-            label: '里程碑日期',
-            value: _milestoneAt,
-            onChanged: (value) => setState(() => _milestoneAt = value),
-          ),
-          _textField(
-            key: 'registration-milestone-title',
-            controller: _milestoneTitle,
-            label: '里程碑标题',
-          ),
-          const SizedBox(height: AppTokens.s24),
-          FilledButton(
-            key: const ValueKey('registration-save'),
-            onPressed: _saving ? null : _save,
-            child: const Text('保存注册'),
-          ),
-        ],
+            _dateField(
+              fieldKey: const ValueKey('registration-submitted-at'),
+              label: '提交日期',
+              value: _submittedAt,
+              onChanged: (value) => setState(() => _submittedAt = value),
+            ),
+            _dateField(
+              fieldKey: const ValueKey('registration-expected-completed-at'),
+              label: '预计完成日期',
+              value: _expectedCompletedAt,
+              onChanged: (value) =>
+                  setState(() => _expectedCompletedAt = value),
+            ),
+            _dateField(
+              fieldKey: const ValueKey('registration-actual-completed-at'),
+              label: '实际完成日期',
+              value: _actualCompletedAt,
+              onChanged: (value) => setState(() => _actualCompletedAt = value),
+            ),
+            _textField(
+              key: 'registration-cost-bearer',
+              controller: _costBearer,
+              label: '费用承担方',
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppTokens.s12),
+              child: AppDropdownFormField<RegistrationStatus>(
+                fieldKey: const ValueKey('registration-status'),
+                initialValue: _status,
+                decoration: const InputDecoration(labelText: '注册状态'),
+                items: RegistrationStatus.values
+                    .map(
+                      (value) => DropdownMenuItem(
+                        value: value,
+                        child: Text(
+                          value.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) setState(() => _status = value);
+                },
+              ),
+            ),
+            _textField(
+              key: 'registration-current-obstacle',
+              controller: _currentObstacle,
+              label: '当前障碍',
+              maxLines: 2,
+            ),
+            _textField(
+              key: 'registration-next-action',
+              controller: _nextAction,
+              label: '下一步行动',
+              maxLines: 2,
+            ),
+            _dateField(
+              fieldKey: const ValueKey('registration-document-due-at'),
+              label: '资料截止日期',
+              value: _documentDueAt,
+              onChanged: (value) => setState(() => _documentDueAt = value),
+            ),
+            _dateField(
+              fieldKey: const ValueKey('registration-milestone-at'),
+              label: '里程碑日期',
+              value: _milestoneAt,
+              onChanged: (value) => setState(() => _milestoneAt = value),
+            ),
+            _textField(
+              key: 'registration-milestone-title',
+              controller: _milestoneTitle,
+              label: '里程碑标题',
+            ),
+          ],
+        ),
       ),
     ),
   );

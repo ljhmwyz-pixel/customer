@@ -1,5 +1,6 @@
 import 'package:customer/data/database.dart';
 import 'package:customer/data/database_provider.dart';
+import 'package:customer/features/attachments/attachment_providers.dart';
 import 'package:customer/features/business/registration_form_page.dart';
 import 'package:customer/features/business/tender_form_page.dart';
 import 'package:customer/features/customers/customer_detail_page.dart';
@@ -280,6 +281,90 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('已有注册和招标直接暴露正确附件与删除动作', (tester) async {
+    final fixture = await _BusinessFixture.create();
+    addTearDown(() => fixture.dispose(tester));
+    final registrationId = await fixture.db.registrationDao.insertRegistration(
+      opportunityId: fixture.opportunityId,
+      country: '德国',
+      status: RegistrationStatus.submitted,
+    );
+    final tenderId = await fixture.db.tenderDao.insertTender(
+      opportunityId: fixture.opportunityId,
+      projectNo: 'T-UX',
+      name: '医院项目',
+      status: TenderStatus.open,
+    );
+
+    Future<void> expectOwner(Widget page, AttachmentOwnerRoute owner) async {
+      await fixture.pump(tester, page, attachmentOwner: owner);
+      expect(
+        find.byKey(
+          ValueKey('business-record-attachments-${owner.segment}-${owner.id}'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(
+          ValueKey('business-record-delete-${owner.segment}-${owner.id}'),
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(
+        find.byKey(
+          ValueKey('business-record-attachments-${owner.segment}-${owner.id}'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('附件:${owner.segment}:${owner.id}'), findsOneWidget);
+    }
+
+    await expectOwner(
+      RegistrationFormPage(
+        customerId: fixture.customerId,
+        opportunityId: fixture.opportunityId,
+        registrationId: registrationId,
+      ),
+      AttachmentOwnerRoute(
+        type: AttachmentOwnerType.registration,
+        id: registrationId,
+      ),
+    );
+    await expectOwner(
+      TenderFormPage(
+        customerId: fixture.customerId,
+        opportunityId: fixture.opportunityId,
+        tenderId: tenderId,
+      ),
+      AttachmentOwnerRoute(type: AttachmentOwnerType.tender, id: tenderId),
+    );
+  });
+
+  testWidgets('新增注册和招标不显示附件与删除动作', (tester) async {
+    final fixture = await _BusinessFixture.create();
+    addTearDown(() => fixture.dispose(tester));
+
+    await fixture.pump(
+      tester,
+      RegistrationFormPage(
+        customerId: fixture.customerId,
+        opportunityId: fixture.opportunityId,
+      ),
+    );
+    expect(find.textContaining('附件（'), findsNothing);
+    expect(find.text('删除记录'), findsNothing);
+
+    await fixture.pump(
+      tester,
+      TenderFormPage(
+        customerId: fixture.customerId,
+        opportunityId: fixture.opportunityId,
+      ),
+    );
+    expect(find.textContaining('附件（'), findsNothing);
+    expect(find.text('删除记录'), findsNothing);
+  });
 }
 
 const _registrationKeys = [
@@ -339,12 +424,25 @@ class _BusinessFixture {
   final int opportunityId;
   GoRouter? _router;
 
-  Future<void> pump(WidgetTester tester, Widget page) async {
+  Future<void> pump(
+    WidgetTester tester,
+    Widget page, {
+    AttachmentOwnerRoute? attachmentOwner,
+  }) async {
+    _router?.dispose();
     _router = GoRouter(
       initialLocation: '/form',
       routes: [
-        GoRoute(path: '/', builder: (_, _) => const SizedBox.shrink()),
+        GoRoute(path: '/', builder: (_, _) => const Text('客户详情')),
         GoRoute(path: '/form', builder: (_, _) => page),
+        GoRoute(path: '/customers/:id', builder: (_, _) => const Text('客户详情')),
+        if (attachmentOwner != null)
+          GoRoute(
+            path: '/attachments/:ownerType/:ownerId',
+            builder: (_, state) => Text(
+              '附件:${state.pathParameters['ownerType']}:${state.pathParameters['ownerId']}',
+            ),
+          ),
       ],
     );
     await tester.pumpWidget(
@@ -397,11 +495,7 @@ AppDropdownFormField<T> _dropdownWidget<T>(WidgetTester tester, String key) =>
 
 Future<void> _tapSave(WidgetTester tester, String key) async {
   final finder = find.byKey(ValueKey(key));
-  await tester.scrollUntilVisible(
-    finder,
-    300,
-    scrollable: find.byType(Scrollable).first,
-  );
+  await tester.ensureVisible(finder);
   await tester.tap(finder);
   await tester.pumpAndSettle();
 }
