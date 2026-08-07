@@ -9,6 +9,7 @@ import '../../theme/tokens.dart';
 import '../../widgets/app_form_fields.dart';
 import '../../widgets/business_record_actions.dart';
 import '../../widgets/sticky_form_scaffold.dart';
+import '../../widgets/unsaved_changes_guard.dart';
 import '../attachments/attachment_providers.dart';
 import '../customers/customer_providers.dart';
 import 'business_providers.dart';
@@ -38,12 +39,21 @@ class _QuoteOutcomePageState extends ConsumerState<QuoteOutcomePage> {
   bool _loading = true;
   bool _saving = false;
   bool _deleting = false;
+  bool _dirty = false;
+  bool _trackingChanges = false;
+  bool _allowLeave = false;
   String? _error;
 
   @override
   void initState() {
     super.initState();
+    _feedback.addListener(_markDirty);
+    _result.addListener(_markDirty);
     _load();
+  }
+
+  void _markDirty() {
+    if (_trackingChanges && !_dirty && mounted) setState(() => _dirty = true);
   }
 
   Future<void> _load() async {
@@ -56,6 +66,7 @@ class _QuoteOutcomePageState extends ConsumerState<QuoteOutcomePage> {
       setState(() {
         _loading = false;
         _error = '报价记录不存在';
+        _trackingChanges = true;
       });
       return;
     }
@@ -71,11 +82,15 @@ class _QuoteOutcomePageState extends ConsumerState<QuoteOutcomePage> {
               isUtc: true,
             );
       _loading = false;
+      _trackingChanges = true;
+      _dirty = false;
     });
   }
 
   @override
   void dispose() {
+    _feedback.removeListener(_markDirty);
+    _result.removeListener(_markDirty);
     _feedback.dispose();
     _result.dispose();
     super.dispose();
@@ -95,7 +110,14 @@ class _QuoteOutcomePageState extends ConsumerState<QuoteOutcomePage> {
             result: Value(_result.text),
           );
       ref.read(customerRevisionProvider.notifier).refresh();
-      if (mounted) context.pop();
+      if (mounted) {
+        setState(() {
+          _allowLeave = true;
+          _dirty = false;
+        });
+        await WidgetsBinding.instance.endOfFrame;
+        if (mounted) context.pop();
+      }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -114,7 +136,10 @@ class _QuoteOutcomePageState extends ConsumerState<QuoteOutcomePage> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
-    if (date != null && mounted) setState(() => _nextFollowAt = date);
+    if (date != null && mounted) {
+      _markDirty();
+      setState(() => _nextFollowAt = date);
+    }
   }
 
   @override
@@ -148,6 +173,8 @@ class _QuoteOutcomePageState extends ConsumerState<QuoteOutcomePage> {
                       .read(businessServiceProvider)
                       .deleteQuote(widget.customerId, widget.quoteId),
                   onDeleted: (report) {
+                    _allowLeave = true;
+                    _dirty = false;
                     ref.read(customerRevisionProvider.notifier).refresh();
                     final messenger = ScaffoldMessenger.of(context);
                     context.go('/customers/${widget.customerId}');
@@ -173,7 +200,10 @@ class _QuoteOutcomePageState extends ConsumerState<QuoteOutcomePage> {
                   value: _received,
                   onChanged: _saving
                       ? null
-                      : (value) => setState(() => _received = value),
+                      : (value) {
+                          _markDirty();
+                          setState(() => _received = value);
+                        },
                 ),
                 const SizedBox(height: AppTokens.s12),
                 TextField(
@@ -190,7 +220,10 @@ class _QuoteOutcomePageState extends ConsumerState<QuoteOutcomePage> {
                   onTap: _pickNextFollowAt,
                   onClear: _nextFollowAt == null
                       ? null
-                      : () => setState(() => _nextFollowAt = null),
+                      : () {
+                          _markDirty();
+                          setState(() => _nextFollowAt = null);
+                        },
                 ),
                 const SizedBox(height: AppTokens.s12),
                 TextField(
@@ -213,5 +246,5 @@ class _QuoteOutcomePageState extends ConsumerState<QuoteOutcomePage> {
               ],
             ),
           ),
-  );
+  ).protectUnsavedChanges(hasUnsavedChanges: _dirty && !_allowLeave);
 }

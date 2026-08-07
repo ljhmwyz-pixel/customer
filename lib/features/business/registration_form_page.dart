@@ -11,6 +11,7 @@ import '../../widgets/app_form_fields.dart';
 import '../../widgets/business_record_actions.dart';
 import '../../widgets/form_section.dart';
 import '../../widgets/sticky_form_scaffold.dart';
+import '../../widgets/unsaved_changes_guard.dart';
 import '../attachments/attachment_providers.dart';
 import '../customers/customer_providers.dart';
 import 'business_providers.dart';
@@ -51,13 +52,37 @@ class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
   DateTime? _milestoneAt;
   bool _saving = false;
   bool _deleting = false;
+  bool _dirty = false;
+  bool _trackingChanges = false;
+  bool _allowLeave = false;
 
   bool get _editing => widget.registrationId != null;
 
   @override
   void initState() {
     super.initState();
+    for (final controller in [
+      _country,
+      _requirements,
+      _documentChecklist,
+      _costBearer,
+      _currentObstacle,
+      _nextAction,
+      _milestoneTitle,
+    ]) {
+      controller.addListener(_markDirty);
+    }
+    _trackingChanges = widget.registrationId == null;
     if (widget.registrationId != null) _load(widget.registrationId!);
+  }
+
+  void _markDirty() {
+    if (_trackingChanges && !_dirty && mounted) setState(() => _dirty = true);
+  }
+
+  void _change(VoidCallback update) {
+    _markDirty();
+    setState(update);
   }
 
   Future<void> _load(int id) async {
@@ -83,11 +108,24 @@ class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
       _actualCompletedAt = date(row.actualCompletedAt);
       _documentDueAt = date(row.documentDueAt);
       _milestoneAt = date(row.milestoneAt);
+      _trackingChanges = true;
+      _dirty = false;
     });
   }
 
   @override
   void dispose() {
+    for (final controller in [
+      _country,
+      _requirements,
+      _documentChecklist,
+      _costBearer,
+      _currentObstacle,
+      _nextAction,
+      _milestoneTitle,
+    ]) {
+      controller.removeListener(_markDirty);
+    }
     _country.dispose();
     _requirements.dispose();
     _documentChecklist.dispose();
@@ -142,7 +180,14 @@ class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
         );
       }
       ref.read(customerRevisionProvider.notifier).refresh();
-      if (mounted) context.pop();
+      if (mounted) {
+        setState(() {
+          _allowLeave = true;
+          _dirty = false;
+        });
+        await WidgetsBinding.instance.endOfFrame;
+        if (mounted) context.pop();
+      }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -188,6 +233,8 @@ class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
                       widget.registrationId!,
                     ),
                 onDeleted: (report) {
+                  _allowLeave = true;
+                  _dirty = false;
                   ref.read(customerRevisionProvider.notifier).refresh();
                   final messenger = ScaffoldMessenger.of(context);
                   context.go('/customers/${widget.customerId}');
@@ -229,7 +276,7 @@ class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
                           )
                           .toList(),
                       onChanged: (value) {
-                        if (value != null) setState(() => _status = value);
+                        if (value != null) _change(() => _status = value);
                       },
                     ),
                   ),
@@ -274,7 +321,7 @@ class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
                           .toList(),
                       onChanged: (value) {
                         if (value != null) {
-                          setState(() => _documentStatus = value);
+                          _change(() => _documentStatus = value);
                         }
                       },
                     ),
@@ -283,7 +330,7 @@ class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
                     fieldKey: const ValueKey('registration-submitted-at'),
                     label: '提交日期',
                     value: _submittedAt,
-                    onChanged: (value) => setState(() => _submittedAt = value),
+                    onChanged: (value) => _change(() => _submittedAt = value),
                   ),
                   _dateField(
                     fieldKey: const ValueKey(
@@ -292,7 +339,7 @@ class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
                     label: '预计完成日期',
                     value: _expectedCompletedAt,
                     onChanged: (value) =>
-                        setState(() => _expectedCompletedAt = value),
+                        _change(() => _expectedCompletedAt = value),
                   ),
                   _dateField(
                     fieldKey: const ValueKey(
@@ -301,7 +348,7 @@ class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
                     label: '实际完成日期',
                     value: _actualCompletedAt,
                     onChanged: (value) =>
-                        setState(() => _actualCompletedAt = value),
+                        _change(() => _actualCompletedAt = value),
                   ),
                   _textField(
                     key: 'registration-cost-bearer',
@@ -312,14 +359,13 @@ class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
                     fieldKey: const ValueKey('registration-document-due-at'),
                     label: '资料截止日期',
                     value: _documentDueAt,
-                    onChanged: (value) =>
-                        setState(() => _documentDueAt = value),
+                    onChanged: (value) => _change(() => _documentDueAt = value),
                   ),
                   _dateField(
                     fieldKey: const ValueKey('registration-milestone-at'),
                     label: '里程碑日期',
                     value: _milestoneAt,
-                    onChanged: (value) => setState(() => _milestoneAt = value),
+                    onChanged: (value) => _change(() => _milestoneAt = value),
                   ),
                   _textField(
                     key: 'registration-milestone-title',
@@ -355,7 +401,7 @@ class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
         ),
       ),
     ),
-  );
+  ).protectUnsavedChanges(hasUnsavedChanges: _dirty && !_allowLeave);
 
   Widget _textField({
     required String key,

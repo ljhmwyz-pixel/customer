@@ -8,6 +8,7 @@ import '../../models/enums.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/business_record_actions.dart';
 import '../../widgets/sticky_form_scaffold.dart';
+import '../../widgets/unsaved_changes_guard.dart';
 import '../attachments/attachment_providers.dart';
 import '../customers/customer_providers.dart';
 import 'business_providers.dart';
@@ -32,6 +33,9 @@ class _SampleFormPageState extends ConsumerState<SampleFormPage> {
   final quantity = TextEditingController(text: '1');
   bool saving = false;
   bool deleting = false;
+  bool _dirty = false;
+  bool _trackingChanges = false;
+  bool _allowLeave = false;
   SampleStatus status = SampleStatus.preparing;
   final result = TextEditingController();
   final nextAction = TextEditingController();
@@ -41,7 +45,15 @@ class _SampleFormPageState extends ConsumerState<SampleFormPage> {
   @override
   void initState() {
     super.initState();
+    for (final controller in [model, quantity, result, nextAction]) {
+      controller.addListener(_markDirty);
+    }
+    _trackingChanges = widget.sampleId == null;
     if (widget.sampleId != null) _load(widget.sampleId!);
+  }
+
+  void _markDirty() {
+    if (_trackingChanges && !_dirty && mounted) setState(() => _dirty = true);
   }
 
   Future<void> _load(int id) async {
@@ -53,11 +65,18 @@ class _SampleFormPageState extends ConsumerState<SampleFormPage> {
     quantity.text = '${row.quantity}';
     result.text = row.testResult ?? '';
     nextAction.text = row.nextAction ?? '';
-    setState(() => status = SampleStatus.fromDb(row.status));
+    setState(() {
+      status = SampleStatus.fromDb(row.status);
+      _trackingChanges = true;
+      _dirty = false;
+    });
   }
 
   @override
   void dispose() {
+    for (final controller in [model, quantity, result, nextAction]) {
+      controller.removeListener(_markDirty);
+    }
     model.dispose();
     quantity.dispose();
     result.dispose();
@@ -96,7 +115,14 @@ class _SampleFormPageState extends ConsumerState<SampleFormPage> {
         );
       }
       ref.read(customerRevisionProvider.notifier).refresh();
-      if (mounted) context.pop();
+      if (mounted) {
+        setState(() {
+          _allowLeave = true;
+          _dirty = false;
+        });
+        await WidgetsBinding.instance.endOfFrame;
+        if (mounted) context.pop();
+      }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -135,6 +161,8 @@ class _SampleFormPageState extends ConsumerState<SampleFormPage> {
                   .read(businessServiceProvider)
                   .deleteSample(widget.customerId, widget.sampleId!),
               onDeleted: (report) {
+                _allowLeave = true;
+                _dirty = false;
                 ref.read(customerRevisionProvider.notifier).refresh();
                 final messenger = ScaffoldMessenger.of(context);
                 context.go('/customers/${widget.customerId}');
@@ -163,7 +191,10 @@ class _SampleFormPageState extends ConsumerState<SampleFormPage> {
                 .toList(growable: false),
             onChanged: saving
                 ? null
-                : (value) => setState(() => status = value!),
+                : (value) {
+                    _markDirty();
+                    setState(() => status = value!);
+                  },
           ),
           const SizedBox(height: AppTokens.s12),
           TextField(
@@ -189,5 +220,5 @@ class _SampleFormPageState extends ConsumerState<SampleFormPage> {
         ],
       ),
     ),
-  );
+  ).protectUnsavedChanges(hasUnsavedChanges: _dirty && !_allowLeave);
 }

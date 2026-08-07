@@ -11,6 +11,7 @@ import '../../widgets/app_form_fields.dart';
 import '../../widgets/business_record_actions.dart';
 import '../../widgets/form_section.dart';
 import '../../widgets/sticky_form_scaffold.dart';
+import '../../widgets/unsaved_changes_guard.dart';
 import '../attachments/attachment_providers.dart';
 import '../customers/customer_providers.dart';
 import 'business_providers.dart';
@@ -55,14 +56,38 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
   bool _saving = false;
   bool _deleting = false;
   bool _riskExpanded = false;
+  bool _dirty = false;
+  bool _trackingChanges = false;
+  bool _allowLeave = false;
 
   bool get _editing => widget.tenderId != null;
 
   @override
   void initState() {
     super.initState();
+    for (final controller in [
+      _projectNo,
+      _name,
+      _bidder,
+      _depositMinor,
+      _customerExperience,
+      _exclusiveQuoteScope,
+      _nextAction,
+    ]) {
+      controller.addListener(_markDirty);
+    }
     _floorPriceSupport.addListener(_handleRiskInputChanged);
+    _trackingChanges = widget.tenderId == null;
     if (widget.tenderId != null) _load(widget.tenderId!);
+  }
+
+  void _markDirty() {
+    if (_trackingChanges && !_dirty && mounted) setState(() => _dirty = true);
+  }
+
+  void _change(VoidCallback update) {
+    _markDirty();
+    setState(update);
   }
 
   Future<void> _load(int id) async {
@@ -99,6 +124,8 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
           row.riskLevel == TenderRiskLevel.high.dbValue ||
           (row.floorPriceSupport?.trim().isNotEmpty ?? false) ||
           row.authorizationType != TenderAuthorizationType.none.dbValue;
+      _trackingChanges = true;
+      _dirty = false;
     });
   }
 
@@ -108,6 +135,7 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
           _floorPriceSupport.text.trim().isNotEmpty);
 
   void _handleRiskInputChanged() {
+    _markDirty();
     final required = _requiresRiskAcknowledgement;
     if (!required && _riskAcknowledged) _riskAcknowledged = false;
     if (required && !_riskExpanded) _riskExpanded = true;
@@ -115,6 +143,7 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
   }
 
   void _setRiskLevel(TenderRiskLevel value) {
+    _markDirty();
     setState(() {
       _riskLevel = value;
       _riskExpanded = true;
@@ -123,6 +152,7 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
   }
 
   void _setAuthorizationType(TenderAuthorizationType value) {
+    _markDirty();
     setState(() {
       _authorizationType = value;
       _riskExpanded = true;
@@ -132,6 +162,17 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
 
   @override
   void dispose() {
+    for (final controller in [
+      _projectNo,
+      _name,
+      _bidder,
+      _depositMinor,
+      _customerExperience,
+      _exclusiveQuoteScope,
+      _nextAction,
+    ]) {
+      controller.removeListener(_markDirty);
+    }
     _floorPriceSupport.removeListener(_handleRiskInputChanged);
     _projectNo.dispose();
     _name.dispose();
@@ -205,7 +246,14 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
         );
       }
       ref.read(customerRevisionProvider.notifier).refresh();
-      if (mounted) context.pop();
+      if (mounted) {
+        setState(() {
+          _allowLeave = true;
+          _dirty = false;
+        });
+        await WidgetsBinding.instance.endOfFrame;
+        if (mounted) context.pop();
+      }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -250,6 +298,8 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
                     .read(businessServiceProvider)
                     .deleteTender(widget.customerId, widget.tenderId!),
                 onDeleted: (report) {
+                  _allowLeave = true;
+                  _dirty = false;
                   ref.read(customerRevisionProvider.notifier).refresh();
                   final messenger = ScaffoldMessenger.of(context);
                   context.go('/customers/${widget.customerId}');
@@ -286,12 +336,12 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
                       onTap: () => _pickDate(
                         initialValue: _deadlineAt,
                         onChanged: (value) =>
-                            setState(() => _deadlineAt = value),
+                            _change(() => _deadlineAt = value),
                       ),
                       clearKey: const ValueKey('tender-deadline-at-clear'),
                       onClear: _deadlineAt == null
                           ? null
-                          : () => setState(() => _deadlineAt = null),
+                          : () => _change(() => _deadlineAt = null),
                     ),
                   ),
                   _dropdown<TenderStatus>(
@@ -300,7 +350,7 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
                     value: _status,
                     values: TenderStatus.values,
                     text: (value) => value.label,
-                    onChanged: (value) => setState(() => _status = value),
+                    onChanged: (value) => _change(() => _status = value),
                   ),
                 ],
               ),
@@ -318,7 +368,7 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
                     values: TenderDocumentStatus.values,
                     text: (value) => value.label,
                     onChanged: (value) =>
-                        setState(() => _documentStatus = value),
+                        _change(() => _documentStatus = value),
                   ),
                   _dropdown<TenderQualificationStatus>(
                     key: 'tender-qualification-status',
@@ -327,7 +377,7 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
                     values: TenderQualificationStatus.values,
                     text: (value) => value.label,
                     onChanged: (value) =>
-                        setState(() => _qualificationStatus = value),
+                        _change(() => _qualificationStatus = value),
                   ),
                   _textField(
                     key: 'tender-bidder',
@@ -353,7 +403,7 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
                     values: TenderVerificationStatus.values,
                     text: (value) => value.label,
                     onChanged: (value) =>
-                        setState(() => _localTeamStatus = value),
+                        _change(() => _localTeamStatus = value),
                   ),
                   _dropdown<TenderVerificationStatus>(
                     key: 'tender-funding-status',
@@ -361,8 +411,7 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
                     value: _fundingStatus,
                     values: TenderVerificationStatus.values,
                     text: (value) => value.label,
-                    onChanged: (value) =>
-                        setState(() => _fundingStatus = value),
+                    onChanged: (value) => _change(() => _fundingStatus = value),
                   ),
                 ],
               ),
@@ -404,15 +453,14 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
                       onTap: () => _pickDate(
                         initialValue: _authorizationExpiresAt,
                         onChanged: (value) =>
-                            setState(() => _authorizationExpiresAt = value),
+                            _change(() => _authorizationExpiresAt = value),
                       ),
                       clearKey: const ValueKey(
                         'tender-authorization-expires-at-clear',
                       ),
                       onClear: _authorizationExpiresAt == null
                           ? null
-                          : () =>
-                                setState(() => _authorizationExpiresAt = null),
+                          : () => _change(() => _authorizationExpiresAt = null),
                     ),
                   ),
                   _textField(
@@ -447,7 +495,7 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
                       contentPadding: EdgeInsets.zero,
                       title: const Text('我已确认风险'),
                       onChanged: (value) =>
-                          setState(() => _riskAcknowledged = value ?? false),
+                          _change(() => _riskAcknowledged = value ?? false),
                     ),
                   ],
                 ],
@@ -457,7 +505,7 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
         ),
       ),
     ),
-  );
+  ).protectUnsavedChanges(hasUnsavedChanges: _dirty && !_allowLeave);
 
   Widget _textField({
     required String key,
