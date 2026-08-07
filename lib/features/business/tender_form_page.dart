@@ -9,6 +9,7 @@ import '../../theme/tokens.dart';
 import '../../widgets/app_dropdown_form_field.dart';
 import '../../widgets/app_form_fields.dart';
 import '../../widgets/business_record_actions.dart';
+import '../../widgets/form_error_navigation.dart';
 import '../../widgets/form_section.dart';
 import '../../widgets/sticky_form_scaffold.dart';
 import '../../widgets/unsaved_changes_guard.dart';
@@ -41,6 +42,9 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
   final _exclusiveQuoteScope = TextEditingController();
   final _floorPriceSupport = TextEditingController();
   final _nextAction = TextEditingController();
+  final _depositTargetKey = GlobalKey();
+  final _riskAcknowledgementTargetKey = GlobalKey();
+  final _depositFocusNode = FocusNode();
 
   DateTime? _deadlineAt;
   TenderDocumentStatus _documentStatus = TenderDocumentStatus.incomplete;
@@ -55,6 +59,7 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
   bool _riskAcknowledged = false;
   bool _saving = false;
   bool _deleting = false;
+  bool _qualificationExpanded = false;
   bool _riskExpanded = false;
   bool _dirty = false;
   bool _trackingChanges = false;
@@ -182,6 +187,7 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
     _exclusiveQuoteScope.dispose();
     _floorPriceSupport.dispose();
     _nextAction.dispose();
+    _depositFocusNode.dispose();
     super.dispose();
   }
 
@@ -189,9 +195,24 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
     final depositText = _depositMinor.text.trim();
     final deposit = depositText.isEmpty ? null : int.tryParse(depositText);
     if (depositText.isNotEmpty && (deposit == null || deposit < 0)) {
+      setState(() => _qualificationExpanded = true);
+      await revealFormError(
+        targetKey: _depositTargetKey,
+        focusNode: _depositFocusNode,
+      );
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('请填写有效的保证金')));
+      return;
+    }
+    if (_requiresRiskAcknowledgement && !_riskAcknowledged) {
+      setState(() => _riskExpanded = true);
+      await revealFormError(targetKey: _riskAcknowledgementTargetKey);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('高风险授权或底价支持必须明确确认风险')));
       return;
     }
 
@@ -358,6 +379,9 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
             FormSection(
               sectionKey: 'tender-qualification',
               title: '资格核验',
+              expanded: _qualificationExpanded,
+              onExpansionChanged: (value) =>
+                  setState(() => _qualificationExpanded = value),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -389,6 +413,8 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
                     controller: _depositMinor,
                     label: '保证金（最小货币单位）',
                     keyboardType: TextInputType.number,
+                    targetKey: _depositTargetKey,
+                    focusNode: _depositFocusNode,
                   ),
                   _textField(
                     key: 'tender-customer-experience',
@@ -489,13 +515,16 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
                       color: Theme.of(context).colorScheme.errorContainer,
                       child: const Text('当前为高风险授权或底价支持，请确认已充分了解风险。'),
                     ),
-                    CheckboxListTile(
-                      key: const ValueKey('tender-risk-acknowledged'),
-                      value: _riskAcknowledged,
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('我已确认风险'),
-                      onChanged: (value) =>
-                          _change(() => _riskAcknowledged = value ?? false),
+                    KeyedSubtree(
+                      key: _riskAcknowledgementTargetKey,
+                      child: CheckboxListTile(
+                        key: const ValueKey('tender-risk-acknowledged'),
+                        value: _riskAcknowledged,
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('我已确认风险'),
+                        onChanged: (value) =>
+                            _change(() => _riskAcknowledged = value ?? false),
+                      ),
                     ),
                   ],
                 ],
@@ -513,14 +542,20 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
     required String label,
     TextInputType? keyboardType,
     int maxLines = 1,
-  }) => Padding(
-    padding: const EdgeInsets.only(bottom: AppTokens.s12),
-    child: TextField(
-      key: ValueKey(key),
-      controller: controller,
-      keyboardType: keyboardType,
-      maxLines: maxLines,
-      decoration: InputDecoration(labelText: label),
+    GlobalKey? targetKey,
+    FocusNode? focusNode,
+  }) => KeyedSubtree(
+    key: targetKey,
+    child: Padding(
+      padding: const EdgeInsets.only(bottom: AppTokens.s12),
+      child: TextField(
+        key: ValueKey(key),
+        controller: controller,
+        focusNode: focusNode,
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        decoration: InputDecoration(labelText: label),
+      ),
     ),
   );
 

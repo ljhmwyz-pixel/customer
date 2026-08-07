@@ -6,6 +6,7 @@ import 'package:customer/features/business/tender_form_page.dart';
 import 'package:customer/features/customers/customer_detail_page.dart';
 import 'package:customer/models/enums.dart';
 import 'package:customer/widgets/app_dropdown_form_field.dart';
+import 'package:customer/widgets/form_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,6 +15,81 @@ import 'package:go_router/go_router.dart';
 import '../../data/helpers.dart';
 
 void main() {
+  testWidgets('长表单首个错误自动定位：招标保证金展开资格区', (tester) async {
+    final fixture = await _BusinessFixture.create();
+    addTearDown(() => fixture.dispose(tester));
+    await fixture.pump(
+      tester,
+      TenderFormPage(
+        customerId: fixture.customerId,
+        opportunityId: fixture.opportunityId,
+      ),
+    );
+
+    await _expandSection(tester, 'form-section-header-tender-qualification');
+    await tester.enterText(
+      find.byKey(const ValueKey('tender-deposit-minor')),
+      'abc',
+    );
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+    await _setSectionExpanded(
+      tester,
+      'form-section-header-tender-qualification',
+      false,
+    );
+    expect(
+      find.byKey(const ValueKey('tender-deposit-minor')).hitTestable(),
+      findsNothing,
+    );
+
+    await _tapSave(tester, 'tender-save');
+
+    expect(find.text('请填写有效的保证金'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('tender-deposit-minor')).hitTestable(),
+      findsOneWidget,
+    );
+    expect(
+      _editableTextHasFocus(tester, const ValueKey('tender-deposit-minor')),
+      isTrue,
+    );
+  });
+
+  testWidgets('长表单首个错误自动定位：招标风险区自动展开', (tester) async {
+    final fixture = await _BusinessFixture.create();
+    addTearDown(() => fixture.dispose(tester));
+    await fixture.pump(
+      tester,
+      TenderFormPage(
+        customerId: fixture.customerId,
+        opportunityId: fixture.opportunityId,
+      ),
+    );
+
+    await _expandSection(tester, 'form-section-header-tender-risk');
+    await _selectDropdown(tester, 'tender-risk-level', TenderRiskLevel.high);
+    await tester.enterText(
+      find.byKey(const ValueKey('tender-floor-price-support')),
+      '申请底价支持',
+    );
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+    await _setSectionExpanded(tester, 'form-section-header-tender-risk', false);
+    expect(
+      find.byKey(const ValueKey('tender-risk-acknowledged')).hitTestable(),
+      findsNothing,
+    );
+
+    await _tapSave(tester, 'tender-save');
+
+    expect(find.text('高风险授权或底价支持必须明确确认风险'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('tender-risk-acknowledged')).hitTestable(),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('注册表单暴露稳定字段、默认值并可保存', (tester) async {
     final fixture = await _BusinessFixture.create();
     addTearDown(() => fixture.dispose(tester));
@@ -514,6 +590,21 @@ Future<void> _expandSection(WidgetTester tester, String key) async {
   await tester.pumpAndSettle();
 }
 
+Future<void> _setSectionExpanded(
+  WidgetTester tester,
+  String headerKey,
+  bool expanded,
+) async {
+  final section = tester.widget<FormSection>(
+    find.ancestor(
+      of: find.byKey(ValueKey(headerKey)),
+      matching: find.byType(FormSection),
+    ),
+  );
+  section.onExpansionChanged!(expanded);
+  await tester.pumpAndSettle();
+}
+
 AppDropdownFormField<T> _dropdownWidget<T>(WidgetTester tester, String key) =>
     tester.widget<AppDropdownFormField<T>>(
       find.ancestor(
@@ -521,6 +612,14 @@ AppDropdownFormField<T> _dropdownWidget<T>(WidgetTester tester, String key) =>
         matching: find.byType(AppDropdownFormField<T>),
       ),
     );
+
+bool _editableTextHasFocus(WidgetTester tester, Key fieldKey) {
+  final editable = find.descendant(
+    of: find.byKey(fieldKey),
+    matching: find.byType(EditableText),
+  );
+  return tester.widget<EditableText>(editable).focusNode.hasFocus;
+}
 
 Future<void> _tapSave(WidgetTester tester, String key) async {
   final finder = find.byKey(ValueKey(key));

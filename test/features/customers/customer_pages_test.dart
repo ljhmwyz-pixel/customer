@@ -24,6 +24,132 @@ import 'package:go_router/go_router.dart';
 import '../../data/helpers.dart';
 
 void main() {
+  testWidgets('长表单首个错误自动定位：订单金额', (tester) async {
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '订单定位客户');
+    await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '订单定位项目',
+    );
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: OrderFormPage(customerId: customerId),
+    );
+    addTearDown(() => harness.dispose(tester));
+    await harness.pump(tester);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('order-description')),
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(const ValueKey('save-order')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('请输入有效金额，最多保留两位小数'), findsOneWidget);
+    expect(
+      _editableTextHasFocus(tester, const ValueKey('order-amount')),
+      isTrue,
+    );
+    expect(
+      find.byKey(const ValueKey('order-amount')).hitTestable(),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('长表单首个错误自动定位：跟进反馈', (tester) async {
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '跟进定位客户');
+    await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '跟进定位项目',
+    );
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: FollowupFormPage(customerId: customerId),
+    );
+    addTearDown(() => harness.dispose(tester));
+    await harness.pump(tester);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('followup-next-choice')),
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(const ValueKey('save-followup')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('客户反馈不能为空'), findsOneWidget);
+    expect(
+      _editableTextHasFocus(tester, const ValueKey('followup-feedback')),
+      isTrue,
+    );
+    expect(
+      find.byKey(const ValueKey('followup-feedback')).hitTestable(),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('长表单首个错误自动定位：项目名称', (tester) async {
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '项目定位客户');
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: OpportunityFormPage(customerId: customerId),
+    );
+    addTearDown(() => harness.dispose(tester));
+    await harness.pump(tester);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('save-opportunity')),
+      500,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(const ValueKey('save-opportunity')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('请输入项目名称'), findsOneWidget);
+    expect(
+      _editableTextHasFocus(tester, const ValueKey('opportunity-name')),
+      isTrue,
+    );
+    expect(
+      find.byKey(const ValueKey('opportunity-name')).hitTestable(),
+      findsOneWidget,
+    );
+
+    await tester.enterText(
+      find.byKey(const ValueKey('opportunity-name')),
+      '有效项目',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('opportunity-estimatedAnnualVolume')),
+      'abc',
+    );
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('save-opportunity')),
+      500,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(const ValueKey('save-opportunity')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('预计年用量需为整数'), findsOneWidget);
+    expect(
+      _editableTextHasFocus(
+        tester,
+        const ValueKey('opportunity-estimatedAnnualVolume'),
+      ),
+      isTrue,
+    );
+  });
+
   testWidgets('剩余表单退出保护：客户和联系人支持恢复初始值', (tester) async {
     final db = await openTestDb();
     final customerId = await seedCustomer(db, name: '基线客户');
@@ -2709,6 +2835,14 @@ AppDropdownFormField<T> _dropdownWidget<T>(WidgetTester tester, String key) =>
         matching: find.byType(AppDropdownFormField<T>),
       ),
     );
+
+bool _editableTextHasFocus(WidgetTester tester, Key fieldKey) {
+  final editable = find.descendant(
+    of: find.byKey(fieldKey),
+    matching: find.byType(EditableText),
+  );
+  return tester.widget<EditableText>(editable).focusNode.hasFocus;
+}
 
 Future<void> _scrollOrderFieldIntoView(WidgetTester tester, String key) async {
   final field = find.byKey(ValueKey(key));

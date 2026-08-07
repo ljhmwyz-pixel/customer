@@ -7,6 +7,7 @@ import '../../models/enums.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/app_dropdown_form_field.dart';
 import '../../widgets/app_form_fields.dart';
+import '../../widgets/form_error_navigation.dart';
 import '../../widgets/unsaved_changes_guard.dart';
 import '../customers/customer_providers.dart';
 import '../customers/customer_widgets.dart';
@@ -31,6 +32,8 @@ class OpportunityFormPage extends ConsumerStatefulWidget {
 class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
   final _formKey = GlobalKey<FormState>();
   final _controllers = <String, TextEditingController>{};
+  final _fieldTargets = <String, GlobalKey>{};
+  final _focusNodes = <String, FocusNode>{};
   OpportunityStage _stage = OpportunityStage.newLead;
   OpportunityStatus _status = OpportunityStatus.active;
   DateTime? _expectedCloseAt;
@@ -54,6 +57,12 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
     key,
     () => TextEditingController()..addListener(_markDirty),
   );
+
+  GlobalKey _fieldTarget(String key) =>
+      _fieldTargets.putIfAbsent(key, GlobalKey.new);
+
+  FocusNode _focusNode(String key) =>
+      _focusNodes.putIfAbsent(key, FocusNode.new);
 
   void _markDirty() {
     if (_trackingChanges && !_dirty && mounted) setState(() => _dirty = true);
@@ -159,6 +168,9 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
     for (final controller in _controllers.values) {
       controller.dispose();
     }
+    for (final focusNode in _focusNodes.values) {
+      focusNode.dispose();
+    }
     super.dispose();
   }
 
@@ -166,7 +178,9 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
     final raw = _controller(key).text.trim();
     if (raw.isEmpty) return null;
     final value = int.tryParse(raw);
-    if (value == null) throw OpportunityValidationException('$label需为整数');
+    if (value == null) {
+      throw _OpportunityFieldValidationException(key, '$label需为整数');
+    }
     return value;
   }
 
@@ -175,13 +189,13 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
     if (raw.isEmpty) return null;
     final match = RegExp(r'^(\d+)(?:\.(\d{1,2}))?$').firstMatch(raw);
     if (match == null) {
-      throw OpportunityValidationException('$label格式不正确，最多两位小数');
+      throw _OpportunityFieldValidationException(key, '$label格式不正确，最多两位小数');
     }
     final whole = BigInt.parse(match.group(1)!);
     final fraction = BigInt.parse((match.group(2) ?? '').padRight(2, '0'));
     final result = whole * BigInt.from(100) + fraction;
     if (result > BigInt.from(9223372036854775807)) {
-      throw OpportunityValidationException('$label超出支持范围');
+      throw _OpportunityFieldValidationException(key, '$label超出支持范围');
     }
     return result.toInt();
   }
@@ -189,7 +203,11 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
   String? _text(String key) => _controller(key).text;
 
   Future<void> _save() async {
-    if (_saving || !_formKey.currentState!.validate()) return;
+    if (_saving) return;
+    if (!_formKey.currentState!.validate()) {
+      await _revealField('name');
+      return;
+    }
     setState(() => _saving = true);
     try {
       final draft = OpportunityDraft(
@@ -243,6 +261,9 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
         await WidgetsBinding.instance.endOfFrame;
         if (mounted) context.go('/customers/${widget.customerId}');
       }
+    } on _OpportunityFieldValidationException catch (error) {
+      await _revealField(error.fieldKey);
+      _message(error.message);
     } on OpportunityValidationException catch (error) {
       _message(error.message);
     } catch (_) {
@@ -251,6 +272,9 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
       if (mounted) setState(() => _saving = false);
     }
   }
+
+  Future<void> _revealField(String key) =>
+      revealFormError(targetKey: _fieldTarget(key), focusNode: _focusNode(key));
 
   void _message(String value) {
     if (!mounted) return;
@@ -306,197 +330,200 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
 
   Widget _form() => Form(
     key: _formKey,
-    child: ListView(
+    child: SingleChildScrollView(
       padding: const EdgeInsets.all(AppTokens.s16),
-      children: [
-        _field('name', '项目名称 *', required: true),
-        _field('productCategory', '产品类别'),
-        _field('productModel', '产品型号'),
-        _field('equipmentBrand', '设备品牌', onChanged: (_) => setState(() {})),
-        _field('equipmentModel', '设备型号', onChanged: (_) => setState(() {})),
-        _field(
-          'estimatedAnnualVolume',
-          '预计年用量',
-          number: true,
-          onChanged: (_) => setState(() {}),
-        ),
-        _field('forecastAmount', '预计项目金额', decimal: true),
-        _field('currency', '币种（如 USD）'),
-        _field('probabilityPercent', '成交概率（0–100）', number: true),
-        Padding(
-          padding: const EdgeInsets.only(bottom: AppTokens.s12),
-          child: AppDropdownFormField<OpportunityStage>(
-            fieldKey: const ValueKey('opportunity-stage'),
-            initialValue: _stage,
-            decoration: const InputDecoration(labelText: '销售阶段'),
-            items: OpportunityStage.values
-                .map(
-                  (v) => DropdownMenuItem(
-                    value: v,
-                    child: Text(
-                      v.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _field('name', '项目名称 *', required: true),
+          _field('productCategory', '产品类别'),
+          _field('productModel', '产品型号'),
+          _field('equipmentBrand', '设备品牌', onChanged: (_) => setState(() {})),
+          _field('equipmentModel', '设备型号', onChanged: (_) => setState(() {})),
+          _field(
+            'estimatedAnnualVolume',
+            '预计年用量',
+            number: true,
+            onChanged: (_) => setState(() {}),
+          ),
+          _field('forecastAmount', '预计项目金额', decimal: true),
+          _field('currency', '币种（如 USD）'),
+          _field('probabilityPercent', '成交概率（0–100）', number: true),
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppTokens.s12),
+            child: AppDropdownFormField<OpportunityStage>(
+              fieldKey: const ValueKey('opportunity-stage'),
+              initialValue: _stage,
+              decoration: const InputDecoration(labelText: '销售阶段'),
+              items: OpportunityStage.values
+                  .map(
+                    (v) => DropdownMenuItem(
+                      value: v,
+                      child: Text(
+                        v.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                )
-                .toList(),
-            onChanged: (value) => _change(() => _stage = value ?? _stage),
+                  )
+                  .toList(),
+              onChanged: (value) => _change(() => _stage = value ?? _stage),
+            ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(bottom: AppTokens.s12),
-          child: AppDropdownFormField<OpportunityStatus>(
-            fieldKey: const ValueKey('opportunity-status'),
-            initialValue: _status,
-            decoration: const InputDecoration(labelText: '投入状态'),
-            items: OpportunityStatus.values
-                .map(
-                  (v) => DropdownMenuItem(
-                    value: v,
-                    child: Text(
-                      v.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppTokens.s12),
+            child: AppDropdownFormField<OpportunityStatus>(
+              fieldKey: const ValueKey('opportunity-status'),
+              initialValue: _status,
+              decoration: const InputDecoration(labelText: '投入状态'),
+              items: OpportunityStatus.values
+                  .map(
+                    (v) => DropdownMenuItem(
+                      value: v,
+                      child: Text(
+                        v.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                )
-                .toList(),
-            onChanged: (value) => _change(() => _status = value ?? _status),
+                  )
+                  .toList(),
+              onChanged: (value) => _change(() => _status = value ?? _status),
+            ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(bottom: AppTokens.s12),
-          child: AppDateFormField(
-            fieldKey: const ValueKey('opportunity-expected-close-at'),
-            label: '预计成交日期',
-            value: _expectedCloseAt,
-            valueText: _expectedCloseAt == null
-                ? null
-                : formatDateTime(_expectedCloseAt!),
-            onTap: () => _pickDate(true),
-            clearKey: const ValueKey('opportunity-expected-close-at-clear'),
-            onClear: _expectedCloseAt == null
-                ? null
-                : () => _change(() => _expectedCloseAt = null),
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppTokens.s12),
+            child: AppDateFormField(
+              fieldKey: const ValueKey('opportunity-expected-close-at'),
+              label: '预计成交日期',
+              value: _expectedCloseAt,
+              valueText: _expectedCloseAt == null
+                  ? null
+                  : formatDateTime(_expectedCloseAt!),
+              onTap: () => _pickDate(true),
+              clearKey: const ValueKey('opportunity-expected-close-at-clear'),
+              onClear: _expectedCloseAt == null
+                  ? null
+                  : () => _change(() => _expectedCloseAt = null),
+            ),
           ),
-        ),
-        _field('latestFeedback', '最新反馈', lines: 2),
-        _field('currentObstacle', '当前障碍', lines: 2),
-        _field('nextAction', '下一步动作', lines: 2),
-        Padding(
-          padding: const EdgeInsets.only(bottom: AppTokens.s12),
-          child: AppDateFormField(
-            fieldKey: const ValueKey('opportunity-next-follow-at'),
-            label: '下次跟进日期',
-            value: _nextFollowAt,
-            valueText: _nextFollowAt == null
-                ? null
-                : formatDateTime(_nextFollowAt!),
-            onTap: () => _pickDate(false),
-            clearKey: const ValueKey('opportunity-next-follow-at-clear'),
-            onClear: _nextFollowAt == null
-                ? null
-                : () => _change(() => _nextFollowAt = null),
+          _field('latestFeedback', '最新反馈', lines: 2),
+          _field('currentObstacle', '当前障碍', lines: 2),
+          _field('nextAction', '下一步动作', lines: 2),
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppTokens.s12),
+            child: AppDateFormField(
+              fieldKey: const ValueKey('opportunity-next-follow-at'),
+              label: '下次跟进日期',
+              value: _nextFollowAt,
+              valueText: _nextFollowAt == null
+                  ? null
+                  : formatDateTime(_nextFollowAt!),
+              onTap: () => _pickDate(false),
+              clearKey: const ValueKey('opportunity-next-follow-at-clear'),
+              onClear: _nextFollowAt == null
+                  ? null
+                  : () => _change(() => _nextFollowAt = null),
+            ),
           ),
-        ),
-        ExpansionTile(
-          tilePadding: EdgeInsets.zero,
-          title: const Text('供应商与价格信息'),
-          children: [
-            _field(
-              'currentSupplier',
-              '当前供应商',
-              onChanged: (_) => setState(() {}),
-            ),
-            _field(
-              'currentPurchaseBrand',
-              '当前采购品牌',
-              onChanged: (_) => setState(() {}),
-            ),
-            _field('currentPurchasePrice', '当前采购价', decimal: true),
-            _field(
-              'supplierStability',
-              '供应稳定性',
-              onChanged: (_) => setState(() {}),
-            ),
-            _optionField(
-              key: 'supplierProblem',
-              label: '现供应商问题',
-              options: supplierProblemOptions,
-              value: _supplierProblem,
-              onChanged: (value) => _supplierProblem = value,
-            ),
-            _optionField(
-              key: 'changeWillingness',
-              label: '更换意愿',
-              options: changeWillingnessOptions,
-              value: _changeWillingness,
-              onChanged: (value) => _changeWillingness = value,
-            ),
-            _optionField(
-              key: 'substitutionDifficulty',
-              label: '替代难度',
-              options: substitutionDifficultyOptions,
-              value: _substitutionDifficulty,
-              onChanged: (value) => _substitutionDifficulty = value,
-            ),
-            _field('latestQuote', '最新报价', decimal: true),
-            _field('targetPrice', '客户目标价', decimal: true),
-          ],
-        ),
-        ExpansionTile(
-          tilePadding: EdgeInsets.zero,
-          title: const Text('投入建议与前置事项'),
-          children: [
-            _optionField(
-              key: 'entryPoint',
-              label: '切入点',
-              options: entryPointOptions,
-              value: _entryPoint,
-              onChanged: (value) => _entryPoint = value,
-            ),
-            _optionField(
-              key: 'investmentAdvice',
-              label: '投入建议',
-              options: investmentAdviceOptions,
-              value: _investmentAdvice,
-              onChanged: (value) => _investmentAdvice = value,
-            ),
-            _recommendationCard(_supplierRecommendation),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('需要样品'),
-              value: _needsSample,
-              onChanged: (v) => _change(() => _needsSample = v),
-            ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('需要注册'),
-              value: _needsRegistration,
-              onChanged: (v) => _change(() => _needsRegistration = v),
-            ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('需要授权'),
-              value: _needsAuthorization,
-              onChanged: (v) => _change(() => _needsAuthorization = v),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppTokens.s24),
-        FilledButton.icon(
-          key: const ValueKey('save-opportunity'),
-          onPressed: _saving ? null : _save,
-          icon: _saving
-              ? const SizedBox.square(
-                  dimension: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.save_outlined),
-          label: Text(_saving ? '保存中…' : '保存项目'),
-        ),
-      ],
+          ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            title: const Text('供应商与价格信息'),
+            children: [
+              _field(
+                'currentSupplier',
+                '当前供应商',
+                onChanged: (_) => setState(() {}),
+              ),
+              _field(
+                'currentPurchaseBrand',
+                '当前采购品牌',
+                onChanged: (_) => setState(() {}),
+              ),
+              _field('currentPurchasePrice', '当前采购价', decimal: true),
+              _field(
+                'supplierStability',
+                '供应稳定性',
+                onChanged: (_) => setState(() {}),
+              ),
+              _optionField(
+                key: 'supplierProblem',
+                label: '现供应商问题',
+                options: supplierProblemOptions,
+                value: _supplierProblem,
+                onChanged: (value) => _supplierProblem = value,
+              ),
+              _optionField(
+                key: 'changeWillingness',
+                label: '更换意愿',
+                options: changeWillingnessOptions,
+                value: _changeWillingness,
+                onChanged: (value) => _changeWillingness = value,
+              ),
+              _optionField(
+                key: 'substitutionDifficulty',
+                label: '替代难度',
+                options: substitutionDifficultyOptions,
+                value: _substitutionDifficulty,
+                onChanged: (value) => _substitutionDifficulty = value,
+              ),
+              _field('latestQuote', '最新报价', decimal: true),
+              _field('targetPrice', '客户目标价', decimal: true),
+            ],
+          ),
+          ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            title: const Text('投入建议与前置事项'),
+            children: [
+              _optionField(
+                key: 'entryPoint',
+                label: '切入点',
+                options: entryPointOptions,
+                value: _entryPoint,
+                onChanged: (value) => _entryPoint = value,
+              ),
+              _optionField(
+                key: 'investmentAdvice',
+                label: '投入建议',
+                options: investmentAdviceOptions,
+                value: _investmentAdvice,
+                onChanged: (value) => _investmentAdvice = value,
+              ),
+              _recommendationCard(_supplierRecommendation),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('需要样品'),
+                value: _needsSample,
+                onChanged: (v) => _change(() => _needsSample = v),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('需要注册'),
+                value: _needsRegistration,
+                onChanged: (v) => _change(() => _needsRegistration = v),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('需要授权'),
+                value: _needsAuthorization,
+                onChanged: (v) => _change(() => _needsAuthorization = v),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTokens.s24),
+          FilledButton.icon(
+            key: const ValueKey('save-opportunity'),
+            onPressed: _saving ? null : _save,
+            icon: _saving
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.save_outlined),
+            label: Text(_saving ? '保存中…' : '保存项目'),
+          ),
+        ],
+      ),
     ),
   );
 
@@ -508,24 +535,29 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
     bool decimal = false,
     int lines = 1,
     ValueChanged<String>? onChanged,
-  }) => Padding(
-    padding: const EdgeInsets.only(bottom: AppTokens.s12),
-    child: TextFormField(
-      key: ValueKey('opportunity-$key'),
-      controller: _controller(key),
-      decoration: InputDecoration(labelText: label),
-      keyboardType: number
-          ? TextInputType.number
-          : decimal
-          ? const TextInputType.numberWithOptions(decimal: true)
-          : lines > 1
-          ? TextInputType.multiline
-          : TextInputType.text,
-      maxLines: lines,
-      onChanged: onChanged,
-      validator: required
-          ? (value) => value == null || value.trim().isEmpty ? '请输入项目名称' : null
-          : null,
+  }) => KeyedSubtree(
+    key: _fieldTarget(key),
+    child: Padding(
+      padding: const EdgeInsets.only(bottom: AppTokens.s12),
+      child: TextFormField(
+        key: ValueKey('opportunity-$key'),
+        controller: _controller(key),
+        focusNode: _focusNode(key),
+        decoration: InputDecoration(labelText: label),
+        keyboardType: number
+            ? TextInputType.number
+            : decimal
+            ? const TextInputType.numberWithOptions(decimal: true)
+            : lines > 1
+            ? TextInputType.multiline
+            : TextInputType.text,
+        maxLines: lines,
+        onChanged: onChanged,
+        validator: required
+            ? (value) =>
+                  value == null || value.trim().isEmpty ? '请输入项目名称' : null
+            : null,
+      ),
     ),
   );
 
@@ -602,4 +634,11 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
       ),
     ),
   );
+}
+
+class _OpportunityFieldValidationException implements Exception {
+  const _OpportunityFieldValidationException(this.fieldKey, this.message);
+
+  final String fieldKey;
+  final String message;
 }

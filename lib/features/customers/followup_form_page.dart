@@ -7,6 +7,7 @@ import '../../models/enums.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/app_dropdown_form_field.dart';
 import '../../widgets/app_form_fields.dart';
+import '../../widgets/form_error_navigation.dart';
 import '../../widgets/sticky_form_scaffold.dart';
 import '../../widgets/unsaved_changes_guard.dart';
 import 'customer_providers.dart';
@@ -27,6 +28,13 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
   final _nextActionController = TextEditingController();
   final _contentController = TextEditingController();
   final _pauseReasonController = TextEditingController();
+  final _feedbackTargetKey = GlobalKey();
+  final _stageTargetKey = GlobalKey();
+  final _nextActionTargetKey = GlobalKey();
+  final _pauseReasonTargetKey = GlobalKey();
+  final _feedbackFocusNode = FocusNode();
+  final _nextActionFocusNode = FocusNode();
+  final _pauseReasonFocusNode = FocusNode();
 
   int? _selectedOpportunityId;
   int? _selectedContactId;
@@ -77,6 +85,9 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
     _nextActionController.dispose();
     _contentController.dispose();
     _pauseReasonController.dispose();
+    _feedbackFocusNode.dispose();
+    _nextActionFocusNode.dispose();
+    _pauseReasonFocusNode.dispose();
     super.dispose();
   }
 
@@ -150,12 +161,15 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
   }
 
   Future<void> _save() async {
+    if (_saving) return;
+    final valid = _formKey.currentState!.validate();
+    if (!valid) {
+      await _revealFirstError();
+      return;
+    }
     final opportunityId = _selectedOpportunityId;
     final stage = _stage;
-    if (_saving ||
-        opportunityId == null ||
-        stage == null ||
-        !_formKey.currentState!.validate()) {
+    if (opportunityId == null || stage == null) {
       return;
     }
     setState(() => _saving = true);
@@ -198,6 +212,26 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  Future<void> _revealFirstError() {
+    if (_feedbackController.text.trim().isEmpty) {
+      return revealFormError(
+        targetKey: _feedbackTargetKey,
+        focusNode: _feedbackFocusNode,
+      );
+    }
+    if (_stage == null) return revealFormError(targetKey: _stageTargetKey);
+    if (_nextActionController.text.trim().isEmpty) {
+      return revealFormError(
+        targetKey: _nextActionTargetKey,
+        focusNode: _nextActionFocusNode,
+      );
+    }
+    return revealFormError(
+      targetKey: _pauseReasonTargetKey,
+      focusNode: _pauseReasonFocusNode,
+    );
   }
 
   void _showMessage(String message) {
@@ -328,55 +362,68 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
                       },
                     ),
                     const SizedBox(height: AppTokens.s12),
-                    TextFormField(
-                      key: const ValueKey('followup-feedback'),
-                      controller: _feedbackController,
-                      minLines: 3,
-                      maxLines: 6,
-                      maxLength: 10000,
-                      decoration: const InputDecoration(
-                        labelText: '客户反馈',
-                        alignLabelWithHint: true,
+                    KeyedSubtree(
+                      key: _feedbackTargetKey,
+                      child: TextFormField(
+                        key: const ValueKey('followup-feedback'),
+                        controller: _feedbackController,
+                        focusNode: _feedbackFocusNode,
+                        minLines: 3,
+                        maxLines: 6,
+                        maxLength: 10000,
+                        decoration: const InputDecoration(
+                          labelText: '客户反馈',
+                          alignLabelWithHint: true,
+                        ),
+                        validator: (value) =>
+                            value == null || value.trim().isEmpty
+                            ? '客户反馈不能为空'
+                            : null,
                       ),
-                      validator: (value) =>
-                          value == null || value.trim().isEmpty
-                          ? '客户反馈不能为空'
-                          : null,
                     ),
                     const SizedBox(height: AppTokens.s12),
-                    AppDropdownFormField<OpportunityStage>(
-                      fieldKey: const ValueKey('followup-stage'),
-                      initialValue: _stage,
-                      decoration: const InputDecoration(labelText: '项目阶段'),
-                      items: OpportunityStage.values
-                          .map(
-                            (stage) => DropdownMenuItem(
-                              value: stage,
-                              child: Text(
-                                stage.label,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                    KeyedSubtree(
+                      key: _stageTargetKey,
+                      child: AppDropdownFormField<OpportunityStage>(
+                        fieldKey: const ValueKey('followup-stage'),
+                        initialValue: _stage,
+                        decoration: const InputDecoration(labelText: '项目阶段'),
+                        items: OpportunityStage.values
+                            .map(
+                              (stage) => DropdownMenuItem(
+                                value: stage,
+                                child: Text(
+                                  stage.label,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: hasOpportunity
-                          ? (stage) {
-                              if (stage != null) _change(() => _stage = stage);
-                            }
-                          : null,
-                      validator: (value) => value == null ? '请选择项目阶段' : null,
+                            )
+                            .toList(),
+                        onChanged: hasOpportunity
+                            ? (stage) {
+                                if (stage != null) {
+                                  _change(() => _stage = stage);
+                                }
+                              }
+                            : null,
+                        validator: (value) => value == null ? '请选择项目阶段' : null,
+                      ),
                     ),
                     const SizedBox(height: AppTokens.s12),
-                    TextFormField(
-                      key: const ValueKey('followup-next-action'),
-                      controller: _nextActionController,
-                      maxLength: 100,
-                      decoration: const InputDecoration(labelText: '下一步行动'),
-                      validator: (value) =>
-                          value == null || value.trim().isEmpty
-                          ? '下一步行动不能为空'
-                          : null,
+                    KeyedSubtree(
+                      key: _nextActionTargetKey,
+                      child: TextFormField(
+                        key: const ValueKey('followup-next-action'),
+                        controller: _nextActionController,
+                        focusNode: _nextActionFocusNode,
+                        maxLength: 100,
+                        decoration: const InputDecoration(labelText: '下一步行动'),
+                        validator: (value) =>
+                            value == null || value.trim().isEmpty
+                            ? '下一步行动不能为空'
+                            : null,
+                      ),
                     ),
                     const SizedBox(height: AppTokens.s24),
                     Text(
@@ -490,21 +537,25 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
                       ),
                     ] else ...[
                       const SizedBox(height: AppTokens.s16),
-                      TextFormField(
-                        key: const ValueKey('followup-pause-reason'),
-                        controller: _pauseReasonController,
-                        minLines: 2,
-                        maxLines: 4,
-                        decoration: const InputDecoration(
-                          labelText: '暂停原因',
-                          alignLabelWithHint: true,
+                      KeyedSubtree(
+                        key: _pauseReasonTargetKey,
+                        child: TextFormField(
+                          key: const ValueKey('followup-pause-reason'),
+                          controller: _pauseReasonController,
+                          focusNode: _pauseReasonFocusNode,
+                          minLines: 2,
+                          maxLines: 4,
+                          decoration: const InputDecoration(
+                            labelText: '暂停原因',
+                            alignLabelWithHint: true,
+                          ),
+                          validator: (value) {
+                            if (!_skipNextPlan) return null;
+                            return value == null || value.trim().isEmpty
+                                ? '暂停原因不能为空'
+                                : null;
+                          },
                         ),
-                        validator: (value) {
-                          if (!_skipNextPlan) return null;
-                          return value == null || value.trim().isEmpty
-                              ? '暂停原因不能为空'
-                              : null;
-                        },
                       ),
                     ],
                     const SizedBox(height: AppTokens.s24),

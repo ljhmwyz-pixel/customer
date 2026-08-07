@@ -7,6 +7,7 @@ import '../../data/database_provider.dart';
 import '../../models/enums.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/app_dropdown_form_field.dart';
+import '../../widgets/form_error_navigation.dart';
 import '../../widgets/sticky_form_scaffold.dart';
 import '../../widgets/unsaved_changes_guard.dart';
 import '../customers/customer_providers.dart';
@@ -66,6 +67,11 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
   final _estimatedArrivalController = TextEditingController();
   final _estimatedRepurchaseController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _opportunityTargetKey = GlobalKey();
+  final _orderNoTargetKey = GlobalKey();
+  final _amountTargetKey = GlobalKey();
+  final _orderNoFocusNode = FocusNode();
+  final _amountFocusNode = FocusNode();
 
   DateTime _orderedAt = DateTime.now();
   DateTime? _estimatedArrivalAt;
@@ -224,6 +230,8 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
     _estimatedArrivalController.dispose();
     _estimatedRepurchaseController.dispose();
     _descriptionController.dispose();
+    _orderNoFocusNode.dispose();
+    _amountFocusNode.dispose();
     super.dispose();
   }
 
@@ -274,10 +282,15 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
   }
 
   Future<void> _save() async {
+    if (_saving) return;
+    final valid = _formKey.currentState!.validate();
+    if (!valid) {
+      await _revealFirstError();
+      return;
+    }
     final opportunityId = _selectedOpportunityId;
-    if (_saving ||
-        opportunityId == null ||
-        !_formKey.currentState!.validate()) {
+    if (opportunityId == null) {
+      await revealFormError(targetKey: _opportunityTargetKey);
       return;
     }
     setState(() => _saving = true);
@@ -322,6 +335,22 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
     }
   }
 
+  Future<void> _revealFirstError() {
+    if (_selectedOpportunityId == null) {
+      return revealFormError(targetKey: _opportunityTargetKey);
+    }
+    if (_orderNoController.text.trim().isEmpty) {
+      return revealFormError(
+        targetKey: _orderNoTargetKey,
+        focusNode: _orderNoFocusNode,
+      );
+    }
+    return revealFormError(
+      targetKey: _amountTargetKey,
+      focusNode: _amountFocusNode,
+    );
+  }
+
   void _showMessage(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(
@@ -335,7 +364,7 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
     body: StickyFormScaffold(
       body: _buildBody(),
       onSubmit: _save,
-      enabled: _selectedOpportunityId != null,
+      enabled: _opportunities.isNotEmpty,
       submitting: _saving,
       submitLabel: '保存订单',
       submitKey: const ValueKey('save-order'),
@@ -356,29 +385,117 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
 
     return Form(
       key: _formKey,
-      child: ListView(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppTokens.s16),
-        children: [
-          if (_opportunities.isEmpty)
-            const _NoOpportunityMessage()
-          else if (_opportunities.length == 1)
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_opportunities.isEmpty)
+              const _NoOpportunityMessage()
+            else if (_opportunities.length == 1)
+              TextFormField(
+                key: const ValueKey('order-opportunity'),
+                readOnly: true,
+                initialValue: _opportunities.single.name,
+                decoration: const InputDecoration(labelText: '项目'),
+              )
+            else
+              KeyedSubtree(
+                key: _opportunityTargetKey,
+                child: AppDropdownFormField<int>(
+                  fieldKey: const ValueKey('order-opportunity'),
+                  initialValue: _selectedOpportunityId,
+                  decoration: const InputDecoration(labelText: '项目'),
+                  items: _opportunities
+                      .map(
+                        (item) => DropdownMenuItem<int>(
+                          value: item.id,
+                          child: Text(
+                            item.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      )
+                      .toList(growable: false),
+                  onChanged: _saving
+                      ? null
+                      : (value) =>
+                            _change(() => _selectedOpportunityId = value),
+                  validator: (value) => value == null ? '请选择关联项目' : null,
+                ),
+              ),
+            const SizedBox(height: AppTokens.s12),
+            KeyedSubtree(
+              key: _orderNoTargetKey,
+              child: TextFormField(
+                key: const ValueKey('order-no'),
+                controller: _orderNoController,
+                focusNode: _orderNoFocusNode,
+                maxLength: 50,
+                decoration: const InputDecoration(labelText: '订单号'),
+                validator: (value) =>
+                    value == null || value.trim().isEmpty ? '订单号不能为空' : null,
+              ),
+            ),
+            const SizedBox(height: AppTokens.s12),
             TextFormField(
-              key: const ValueKey('order-opportunity'),
+              key: const ValueKey('order-date'),
+              controller: _dateController,
               readOnly: true,
-              initialValue: _opportunities.single.name,
-              decoration: const InputDecoration(labelText: '项目'),
-            )
-          else
-            AppDropdownFormField<int>(
-              fieldKey: const ValueKey('order-opportunity'),
-              initialValue: _selectedOpportunityId,
-              decoration: const InputDecoration(labelText: '项目'),
-              items: _opportunities
+              onTap: _pickDate,
+              decoration: const InputDecoration(
+                labelText: '下单日期',
+                suffixIcon: Icon(Icons.calendar_today_outlined),
+              ),
+            ),
+            const SizedBox(height: AppTokens.s12),
+            KeyedSubtree(
+              key: _amountTargetKey,
+              child: TextFormField(
+                key: const ValueKey('order-amount'),
+                controller: _amountController,
+                focusNode: _amountFocusNode,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: InputDecoration(
+                  labelText: '订单金额',
+                  prefixText:
+                      '${_currencyController.text.trim().isEmpty ? 'CNY' : _currencyController.text.trim()} ',
+                ),
+                validator: _validateAmount,
+              ),
+            ),
+            const SizedBox(height: AppTokens.s12),
+            TextFormField(
+              key: const ValueKey('order-pi-po-no'),
+              controller: _piPoNoController,
+              maxLength: 100,
+              decoration: const InputDecoration(labelText: 'PI/PO 编号'),
+            ),
+            const SizedBox(height: AppTokens.s12),
+            TextFormField(
+              key: const ValueKey('order-currency'),
+              controller: _currencyController,
+              maxLength: 3,
+              textCapitalization: TextCapitalization.characters,
+              decoration: const InputDecoration(
+                labelText: '币种',
+                hintText: 'CNY',
+              ),
+            ),
+            const SizedBox(height: AppTokens.s12),
+            AppDropdownFormField<PaymentStatus>(
+              fieldKey: const ValueKey('order-payment-status'),
+              initialValue: _paymentStatus,
+              decoration: const InputDecoration(labelText: '付款状态'),
+              items: PaymentStatus.values
                   .map(
-                    (item) => DropdownMenuItem<int>(
-                      value: item.id,
+                    (status) => DropdownMenuItem(
+                      value: status,
                       child: Text(
-                        item.name,
+                        status.label,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -387,191 +504,125 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
                   .toList(growable: false),
               onChanged: _saving
                   ? null
-                  : (value) => _change(() => _selectedOpportunityId = value),
-              validator: (value) => value == null ? '请选择关联项目' : null,
+                  : (value) {
+                      if (value != null) _change(() => _paymentStatus = value);
+                    },
             ),
-          const SizedBox(height: AppTokens.s12),
-          TextFormField(
-            key: const ValueKey('order-no'),
-            controller: _orderNoController,
-            maxLength: 50,
-            decoration: const InputDecoration(labelText: '订单号'),
-            validator: (value) =>
-                value == null || value.trim().isEmpty ? '订单号不能为空' : null,
-          ),
-          const SizedBox(height: AppTokens.s12),
-          TextFormField(
-            key: const ValueKey('order-date'),
-            controller: _dateController,
-            readOnly: true,
-            onTap: _pickDate,
-            decoration: const InputDecoration(
-              labelText: '下单日期',
-              suffixIcon: Icon(Icons.calendar_today_outlined),
+            const SizedBox(height: AppTokens.s12),
+            AppDropdownFormField<ProductionStatus>(
+              fieldKey: const ValueKey('order-production-status'),
+              initialValue: _productionStatus,
+              decoration: const InputDecoration(labelText: '生产状态'),
+              items: ProductionStatus.values
+                  .map(
+                    (status) => DropdownMenuItem(
+                      value: status,
+                      child: Text(
+                        status.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  )
+                  .toList(growable: false),
+              onChanged: _saving
+                  ? null
+                  : (value) {
+                      if (value != null) {
+                        _change(() => _productionStatus = value);
+                      }
+                    },
             ),
-          ),
-          const SizedBox(height: AppTokens.s12),
-          TextFormField(
-            key: const ValueKey('order-amount'),
-            controller: _amountController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-              labelText: '订单金额',
-              prefixText:
-                  '${_currencyController.text.trim().isEmpty ? 'CNY' : _currencyController.text.trim()} ',
+            const SizedBox(height: AppTokens.s12),
+            AppDropdownFormField<ShippingStatus>(
+              fieldKey: const ValueKey('order-shipping-status'),
+              initialValue: _shippingStatus,
+              decoration: const InputDecoration(labelText: '发货状态'),
+              items: ShippingStatus.values
+                  .map(
+                    (status) => DropdownMenuItem(
+                      value: status,
+                      child: Text(
+                        status.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  )
+                  .toList(growable: false),
+              onChanged: _saving
+                  ? null
+                  : (value) {
+                      if (value != null) _change(() => _shippingStatus = value);
+                    },
             ),
-            validator: _validateAmount,
-          ),
-          const SizedBox(height: AppTokens.s12),
-          TextFormField(
-            key: const ValueKey('order-pi-po-no'),
-            controller: _piPoNoController,
-            maxLength: 100,
-            decoration: const InputDecoration(labelText: 'PI/PO 编号'),
-          ),
-          const SizedBox(height: AppTokens.s12),
-          TextFormField(
-            key: const ValueKey('order-currency'),
-            controller: _currencyController,
-            maxLength: 3,
-            textCapitalization: TextCapitalization.characters,
-            decoration: const InputDecoration(labelText: '币种', hintText: 'CNY'),
-          ),
-          const SizedBox(height: AppTokens.s12),
-          AppDropdownFormField<PaymentStatus>(
-            fieldKey: const ValueKey('order-payment-status'),
-            initialValue: _paymentStatus,
-            decoration: const InputDecoration(labelText: '付款状态'),
-            items: PaymentStatus.values
-                .map(
-                  (status) => DropdownMenuItem(
-                    value: status,
-                    child: Text(
-                      status.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+            const SizedBox(height: AppTokens.s12),
+            _optionalDateField(
+              key: 'order-estimated-arrival',
+              label: '预计到货日期',
+              controller: _estimatedArrivalController,
+              value: _estimatedArrivalAt,
+              onChanged: (value) => _change(() {
+                _estimatedArrivalAt = value;
+                _estimatedArrivalController.text = _formatOptionalDate(value);
+              }),
+            ),
+            const SizedBox(height: AppTokens.s12),
+            AppDropdownFormField<OrderResult>(
+              fieldKey: const ValueKey('order-result'),
+              initialValue: _orderResult,
+              decoration: const InputDecoration(labelText: '订单结果'),
+              items: OrderResult.values
+                  .map(
+                    (result) => DropdownMenuItem(
+                      value: result,
+                      child: Text(
+                        result.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                )
-                .toList(growable: false),
-            onChanged: _saving
-                ? null
-                : (value) {
-                    if (value != null) _change(() => _paymentStatus = value);
-                  },
-          ),
-          const SizedBox(height: AppTokens.s12),
-          AppDropdownFormField<ProductionStatus>(
-            fieldKey: const ValueKey('order-production-status'),
-            initialValue: _productionStatus,
-            decoration: const InputDecoration(labelText: '生产状态'),
-            items: ProductionStatus.values
-                .map(
-                  (status) => DropdownMenuItem(
-                    value: status,
-                    child: Text(
-                      status.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                )
-                .toList(growable: false),
-            onChanged: _saving
-                ? null
-                : (value) {
-                    if (value != null) {
-                      _change(() => _productionStatus = value);
-                    }
-                  },
-          ),
-          const SizedBox(height: AppTokens.s12),
-          AppDropdownFormField<ShippingStatus>(
-            fieldKey: const ValueKey('order-shipping-status'),
-            initialValue: _shippingStatus,
-            decoration: const InputDecoration(labelText: '发货状态'),
-            items: ShippingStatus.values
-                .map(
-                  (status) => DropdownMenuItem(
-                    value: status,
-                    child: Text(
-                      status.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                )
-                .toList(growable: false),
-            onChanged: _saving
-                ? null
-                : (value) {
-                    if (value != null) _change(() => _shippingStatus = value);
-                  },
-          ),
-          const SizedBox(height: AppTokens.s12),
-          _optionalDateField(
-            key: 'order-estimated-arrival',
-            label: '预计到货日期',
-            controller: _estimatedArrivalController,
-            value: _estimatedArrivalAt,
-            onChanged: (value) => _change(() {
-              _estimatedArrivalAt = value;
-              _estimatedArrivalController.text = _formatOptionalDate(value);
-            }),
-          ),
-          const SizedBox(height: AppTokens.s12),
-          AppDropdownFormField<OrderResult>(
-            fieldKey: const ValueKey('order-result'),
-            initialValue: _orderResult,
-            decoration: const InputDecoration(labelText: '订单结果'),
-            items: OrderResult.values
-                .map(
-                  (result) => DropdownMenuItem(
-                    value: result,
-                    child: Text(
-                      result.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                )
-                .toList(growable: false),
-            onChanged: _saving
-                ? null
-                : (value) {
-                    if (value != null) _change(() => _orderResult = value);
-                  },
-          ),
-          const SizedBox(height: AppTokens.s12),
-          _optionalDateField(
-            key: 'order-estimated-repurchase',
-            label: '预计复购日期',
-            controller: _estimatedRepurchaseController,
-            value: _estimatedRepurchaseAt,
-            onChanged: (value) => _change(() {
-              _estimatedRepurchaseAt = value;
-              _estimatedRepurchaseController.text = _formatOptionalDate(value);
-            }),
-          ),
-          const SizedBox(height: AppTokens.s12),
-          TextFormField(
-            key: const ValueKey('order-description'),
-            controller: _descriptionController,
-            minLines: 3,
-            maxLines: 6,
-            decoration: const InputDecoration(labelText: '商品或服务描述'),
-          ),
-          if (_statusLabel != null) ...[
+                  )
+                  .toList(growable: false),
+              onChanged: _saving
+                  ? null
+                  : (value) {
+                      if (value != null) _change(() => _orderResult = value);
+                    },
+            ),
+            const SizedBox(height: AppTokens.s12),
+            _optionalDateField(
+              key: 'order-estimated-repurchase',
+              label: '预计复购日期',
+              controller: _estimatedRepurchaseController,
+              value: _estimatedRepurchaseAt,
+              onChanged: (value) => _change(() {
+                _estimatedRepurchaseAt = value;
+                _estimatedRepurchaseController.text = _formatOptionalDate(
+                  value,
+                );
+              }),
+            ),
             const SizedBox(height: AppTokens.s12),
             TextFormField(
-              key: const ValueKey('order-status'),
-              readOnly: true,
-              initialValue: _statusLabel,
-              decoration: const InputDecoration(labelText: '订单状态'),
+              key: const ValueKey('order-description'),
+              controller: _descriptionController,
+              minLines: 3,
+              maxLines: 6,
+              decoration: const InputDecoration(labelText: '商品或服务描述'),
             ),
+            if (_statusLabel != null) ...[
+              const SizedBox(height: AppTokens.s12),
+              TextFormField(
+                key: const ValueKey('order-status'),
+                readOnly: true,
+                initialValue: _statusLabel,
+                decoration: const InputDecoration(labelText: '订单状态'),
+              ),
+            ],
+            const SizedBox(height: AppTokens.s24),
           ],
-          const SizedBox(height: AppTokens.s24),
-        ],
+        ),
       ),
     );
   }
