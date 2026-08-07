@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../data/database_provider.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/sticky_form_scaffold.dart';
+import '../../widgets/unsaved_changes_guard.dart';
 import 'customer_providers.dart';
 
 class ContactFormPage extends ConsumerStatefulWidget {
@@ -37,15 +38,54 @@ class _ContactFormPageState extends ConsumerState<ContactFormPage> {
   bool _decisionMaker = false;
   bool _loading = false;
   bool _saving = false;
+  bool _trackingChanges = false;
+  bool _allowLeave = false;
+  Object? _baseline;
 
   bool get _editing => widget.contactId != null;
+
+  List<TextEditingController> get _controllers => [
+    _name,
+    _position,
+    _phone,
+    _email,
+    _whatsapp,
+    _preference,
+    _note,
+  ];
+
+  Object get _currentValue => (
+    name: _name.text,
+    position: _position.text,
+    phone: _phone.text,
+    email: _email.text,
+    whatsapp: _whatsapp.text,
+    preference: _preference.text,
+    note: _note.text,
+    decisionMaker: _decisionMaker,
+  );
+
+  bool get _hasUnsavedChanges =>
+      _trackingChanges && !_allowLeave && _baseline != _currentValue;
 
   @override
   void initState() {
     super.initState();
     _name = TextEditingController(text: widget.initialName ?? '');
     _phone = TextEditingController(text: widget.initialPhone ?? '');
-    if (_editing) _load();
+    for (final controller in _controllers) {
+      controller.addListener(_formValueChanged);
+    }
+    if (_editing) {
+      _load();
+    } else {
+      _baseline = _currentValue;
+      _trackingChanges = true;
+    }
+  }
+
+  void _formValueChanged() {
+    if (_trackingChanges && mounted) setState(() {});
   }
 
   Future<void> _load() async {
@@ -69,11 +109,16 @@ class _ContactFormPageState extends ConsumerState<ContactFormPage> {
     setState(() {
       _decisionMaker = row.isDecisionMaker;
       _loading = false;
+      _baseline = _currentValue;
+      _trackingChanges = true;
     });
   }
 
   @override
   void dispose() {
+    for (final controller in _controllers) {
+      controller.removeListener(_formValueChanged);
+    }
     _name.dispose();
     _position.dispose();
     _phone.dispose();
@@ -109,7 +154,11 @@ class _ContactFormPageState extends ConsumerState<ContactFormPage> {
         await service.createContact(widget.customerId, draft);
       }
       ref.read(customerRevisionProvider.notifier).refresh();
-      if (mounted) context.pop();
+      if (mounted) {
+        setState(() => _allowLeave = true);
+        await WidgetsBinding.instance.endOfFrame;
+        if (mounted) context.pop();
+      }
     } on CustomerValidationException catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -181,7 +230,7 @@ class _ContactFormPageState extends ConsumerState<ContactFormPage> {
               ),
             ),
           ),
-  );
+  ).protectUnsavedChanges(hasUnsavedChanges: _hasUnsavedChanges);
 
   Widget _field({
     String? key,

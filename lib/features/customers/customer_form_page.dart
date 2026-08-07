@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../models/enums.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/app_dropdown_form_field.dart';
+import '../../widgets/unsaved_changes_guard.dart';
 import 'customer_providers.dart';
 
 class CustomerFormPage extends ConsumerStatefulWidget {
@@ -40,14 +41,72 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
   bool _showMore = false;
   bool _loading = false;
   bool _saving = false;
+  bool _trackingChanges = false;
+  bool _allowLeave = false;
+  Object? _baseline;
   String? _loadError;
 
   bool get _isEditing => widget.customerId != null;
 
+  List<TextEditingController> get _controllers => [
+    _nameController,
+    _companyController,
+    _customerNoController,
+    _customerTypeController,
+    _ownerController,
+    _phoneController,
+    _wechatController,
+    _addressController,
+    _sourceController,
+    _noteController,
+    _tagsController,
+    _tenderExperienceController,
+    _tenderQualificationController,
+    _tenderBidderController,
+    _localTeamStatusController,
+    _fundingStatusController,
+  ];
+
+  Object get _currentValue => (
+    name: _nameController.text,
+    company: _companyController.text,
+    customerNo: _customerNoController.text,
+    customerType: _customerTypeController.text,
+    owner: _ownerController.text,
+    phone: _phoneController.text,
+    wechat: _wechatController.text,
+    address: _addressController.text,
+    source: _sourceController.text,
+    note: _noteController.text,
+    tags: _tagsController.text,
+    tenderExperience: _tenderExperienceController.text,
+    tenderQualification: _tenderQualificationController.text,
+    tenderBidder: _tenderBidderController.text,
+    localTeamStatus: _localTeamStatusController.text,
+    fundingStatus: _fundingStatusController.text,
+    stage: _stage,
+    grade: _grade,
+  );
+
+  bool get _hasUnsavedChanges =>
+      _trackingChanges && !_allowLeave && _baseline != _currentValue;
+
   @override
   void initState() {
     super.initState();
-    if (_isEditing) _loadCustomer();
+    for (final controller in _controllers) {
+      controller.addListener(_formValueChanged);
+    }
+    if (_isEditing) {
+      _loadCustomer();
+    } else {
+      _baseline = _currentValue;
+      _trackingChanges = true;
+    }
+  }
+
+  void _formValueChanged() {
+    if (_trackingChanges && mounted) setState(() {});
   }
 
   Future<void> _loadCustomer() async {
@@ -86,6 +145,8 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
         _grade = CustomerGrade.fromDb(customer.grade);
         _showMore = true;
         _loading = false;
+        _baseline = _currentValue;
+        _trackingChanges = true;
       });
     } catch (_) {
       if (!mounted) return;
@@ -98,6 +159,9 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
 
   @override
   void dispose() {
+    for (final controller in _controllers) {
+      controller.removeListener(_formValueChanged);
+    }
     _nameController.dispose();
     _companyController.dispose();
     _customerNoController.dispose();
@@ -151,11 +215,19 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
       if (_isEditing) {
         await service.updateCustomer(widget.customerId!, draft);
         ref.read(customerRevisionProvider.notifier).refresh();
-        if (mounted) context.pop();
+        if (mounted) {
+          setState(() => _allowLeave = true);
+          await WidgetsBinding.instance.endOfFrame;
+          if (mounted) context.pop();
+        }
       } else {
         final customerId = await service.createCustomer(draft);
         ref.read(customerRevisionProvider.notifier).refresh();
-        if (mounted) await _showCreatedActions(customerId);
+        if (mounted) {
+          setState(() => _allowLeave = true);
+          await WidgetsBinding.instance.endOfFrame;
+          if (mounted) await _showCreatedActions(customerId);
+        }
       }
     } on CustomerValidationException catch (error) {
       _showMessage(error.message);
@@ -373,7 +445,7 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
                 ],
               ),
             ),
-    );
+    ).protectUnsavedChanges(hasUnsavedChanges: _hasUnsavedChanges);
   }
 }
 

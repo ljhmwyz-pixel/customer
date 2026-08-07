@@ -24,6 +24,76 @@ import 'package:go_router/go_router.dart';
 import '../../data/helpers.dart';
 
 void main() {
+  testWidgets('剩余表单退出保护：客户和联系人支持恢复初始值', (tester) async {
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '基线客户');
+    final contactId = await db.contactDao.insertContact(
+      customerId: customerId,
+      name: '基线联系人',
+      isDecisionMaker: true,
+    );
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: CustomerDetailPage(customerId: customerId),
+    );
+    addTearDown(() => harness.dispose(tester));
+    await harness.pump(tester);
+
+    harness.router.push('/customers/new');
+    await tester.pumpAndSettle();
+    final customerName = find.byKey(const ValueKey('customer-name'));
+    await tester.enterText(customerName, '临时客户');
+    await tester.pump();
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.text('放弃未保存的修改？'), findsOneWidget);
+    await tester.tap(find.text('继续编辑'));
+    await tester.pumpAndSettle();
+    await tester.enterText(customerName, '');
+    await tester.pump();
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.text('放弃未保存的修改？'), findsNothing);
+
+    harness.router.push('/customers/$customerId/edit');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.text('放弃未保存的修改？'), findsNothing);
+
+    harness.router.push('/customers/$customerId/contacts/new');
+    await tester.pumpAndSettle();
+    final decisionMaker = find.byKey(const ValueKey('contact-decision-maker'));
+    await tester.tap(decisionMaker);
+    await tester.pump();
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.text('放弃未保存的修改？'), findsOneWidget);
+    await tester.tap(find.text('继续编辑'));
+    await tester.pumpAndSettle();
+    await tester.tap(decisionMaker);
+    await tester.pump();
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.text('放弃未保存的修改？'), findsNothing);
+
+    harness.router.push(
+      '/customers/$customerId/contacts/new?name=预填联系人&phone=13900000000',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.text('放弃未保存的修改？'), findsNothing);
+
+    harness.router.push('/customers/$customerId/contacts/$contactId/edit');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.text('放弃未保存的修改？'), findsNothing);
+  });
+
   testWidgets('核心表单未保存修改保护：订单、跟进和项目', (tester) async {
     final db = await openTestDb();
     final customerId = await seedCustomer(db, name: '退出保护客户');
@@ -2439,6 +2509,12 @@ class _TestHarness {
         GoRoute(
           path: '/customers/new',
           builder: (_, _) => const CustomerFormPage(),
+        ),
+        GoRoute(
+          path: '/customers/:id/edit',
+          builder: (_, state) => CustomerFormPage(
+            customerId: int.parse(state.pathParameters['id']!),
+          ),
         ),
         GoRoute(
           path: '/customers/:id',

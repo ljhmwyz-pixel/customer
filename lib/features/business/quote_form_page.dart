@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../data/database_provider.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/unsaved_changes_guard.dart';
 import '../customers/customer_providers.dart';
 import 'business_providers.dart';
 
@@ -27,27 +28,55 @@ class _QuoteFormPageState extends ConsumerState<QuoteFormPage> {
   final quantity = TextEditingController(text: '1');
   final amount = TextEditingController();
   bool saving = false;
+  bool _trackingChanges = false;
+  bool _allowLeave = false;
+  Object? _baseline;
+
+  List<TextEditingController> get _controllers => [no, quantity, amount];
+
+  Object get _currentValue =>
+      (quoteNo: no.text, quantity: quantity.text, amount: amount.text);
+
+  bool get _hasUnsavedChanges =>
+      _trackingChanges && !_allowLeave && _baseline != _currentValue;
 
   @override
   void initState() {
     super.initState();
-    if (widget.sourceQuoteId != null) _loadSource(widget.sourceQuoteId!);
+    for (final controller in _controllers) {
+      controller.addListener(_formValueChanged);
+    }
+    if (widget.sourceQuoteId != null) {
+      _loadSource(widget.sourceQuoteId!);
+    } else {
+      _baseline = _currentValue;
+      _trackingChanges = true;
+    }
+  }
+
+  void _formValueChanged() {
+    if (_trackingChanges && mounted) setState(() {});
   }
 
   Future<void> _loadSource(int sourceId) async {
     final quote = await ref.read(databaseProvider).quoteDao.findById(sourceId);
-    if (!mounted ||
-        quote == null ||
-        quote.opportunityId != widget.opportunityId) {
-      return;
+    if (!mounted) return;
+    if (quote != null && quote.opportunityId == widget.opportunityId) {
+      no.text = quote.quoteNo;
+      quantity.text = '${quote.quantity}';
+      amount.text = quote.totalAmountMinor?.toString() ?? '';
     }
-    no.text = quote.quoteNo;
-    quantity.text = '${quote.quantity}';
-    amount.text = quote.totalAmountMinor?.toString() ?? '';
+    setState(() {
+      _baseline = _currentValue;
+      _trackingChanges = true;
+    });
   }
 
   @override
   void dispose() {
+    for (final controller in _controllers) {
+      controller.removeListener(_formValueChanged);
+    }
     no.dispose();
     quantity.dispose();
     amount.dispose();
@@ -80,7 +109,11 @@ class _QuoteFormPageState extends ConsumerState<QuoteFormPage> {
             quotedAt: DateTime.now(),
           );
       ref.read(customerRevisionProvider.notifier).refresh();
-      if (mounted) context.pop();
+      if (mounted) {
+        setState(() => _allowLeave = true);
+        await WidgetsBinding.instance.endOfFrame;
+        if (mounted) context.pop();
+      }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -125,5 +158,5 @@ class _QuoteFormPageState extends ConsumerState<QuoteFormPage> {
         ),
       ],
     ),
-  );
+  ).protectUnsavedChanges(hasUnsavedChanges: _hasUnsavedChanges);
 }

@@ -14,6 +14,75 @@ import 'package:go_router/go_router.dart';
 import '../../data/helpers.dart';
 
 void main() {
+  testWidgets('剩余表单退出保护：新增报价支持恢复初始值', (tester) async {
+    final db = await openTestDb();
+    addTearDown(db.close);
+    final customerId = await seedCustomer(db);
+    final opportunityId = await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '报价保护项目',
+    );
+    final sourceQuoteId = await db.quoteDao.insertVersion(
+      opportunityId: opportunityId,
+      quoteNo: 'Q-SOURCE',
+      quantity: 3,
+      totalAmountMinor: 3000,
+      quotedAt: DateTime(2026, 8, 7),
+    );
+    final router = GoRouter(
+      initialLocation: '/home',
+      routes: [
+        GoRoute(path: '/home', builder: (_, _) => const Text('首页')),
+        GoRoute(
+          path: '/quote/new',
+          builder: (_, _) => QuoteFormPage(
+            customerId: customerId,
+            opportunityId: opportunityId,
+          ),
+        ),
+        GoRoute(
+          path: '/quote/source',
+          builder: (_, _) => QuoteFormPage(
+            customerId: customerId,
+            opportunityId: opportunityId,
+            sourceQuoteId: sourceQuoteId,
+          ),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [databaseProvider.overrideWithValue(db)],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    router.push('/quote/new');
+    await tester.pumpAndSettle();
+    final quoteNo = find.byKey(const ValueKey('quote-version-no'));
+    await tester.enterText(quoteNo, 'Q-TEMP');
+    await tester.pump();
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.text('放弃未保存的修改？'), findsOneWidget);
+    await tester.tap(find.text('继续编辑'));
+    await tester.pumpAndSettle();
+    await tester.enterText(quoteNo, '');
+    await tester.pump();
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.text('放弃未保存的修改？'), findsNothing);
+
+    router.push('/quote/source');
+    await tester.pumpAndSettle();
+    expect(find.text('Q-SOURCE'), findsOneWidget);
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.text('放弃未保存的修改？'), findsNothing);
+  });
+
   testWidgets('样品新增修改后返回会提示且继续编辑保留输入', (tester) async {
     final db = await openTestDb();
     addTearDown(db.close);
