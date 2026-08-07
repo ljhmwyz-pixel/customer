@@ -45,6 +45,58 @@ void main() {
     );
     expect(preview.canImport, isFalse);
     expect(preview.issues.single.message, contains('客户编号重复'));
+    expect(preview.issues.single.field, '客户编号');
+  });
+
+  test('修正错误字段后保留原行数据并重新校验全部行', () {
+    final preview = service.preview(
+      Uint8List.fromList(
+        utf8.encode(
+          '客户编号,客户名称,联系人姓名,联系人邮箱\n'
+          'C-1,甲客户,李经理,bad-email\n'
+          'C-1,乙客户,王经理,wang@example.com\n',
+        ),
+      ),
+      fileName: 'customers.csv',
+    );
+
+    expect(
+      preview.issues.map((issue) => issue.field),
+      containsAll(<String>['联系人邮箱', '客户编号']),
+    );
+
+    final correctedRows = preview.rows
+        .map(
+          (row) => row.line == 2
+              ? row.withValues({'联系人邮箱': 'li@example.com'})
+              : row.line == 3
+              ? row.withValues({'客户编号': 'C-2'})
+              : row,
+        )
+        .toList();
+    final corrected = service.revalidate(correctedRows);
+
+    expect(corrected.issues, isEmpty);
+    expect(corrected.rows.first.line, 2);
+    expect(corrected.rows.first.name, '甲客户');
+    expect(corrected.rows.first.contactName, '李经理');
+    expect(corrected.rows.first.contactEmail, 'li@example.com');
+    expect(corrected.rows.last.customerNo, 'C-2');
+  });
+
+  test('排除重复编号行后重新校验为可导入', () {
+    final preview = service.preview(
+      Uint8List.fromList(utf8.encode('客户编号,客户名称\nC-1,A\nC-1,B\n')),
+      fileName: 'customers.csv',
+    );
+
+    final corrected = service.revalidate(
+      preview.rows.where((row) => row.line != 3).toList(),
+    );
+
+    expect(corrected.rows.single.line, 2);
+    expect(corrected.issues, isEmpty);
+    expect(corrected.canImport, isTrue);
   });
 
   test('可以读取 Excel 第一张工作表', () {
@@ -78,5 +130,20 @@ void main() {
     final customer = (await db.customerDao.allCustomers()).single;
     expect(customer.name, 'A2');
     expect(customer.company, '乙公司');
+  });
+
+  test('修正后的预览按修正值完成导入', () async {
+    final invalid = service.preview(
+      Uint8List.fromList(utf8.encode('客户编号,客户名称,联系人邮箱\nC-9,,bad\n')),
+      fileName: 'customers.csv',
+    );
+    final corrected = service.revalidate([
+      invalid.rows.single.withValues({'客户名称': '修正客户', '联系人邮箱': ''}),
+    ]);
+
+    final result = await service.importPreview(corrected);
+
+    expect(result.createdCustomers, 1);
+    expect((await db.customerDao.allCustomers()).single.name, '修正客户');
   });
 }

@@ -11,6 +11,7 @@ import '../../services/attachment_source_service.dart';
 import '../../services/backup_restore_providers.dart';
 import '../../services/customer_contact_import_providers.dart';
 import '../../services/customer_contact_import_service.dart';
+import '../../models/enums.dart';
 import '../../theme/tokens.dart';
 
 class CustomerContactImportPage extends ConsumerStatefulWidget {
@@ -75,27 +76,12 @@ class _CustomerContactImportPageState
           ),
           if (preview != null) ...[
             const SizedBox(height: AppTokens.s24),
-            Text('导入预览', style: theme.textTheme.titleMedium),
-            const SizedBox(height: AppTokens.s8),
-            Text('共 ${preview.rows.length} 行，${preview.issues.length} 个问题'),
-            ...preview.issues
-                .take(20)
-                .map(
-                  (issue) => ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(
-                      Icons.error_outline,
-                      color: theme.colorScheme.error,
-                    ),
-                    title: Text('第 ${issue.line} 行'),
-                    subtitle: Text(issue.message),
-                  ),
-                ),
-            FilledButton.icon(
-              onPressed: _busy || !preview.canImport ? null : _import,
-              icon: const Icon(Icons.check),
-              label: const Text('确认导入'),
+            CustomerContactImportPreviewPanel(
+              preview: preview,
+              busy: _busy,
+              onImport: _import,
+              onCorrected: _correctRow,
+              onRemoved: _removeRow,
             ),
           ],
           if (_result case final result?) ...[
@@ -183,6 +169,39 @@ class _CustomerContactImportPageState
     });
   }
 
+  void _correctRow(CustomerContactImportRow correctedRow) {
+    final preview = _preview;
+    if (preview == null) return;
+    final rows = [
+      for (final row in preview.rows)
+        if (row.line == correctedRow.line) correctedRow else row,
+    ];
+    final corrected = ref
+        .read(customerContactImportServiceProvider)
+        .revalidate(rows, headers: preview.headers);
+    setState(() {
+      _preview = corrected;
+      _result = null;
+      _error = null;
+    });
+  }
+
+  void _removeRow(CustomerContactImportRow removedRow) {
+    final preview = _preview;
+    if (preview == null) return;
+    final rows = preview.rows
+        .where((row) => row.line != removedRow.line)
+        .toList();
+    final corrected = ref
+        .read(customerContactImportServiceProvider)
+        .revalidate(rows, headers: preview.headers);
+    setState(() {
+      _preview = corrected;
+      _result = null;
+      _error = null;
+    });
+  }
+
   Future<void> _shareTemplate() async {
     final directory = await getTemporaryDirectory();
     final file = File('${directory.path}/客户联系人导入模板.csv');
@@ -218,6 +237,315 @@ class _CustomerContactImportPageState
       if (mounted) setState(() => _busy = false);
     }
   }
+}
+
+class CustomerContactImportPreviewPanel extends StatelessWidget {
+  const CustomerContactImportPreviewPanel({
+    required this.preview,
+    required this.busy,
+    required this.onImport,
+    required this.onCorrected,
+    required this.onRemoved,
+    super.key,
+  });
+
+  final CustomerContactImportPreview preview;
+  final bool busy;
+  final VoidCallback onImport;
+  final ValueChanged<CustomerContactImportRow> onCorrected;
+  final ValueChanged<CustomerContactImportRow> onRemoved;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final issuesByLine = <int, List<CustomerContactImportIssue>>{};
+    for (final issue in preview.issues) {
+      issuesByLine.putIfAbsent(issue.line, () => []).add(issue);
+    }
+    final rowsByLine = {for (final row in preview.rows) row.line: row};
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('导入预览', style: theme.textTheme.titleMedium),
+        const SizedBox(height: AppTokens.s8),
+        Text('共 ${preview.rows.length} 行，${preview.issues.length} 个问题'),
+        if (issuesByLine.isNotEmpty) ...[
+          const SizedBox(height: AppTokens.s12),
+          for (final entry in issuesByLine.entries)
+            if (rowsByLine[entry.key] case final row?)
+              _ImportIssueRow(
+                row: row,
+                issues: entry.value,
+                onCorrected: onCorrected,
+                onRemoved: onRemoved,
+              ),
+        ],
+        const SizedBox(height: AppTokens.s12),
+        Row(
+          children: [
+            Icon(
+              preview.canImport
+                  ? Icons.check_circle_outline
+                  : Icons.info_outline,
+              size: 20,
+              color: preview.canImport
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: AppTokens.s8),
+            Expanded(
+              child: Text(
+                preview.canImport
+                    ? '已通过校验，可导入 ${preview.rows.length} 行'
+                    : preview.rows.isEmpty
+                    ? '没有可导入的数据'
+                    : '修正或排除问题行后可导入',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: preview.canImport
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppTokens.s12),
+        FilledButton.icon(
+          onPressed: busy || !preview.canImport ? null : onImport,
+          icon: const Icon(Icons.check),
+          label: const Text('确认导入'),
+        ),
+      ],
+    );
+  }
+}
+
+class _ImportIssueRow extends StatelessWidget {
+  const _ImportIssueRow({
+    required this.row,
+    required this.issues,
+    required this.onCorrected,
+    required this.onRemoved,
+  });
+
+  final CustomerContactImportRow row;
+  final List<CustomerContactImportIssue> issues;
+  final ValueChanged<CustomerContactImportRow> onCorrected;
+  final ValueChanged<CustomerContactImportRow> onRemoved;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final uniqueIssues = <String, CustomerContactImportIssue>{
+      for (final issue in issues) issue.field: issue,
+    };
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppTokens.s12),
+      padding: const EdgeInsets.all(AppTokens.s12),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: theme.colorScheme.error.withValues(alpha: .5),
+        ),
+        borderRadius: BorderRadius.circular(AppTokens.r8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.error_outline, color: theme.colorScheme.error),
+              const SizedBox(width: AppTokens.s8),
+              Expanded(
+                child: Text(
+                  '第 ${row.line} 行',
+                  style: theme.textTheme.titleSmall,
+                ),
+              ),
+              Text(
+                '${issues.length} 个问题',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTokens.s8),
+          for (final issue in uniqueIssues.values) ...[
+            Text('${issue.field}：${_displayValue(row.values[issue.field])}'),
+            Text(
+              issue.message,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.error,
+              ),
+            ),
+            const SizedBox(height: AppTokens.s8),
+          ],
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: AppTokens.s8,
+            runSpacing: AppTokens.s4,
+            children: [
+              TextButton.icon(
+                onPressed: () => _confirmRemove(context),
+                icon: const Icon(Icons.remove_circle_outline),
+                label: const Text('不导入此行'),
+              ),
+              FilledButton.tonalIcon(
+                onPressed: () => _edit(context),
+                icon: const Icon(Icons.edit_outlined),
+                label: const Text('修正本行'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _edit(BuildContext context) async {
+    final fields = <String>[];
+    for (final issue in issues) {
+      if (!fields.contains(issue.field)) fields.add(issue.field);
+    }
+    final updates = await showDialog<Map<String, String>>(
+      context: context,
+      builder: (context) =>
+          _ImportRowCorrectionDialog(row: row, fields: fields),
+    );
+    if (updates != null) onCorrected(row.withValues(updates));
+  }
+
+  Future<void> _confirmRemove(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('排除第 ${row.line} 行？'),
+        content: const Text('该行不会写入客户或联系人。其他保留行会重新校验。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('确认排除'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) onRemoved(row);
+  }
+
+  static String _displayValue(String? value) {
+    final trimmed = value?.trim();
+    return trimmed == null || trimmed.isEmpty ? '未填写' : trimmed;
+  }
+}
+
+class _ImportRowCorrectionDialog extends StatefulWidget {
+  const _ImportRowCorrectionDialog({required this.row, required this.fields});
+
+  final CustomerContactImportRow row;
+  final List<String> fields;
+
+  @override
+  State<_ImportRowCorrectionDialog> createState() =>
+      _ImportRowCorrectionDialogState();
+}
+
+class _ImportRowCorrectionDialogState
+    extends State<_ImportRowCorrectionDialog> {
+  late final Map<String, TextEditingController> _controllers;
+  CustomerStage? _stage;
+  CustomerGrade? _grade;
+
+  @override
+  void initState() {
+    super.initState();
+    _controllers = {
+      for (final field in widget.fields)
+        if (field != '客户阶段' && field != '客户等级')
+          field: TextEditingController(text: widget.row.values[field] ?? ''),
+    };
+    final rawStage = widget.row.values['客户阶段'];
+    _stage = CustomerStage.values
+        .where((value) => value.dbValue == rawStage || value.label == rawStage)
+        .firstOrNull;
+    final rawGrade = widget.row.values['客户等级'];
+    _grade = CustomerGrade.values
+        .where((value) => value.dbValue == rawGrade || value.label == rawGrade)
+        .firstOrNull;
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _controllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: Text('修正第 ${widget.row.line} 行'),
+    content: SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final field in widget.fields) ...[
+            if (field == '客户阶段')
+              DropdownButtonFormField<CustomerStage>(
+                initialValue: _stage,
+                decoration: const InputDecoration(labelText: '客户阶段'),
+                items: [
+                  for (final value in CustomerStage.values)
+                    DropdownMenuItem(value: value, child: Text(value.label)),
+                ],
+                onChanged: (value) => setState(() => _stage = value),
+              )
+            else if (field == '客户等级')
+              DropdownButtonFormField<CustomerGrade>(
+                initialValue: _grade,
+                decoration: const InputDecoration(labelText: '客户等级'),
+                items: [
+                  for (final value in CustomerGrade.values)
+                    DropdownMenuItem(value: value, child: Text(value.label)),
+                ],
+                onChanged: (value) => setState(() => _grade = value),
+              )
+            else
+              TextFormField(
+                controller: _controllers[field],
+                decoration: InputDecoration(labelText: field),
+                keyboardType: field == '联系人邮箱'
+                    ? TextInputType.emailAddress
+                    : TextInputType.text,
+              ),
+            const SizedBox(height: AppTokens.s12),
+          ],
+        ],
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('取消'),
+      ),
+      FilledButton(
+        onPressed: () => Navigator.pop(context, _updates()),
+        child: const Text('应用修正'),
+      ),
+    ],
+  );
+
+  Map<String, String> _updates() => {
+    for (final entry in _controllers.entries) entry.key: entry.value.text,
+    if (widget.fields.contains('客户阶段'))
+      '客户阶段': _stage?.label ?? widget.row.values['客户阶段'] ?? '',
+    if (widget.fields.contains('客户等级'))
+      '客户等级': _grade?.label ?? widget.row.values['客户等级'] ?? '',
+  };
 }
 
 class _StepLabel extends StatelessWidget {

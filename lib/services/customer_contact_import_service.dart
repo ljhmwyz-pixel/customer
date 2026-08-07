@@ -12,6 +12,12 @@ class CustomerContactImportRow {
   final int line;
   final Map<String, String> values;
 
+  CustomerContactImportRow withValues(Map<String, String> updates) =>
+      CustomerContactImportRow(
+        line: line,
+        values: Map<String, String>.unmodifiable({...values, ...updates}),
+      );
+
   String? get customerNo => _value('客户编号');
   String? get name => _value('客户名称');
   String? get company => _value('公司');
@@ -46,9 +52,14 @@ class CustomerContactImportRow {
 }
 
 class CustomerContactImportIssue {
-  const CustomerContactImportIssue(this.line, this.message);
+  const CustomerContactImportIssue({
+    required this.line,
+    required this.field,
+    required this.message,
+  });
 
   final int line;
+  final String field;
   final String message;
 }
 
@@ -117,35 +128,83 @@ class CustomerContactImportService {
 
   CustomerContactImportPreview preview(Uint8List bytes, {String? fileName}) {
     final rows = _decode(bytes, fileName: fileName);
+    return revalidate(
+      rows,
+      headers: rows.isEmpty ? const [] : rows.first.values.keys.toList(),
+    );
+  }
+
+  CustomerContactImportPreview revalidate(
+    List<CustomerContactImportRow> rows, {
+    List<String>? headers,
+  }) {
     final issues = <CustomerContactImportIssue>[];
     final seenNumbers = <String>{};
     for (final row in rows) {
       if (row.name == null) {
-        issues.add(CustomerContactImportIssue(row.line, '客户名称不能为空'));
+        issues.add(
+          CustomerContactImportIssue(
+            line: row.line,
+            field: '客户名称',
+            message: '客户名称不能为空',
+          ),
+        );
       }
       final no = row.customerNo;
       if (no != null && !seenNumbers.add(no)) {
-        issues.add(CustomerContactImportIssue(row.line, '文件内客户编号重复：$no'));
+        issues.add(
+          CustomerContactImportIssue(
+            line: row.line,
+            field: '客户编号',
+            message: '文件内客户编号重复：$no',
+          ),
+        );
       }
       if (row.contactEmail != null && !_validEmail(row.contactEmail!)) {
-        issues.add(CustomerContactImportIssue(row.line, '联系人邮箱格式无效'));
+        issues.add(
+          CustomerContactImportIssue(
+            line: row.line,
+            field: '联系人邮箱',
+            message: '联系人邮箱格式无效',
+          ),
+        );
       }
       if (row.stage != null && _stage(row.stage!) == null) {
-        issues.add(CustomerContactImportIssue(row.line, '客户阶段无效：${row.stage}'));
+        issues.add(
+          CustomerContactImportIssue(
+            line: row.line,
+            field: '客户阶段',
+            message: '客户阶段无效：${row.stage}',
+          ),
+        );
       }
       if (row.grade != null && _grade(row.grade!) == null) {
-        issues.add(CustomerContactImportIssue(row.line, '客户等级无效：${row.grade}'));
+        issues.add(
+          CustomerContactImportIssue(
+            line: row.line,
+            field: '客户等级',
+            message: '客户等级无效：${row.grade}',
+          ),
+        );
       }
       if (row.contactName != null &&
           row.customerNo == null &&
           row.name == null) {
-        issues.add(CustomerContactImportIssue(row.line, '联系人无法归属客户'));
+        issues.add(
+          CustomerContactImportIssue(
+            line: row.line,
+            field: '客户名称',
+            message: '联系人无法归属客户',
+          ),
+        );
       }
     }
     return CustomerContactImportPreview(
-      rows: rows,
-      issues: issues,
-      headers: rows.isEmpty ? const [] : rows.first.values.keys.toList(),
+      rows: List<CustomerContactImportRow>.unmodifiable(rows),
+      issues: List<CustomerContactImportIssue>.unmodifiable(issues),
+      headers: List<String>.unmodifiable(
+        headers ?? (rows.isEmpty ? const [] : rows.first.values.keys),
+      ),
     );
   }
 
