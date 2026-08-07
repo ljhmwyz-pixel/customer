@@ -122,7 +122,7 @@ abstract final class AppTheme {
         shadowColor: scheme.shadow.withValues(alpha: 0.24),
         barrierColor: Colors.black54,
         insetPadding: const EdgeInsets.symmetric(
-          horizontal: AppTokens.s24,
+          horizontal: AppTokens.s16,
           vertical: AppTokens.s24,
         ),
         constraints: const BoxConstraints(maxWidth: 420),

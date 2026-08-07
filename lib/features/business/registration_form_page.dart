@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../models/enums.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/app_dropdown_form_field.dart';
+import '../../widgets/app_form_fields.dart';
 import '../customers/customer_providers.dart';
 import 'business_providers.dart';
 
@@ -114,37 +116,43 @@ class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
             label: '资料清单',
             maxLines: 3,
           ),
-          DropdownButtonFormField<RegistrationDocumentStatus>(
-            menuMaxHeight: 320,
-            borderRadius: BorderRadius.circular(AppTokens.r8),
-            dropdownColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-            key: const ValueKey('registration-document-status'),
-            initialValue: _documentStatus,
-            decoration: const InputDecoration(labelText: '资料状态'),
-            items: RegistrationDocumentStatus.values
-                .map(
-                  (value) =>
-                      DropdownMenuItem(value: value, child: Text(value.label)),
-                )
-                .toList(),
-            onChanged: (value) {
-              if (value != null) setState(() => _documentStatus = value);
-            },
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppTokens.s12),
+            child: AppDropdownFormField<RegistrationDocumentStatus>(
+              fieldKey: const ValueKey('registration-document-status'),
+              initialValue: _documentStatus,
+              decoration: const InputDecoration(labelText: '资料状态'),
+              items: RegistrationDocumentStatus.values
+                  .map(
+                    (value) => DropdownMenuItem(
+                      value: value,
+                      child: Text(
+                        value.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                if (value != null) setState(() => _documentStatus = value);
+              },
+            ),
           ),
-          _DateField(
-            key: const ValueKey('registration-submitted-at'),
+          _dateField(
+            fieldKey: const ValueKey('registration-submitted-at'),
             label: '提交日期',
             value: _submittedAt,
             onChanged: (value) => setState(() => _submittedAt = value),
           ),
-          _DateField(
-            key: const ValueKey('registration-expected-completed-at'),
+          _dateField(
+            fieldKey: const ValueKey('registration-expected-completed-at'),
             label: '预计完成日期',
             value: _expectedCompletedAt,
             onChanged: (value) => setState(() => _expectedCompletedAt = value),
           ),
-          _DateField(
-            key: const ValueKey('registration-actual-completed-at'),
+          _dateField(
+            fieldKey: const ValueKey('registration-actual-completed-at'),
             label: '实际完成日期',
             value: _actualCompletedAt,
             onChanged: (value) => setState(() => _actualCompletedAt = value),
@@ -154,22 +162,28 @@ class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
             controller: _costBearer,
             label: '费用承担方',
           ),
-          DropdownButtonFormField<RegistrationStatus>(
-            menuMaxHeight: 320,
-            borderRadius: BorderRadius.circular(AppTokens.r8),
-            dropdownColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-            key: const ValueKey('registration-status'),
-            initialValue: _status,
-            decoration: const InputDecoration(labelText: '注册状态'),
-            items: RegistrationStatus.values
-                .map(
-                  (value) =>
-                      DropdownMenuItem(value: value, child: Text(value.label)),
-                )
-                .toList(),
-            onChanged: (value) {
-              if (value != null) setState(() => _status = value);
-            },
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppTokens.s12),
+            child: AppDropdownFormField<RegistrationStatus>(
+              fieldKey: const ValueKey('registration-status'),
+              initialValue: _status,
+              decoration: const InputDecoration(labelText: '注册状态'),
+              items: RegistrationStatus.values
+                  .map(
+                    (value) => DropdownMenuItem(
+                      value: value,
+                      child: Text(
+                        value.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                if (value != null) setState(() => _status = value);
+              },
+            ),
           ),
           _textField(
             key: 'registration-current-obstacle',
@@ -183,14 +197,14 @@ class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
             label: '下一步行动',
             maxLines: 2,
           ),
-          _DateField(
-            key: const ValueKey('registration-document-due-at'),
+          _dateField(
+            fieldKey: const ValueKey('registration-document-due-at'),
             label: '资料截止日期',
             value: _documentDueAt,
             onChanged: (value) => setState(() => _documentDueAt = value),
           ),
-          _DateField(
-            key: const ValueKey('registration-milestone-at'),
+          _dateField(
+            fieldKey: const ValueKey('registration-milestone-at'),
             label: '里程碑日期',
             value: _milestoneAt,
             onChanged: (value) => setState(() => _milestoneAt = value),
@@ -225,21 +239,27 @@ class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
       decoration: InputDecoration(labelText: label),
     ),
   );
-}
 
-class _DateField extends StatelessWidget {
-  const _DateField({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-    super.key,
-  });
+  Widget _dateField({
+    required Key fieldKey,
+    required String label,
+    required DateTime? value,
+    required ValueChanged<DateTime?> onChanged,
+  }) => Padding(
+    padding: const EdgeInsets.only(bottom: AppTokens.s12),
+    child: AppDateFormField(
+      fieldKey: fieldKey,
+      label: label,
+      value: value,
+      onTap: () => _pickDate(value, onChanged),
+      onClear: value == null ? null : () => onChanged(null),
+    ),
+  );
 
-  final String label;
-  final DateTime? value;
-  final ValueChanged<DateTime?> onChanged;
-
-  Future<void> _pick(BuildContext context) async {
+  Future<void> _pickDate(
+    DateTime? value,
+    ValueChanged<DateTime?> onChanged,
+  ) async {
     final today = DateUtils.dateOnly(DateTime.now());
     final selected = await showDatePicker(
       context: context,
@@ -247,31 +267,6 @@ class _DateField extends StatelessWidget {
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
-    if (selected != null) onChanged(selected);
+    if (selected != null && mounted) onChanged(selected);
   }
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: AppTokens.s12),
-    child: InkWell(
-      onTap: () => _pick(context),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          suffixIcon: value == null
-              ? const Icon(Icons.calendar_today_outlined)
-              : IconButton(
-                  tooltip: '清除日期',
-                  onPressed: () => onChanged(null),
-                  icon: const Icon(Icons.clear),
-                ),
-        ),
-        child: Text(
-          value == null
-              ? '请选择'
-              : '${value!.year}-${value!.month.toString().padLeft(2, '0')}-${value!.day.toString().padLeft(2, '0')}',
-        ),
-      ),
-    ),
-  );
 }

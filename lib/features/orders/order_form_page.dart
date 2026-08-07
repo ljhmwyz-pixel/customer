@@ -6,6 +6,7 @@ import '../../data/database.dart';
 import '../../data/database_provider.dart';
 import '../../models/enums.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/app_dropdown_form_field.dart';
 import '../customers/customer_providers.dart';
 import '../customers/customer_widgets.dart';
 import 'order_providers.dart';
@@ -315,20 +316,19 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
               decoration: const InputDecoration(labelText: '项目'),
             )
           else
-            DropdownButtonFormField<int>(
-              menuMaxHeight: 320,
-              borderRadius: BorderRadius.circular(AppTokens.r8),
-              dropdownColor: Theme.of(
-                context,
-              ).colorScheme.surfaceContainerLowest,
-              key: const ValueKey('order-opportunity'),
+            AppDropdownFormField<int>(
+              fieldKey: const ValueKey('order-opportunity'),
               initialValue: _selectedOpportunityId,
               decoration: const InputDecoration(labelText: '项目'),
               items: _opportunities
                   .map(
                     (item) => DropdownMenuItem<int>(
                       value: item.id,
-                      child: Text(item.name),
+                      child: Text(
+                        item.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   )
                   .toList(growable: false),
@@ -384,18 +384,19 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
             decoration: const InputDecoration(labelText: '币种', hintText: 'CNY'),
           ),
           const SizedBox(height: AppTokens.s12),
-          DropdownButtonFormField<PaymentStatus>(
-            menuMaxHeight: 320,
-            borderRadius: BorderRadius.circular(AppTokens.r8),
-            dropdownColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-            key: const ValueKey('order-payment-status'),
+          AppDropdownFormField<PaymentStatus>(
+            fieldKey: const ValueKey('order-payment-status'),
             initialValue: _paymentStatus,
             decoration: const InputDecoration(labelText: '付款状态'),
             items: PaymentStatus.values
                 .map(
                   (status) => DropdownMenuItem(
                     value: status,
-                    child: Text(status.label),
+                    child: Text(
+                      status.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 )
                 .toList(growable: false),
@@ -406,18 +407,19 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
                   },
           ),
           const SizedBox(height: AppTokens.s12),
-          DropdownButtonFormField<ProductionStatus>(
-            menuMaxHeight: 320,
-            borderRadius: BorderRadius.circular(AppTokens.r8),
-            dropdownColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-            key: const ValueKey('order-production-status'),
+          AppDropdownFormField<ProductionStatus>(
+            fieldKey: const ValueKey('order-production-status'),
             initialValue: _productionStatus,
             decoration: const InputDecoration(labelText: '生产状态'),
             items: ProductionStatus.values
                 .map(
                   (status) => DropdownMenuItem(
                     value: status,
-                    child: Text(status.label),
+                    child: Text(
+                      status.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 )
                 .toList(growable: false),
@@ -430,18 +432,19 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
                   },
           ),
           const SizedBox(height: AppTokens.s12),
-          DropdownButtonFormField<ShippingStatus>(
-            menuMaxHeight: 320,
-            borderRadius: BorderRadius.circular(AppTokens.r8),
-            dropdownColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-            key: const ValueKey('order-shipping-status'),
+          AppDropdownFormField<ShippingStatus>(
+            fieldKey: const ValueKey('order-shipping-status'),
             initialValue: _shippingStatus,
             decoration: const InputDecoration(labelText: '发货状态'),
             items: ShippingStatus.values
                 .map(
                   (status) => DropdownMenuItem(
                     value: status,
-                    child: Text(status.label),
+                    child: Text(
+                      status.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 )
                 .toList(growable: false),
@@ -463,18 +466,19 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
             }),
           ),
           const SizedBox(height: AppTokens.s12),
-          DropdownButtonFormField<OrderResult>(
-            menuMaxHeight: 320,
-            borderRadius: BorderRadius.circular(AppTokens.r8),
-            dropdownColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-            key: const ValueKey('order-result'),
+          AppDropdownFormField<OrderResult>(
+            fieldKey: const ValueKey('order-result'),
             initialValue: _orderResult,
             decoration: const InputDecoration(labelText: '订单结果'),
             items: OrderResult.values
                 .map(
                   (result) => DropdownMenuItem(
                     value: result,
-                    child: Text(result.label),
+                    child: Text(
+                      result.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 )
                 .toList(growable: false),

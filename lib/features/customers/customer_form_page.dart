@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../models/enums.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/app_dropdown_form_field.dart';
 import 'customer_providers.dart';
 
 class CustomerFormPage extends ConsumerStatefulWidget {
@@ -231,19 +232,18 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
                     _TextField(controller: _wechatController, label: '微信'),
                     _TextField(controller: _addressController, label: '地址'),
                     _TextField(controller: _sourceController, label: '来源'),
-                    DropdownButtonFormField<CustomerStage>(
-                      menuMaxHeight: 320,
-                      borderRadius: BorderRadius.circular(AppTokens.r8),
-                      dropdownColor: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerLowest,
+                    AppDropdownFormField<CustomerStage>(
                       initialValue: _stage,
                       decoration: const InputDecoration(labelText: '阶段'),
                       items: CustomerStage.values
                           .map(
                             (stage) => DropdownMenuItem(
                               value: stage,
-                              child: Text(stage.label),
+                              child: Text(
+                                stage.label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           )
                           .toList(),

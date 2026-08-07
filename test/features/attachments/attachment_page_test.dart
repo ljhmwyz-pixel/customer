@@ -443,6 +443,11 @@ void main() {
     });
 
     testWidgets('添加菜单提供拍照、相册和系统文件三类来源', (tester) async {
+      await _setNarrowSurface(tester);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetDevicePixelRatio);
+      tester.view.padding = const FakeViewPadding(left: 12, top: 24, right: 20);
+      addTearDown(tester.view.resetPadding);
       await pumpAttachmentPage(tester);
 
       await tester.tap(find.byIcon(Icons.add));
@@ -451,6 +456,12 @@ void main() {
       expect(find.text('拍照'), findsOneWidget);
       expect(find.text('从相册选择'), findsOneWidget);
       expect(find.text('从系统文件选择'), findsOneWidget);
+      final firstTileRect = tester.getRect(
+        find.ancestor(of: find.text('拍照'), matching: find.byType(ListTile)),
+      );
+      expect(firstTileRect.left, moreOrLessEquals(12));
+      expect(firstTileRect.right, moreOrLessEquals(300));
+      expect(tester.takeException(), isNull);
     });
 
     for (final sourceCase in const [

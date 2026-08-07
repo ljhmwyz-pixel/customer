@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../models/enums.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/app_dropdown_form_field.dart';
+import '../../widgets/app_form_fields.dart';
 import '../customers/customer_providers.dart';
 import 'business_providers.dart';
 
@@ -152,11 +154,21 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
             label: '招标项目编号',
           ),
           _textField(key: 'tender-name', controller: _name, label: '招标名称'),
-          _TenderDateField(
-            key: const ValueKey('tender-deadline-at'),
-            label: '投标截止日期',
-            value: _deadlineAt,
-            onChanged: (value) => setState(() => _deadlineAt = value),
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppTokens.s12),
+            child: AppDateFormField(
+              fieldKey: const ValueKey('tender-deadline-at'),
+              label: '投标截止日期',
+              value: _deadlineAt,
+              onTap: () => _pickDate(
+                initialValue: _deadlineAt,
+                onChanged: (value) => setState(() => _deadlineAt = value),
+              ),
+              clearKey: const ValueKey('tender-deadline-at-clear'),
+              onClear: _deadlineAt == null
+                  ? null
+                  : () => setState(() => _deadlineAt = null),
+            ),
           ),
           _dropdown<TenderDocumentStatus>(
             key: 'tender-document-status',
@@ -219,12 +231,22 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
             text: (value) => value.label,
             onChanged: _setAuthorizationType,
           ),
-          _TenderDateField(
-            key: const ValueKey('tender-authorization-expires-at'),
-            label: '授权有效期',
-            value: _authorizationExpiresAt,
-            onChanged: (value) =>
-                setState(() => _authorizationExpiresAt = value),
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppTokens.s12),
+            child: AppDateFormField(
+              fieldKey: const ValueKey('tender-authorization-expires-at'),
+              label: '授权有效期',
+              value: _authorizationExpiresAt,
+              onTap: () => _pickDate(
+                initialValue: _authorizationExpiresAt,
+                onChanged: (value) =>
+                    setState(() => _authorizationExpiresAt = value),
+              ),
+              clearKey: const ValueKey('tender-authorization-expires-at-clear'),
+              onClear: _authorizationExpiresAt == null
+                  ? null
+                  : () => setState(() => _authorizationExpiresAt = null),
+            ),
           ),
           _textField(
             key: 'tender-exclusive-quote-scope',
@@ -297,6 +319,19 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
     ),
   );
 
+  Future<void> _pickDate({
+    required DateTime? initialValue,
+    required ValueChanged<DateTime?> onChanged,
+  }) async {
+    final selected = await showDatePicker(
+      context: context,
+      initialDate: initialValue ?? DateUtils.dateOnly(DateTime.now()),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (selected != null && mounted) onChanged(selected);
+  }
+
   Widget _dropdown<T>({
     required String key,
     required String label,
@@ -306,68 +341,25 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
     required ValueChanged<T> onChanged,
   }) => Padding(
     padding: const EdgeInsets.only(bottom: AppTokens.s12),
-    child: DropdownButtonFormField<T>(
-      menuMaxHeight: 320,
-      borderRadius: BorderRadius.circular(AppTokens.r8),
-      dropdownColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-      key: ValueKey(key),
+    child: AppDropdownFormField<T>(
+      fieldKey: ValueKey(key),
       initialValue: value,
       decoration: InputDecoration(labelText: label),
       items: values
-          .map((item) => DropdownMenuItem(value: item, child: Text(text(item))))
+          .map(
+            (item) => DropdownMenuItem(
+              value: item,
+              child: Text(
+                text(item),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          )
           .toList(),
       onChanged: (next) {
         if (next != null) onChanged(next);
       },
-    ),
-  );
-}
-
-class _TenderDateField extends StatelessWidget {
-  const _TenderDateField({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-    super.key,
-  });
-
-  final String label;
-  final DateTime? value;
-  final ValueChanged<DateTime?> onChanged;
-
-  Future<void> _pick(BuildContext context) async {
-    final today = DateUtils.dateOnly(DateTime.now());
-    final selected = await showDatePicker(
-      context: context,
-      initialDate: value ?? today,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (selected != null) onChanged(selected);
-  }
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: AppTokens.s12),
-    child: InkWell(
-      onTap: () => _pick(context),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          suffixIcon: value == null
-              ? const Icon(Icons.calendar_today_outlined)
-              : IconButton(
-                  tooltip: '清除日期',
-                  onPressed: () => onChanged(null),
-                  icon: const Icon(Icons.clear),
-                ),
-        ),
-        child: Text(
-          value == null
-              ? '请选择'
-              : '${value!.year}-${value!.month.toString().padLeft(2, '0')}-${value!.day.toString().padLeft(2, '0')}',
-        ),
-      ),
     ),
   );
 }

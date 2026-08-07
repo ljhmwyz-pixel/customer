@@ -201,98 +201,106 @@ class _PlanTileState extends ConsumerState<_PlanTile> {
           ),
           child: Padding(
             padding: const EdgeInsets.all(AppTokens.s12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: AppTokens.accentBarWidth,
-                  height: 108,
-                  color: widget.color,
-                ),
-                const SizedBox(width: AppTokens.s8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              '${item.customer.name}$country',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.bodyLarge
-                                  ?.copyWith(fontWeight: AppTokens.wMedium),
-                            ),
-                          ),
-                          CustomerGradeBadge(
-                            grade: CustomerGrade.fromDb(item.customer.grade),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppTokens.s4),
-                      Text(
-                        '${item.projectLabel} · ${item.productLabel}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        '反馈：${item.latestFeedback}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      Text(
-                        '原因：${item.reason}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      Text(
-                        '方向：${item.plan.talkingDirection ?? '待确认'}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      Text(
-                        '下一步：${item.nextAction} · 负责人：${item.owner}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      Text(
-                        item.overdueDays(DateTime.now()) > 0
-                            ? '逾期 ${item.overdueDays(DateTime.now())} 天'
-                            : '今天 ${formatDateTime(localDateTime(item.plan.planAt)).split(' ').last}',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.labelMedium?.copyWith(color: widget.color),
-                      ),
-                      if (warning != null)
-                        Text(
-                          warning!,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: AppSemanticColors.of(context).overdue,
-                              ),
-                        ),
-                    ],
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    width: AppTokens.accentBarWidth,
+                    color: widget.color,
                   ),
-                ),
-                IconButton(
-                  key: ValueKey('home-plan-complete-${item.plan.id}'),
-                  tooltip: '完成任务',
-                  onPressed: busy ? null : _complete,
-                  icon: const Icon(Icons.check_circle_outline),
-                ),
-                PopupMenuButton<String>(
-                  tooltip: '更多操作',
-                  onSelected: (_) => _cancel(),
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(value: 'cancel', child: Text('取消任务')),
-                  ],
-                ),
-              ],
+                  const SizedBox(width: AppTokens.s8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${item.customer.name}$country',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(fontWeight: AppTokens.wMedium),
+                        ),
+                        const SizedBox(height: AppTokens.s4),
+                        Text(
+                          '${item.projectLabel} · ${item.productLabel}',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          '反馈：${item.latestFeedback}',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        Text(
+                          '原因：${item.reason}',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        Text(
+                          '方向：${item.plan.talkingDirection ?? '待确认'}',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        Text(
+                          '下一步：${item.nextAction} · 负责人：${item.owner}',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        Text(
+                          item.overdueDays(DateTime.now()) > 0
+                              ? '逾期 ${item.overdueDays(DateTime.now())} 天'
+                              : '今天 ${formatDateTime(localDateTime(item.plan.planAt)).split(' ').last}',
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(color: widget.color),
+                        ),
+                        if (warning != null)
+                          Text(
+                            warning!,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: AppSemanticColors.of(context).overdue,
+                                ),
+                          ),
+                        const SizedBox(height: AppTokens.s4),
+                        Row(
+                          key: ValueKey('home-plan-actions-${item.plan.id}'),
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            CustomerGradeBadge(
+                              grade: CustomerGrade.fromDb(item.customer.grade),
+                            ),
+                            const Spacer(),
+                            IconButton(
+                              key: ValueKey(
+                                'home-plan-complete-${item.plan.id}',
+                              ),
+                              tooltip: '完成任务',
+                              onPressed: busy ? null : _complete,
+                              icon: const Icon(Icons.check_circle_outline),
+                            ),
+                            PopupMenuButton<String>(
+                              key: ValueKey('home-plan-menu-${item.plan.id}'),
+                              tooltip: '更多操作',
+                              onSelected: (_) => _cancel(),
+                              itemBuilder: (_) => const [
+                                PopupMenuItem(
+                                  value: 'cancel',
+                                  child: Text('取消任务'),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

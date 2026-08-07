@@ -4,6 +4,7 @@ import 'package:customer/features/business/registration_form_page.dart';
 import 'package:customer/features/business/tender_form_page.dart';
 import 'package:customer/features/customers/customer_detail_page.dart';
 import 'package:customer/models/enums.dart';
+import 'package:customer/widgets/app_dropdown_form_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -28,19 +29,17 @@ void main() {
       expect(find.byKey(ValueKey(key)), findsOneWidget, reason: key);
     }
     expect(
-      tester
-          .widget<DropdownButtonFormField<RegistrationDocumentStatus>>(
-            find.byKey(const ValueKey('registration-document-status')),
-          )
-          .initialValue,
+      _dropdownWidget<RegistrationDocumentStatus>(
+        tester,
+        'registration-document-status',
+      ).initialValue,
       RegistrationDocumentStatus.pending,
     );
     expect(
-      tester
-          .widget<DropdownButtonFormField<RegistrationStatus>>(
-            find.byKey(const ValueKey('registration-status')),
-          )
-          .initialValue,
+      _dropdownWidget<RegistrationStatus>(
+        tester,
+        'registration-status',
+      ).initialValue,
       RegistrationStatus.preparing,
     );
 
@@ -65,7 +64,7 @@ void main() {
     await _selectDropdown(
       tester,
       'registration-status',
-      RegistrationStatus.blocked.label,
+      RegistrationStatus.blocked,
     );
     await _tapSave(tester, 'registration-save');
 
@@ -91,19 +90,14 @@ void main() {
       expect(find.byKey(ValueKey(key)), findsOneWidget, reason: key);
     }
     expect(
-      tester
-          .widget<DropdownButtonFormField<TenderRiskLevel>>(
-            find.byKey(const ValueKey('tender-risk-level')),
-          )
-          .initialValue,
+      _dropdownWidget<TenderRiskLevel>(
+        tester,
+        'tender-risk-level',
+      ).initialValue,
       TenderRiskLevel.mediumHigh,
     );
 
-    await _selectDropdown(
-      tester,
-      'tender-risk-level',
-      TenderRiskLevel.high.label,
-    );
+    await _selectDropdown(tester, 'tender-risk-level', TenderRiskLevel.high);
     await tester.enterText(
       find.byKey(const ValueKey('tender-floor-price-support')),
       '申请底价支持',
@@ -131,12 +125,12 @@ void main() {
     await _selectDropdown(
       tester,
       'tender-document-status',
-      TenderDocumentStatus.complete.label,
+      TenderDocumentStatus.complete,
     );
     await _selectDropdown(
       tester,
       'tender-qualification-status',
-      TenderQualificationStatus.qualified.label,
+      TenderQualificationStatus.qualified,
     );
     await tester.enterText(
       find.byKey(const ValueKey('tender-bidder')),
@@ -149,18 +143,14 @@ void main() {
     await _selectDropdown(
       tester,
       'tender-local-team-status',
-      TenderVerificationStatus.confirmed.label,
+      TenderVerificationStatus.confirmed,
     );
     await _selectDropdown(
       tester,
       'tender-funding-status',
-      TenderVerificationStatus.confirmed.label,
+      TenderVerificationStatus.confirmed,
     );
-    await _selectDropdown(
-      tester,
-      'tender-risk-level',
-      TenderRiskLevel.high.label,
-    );
+    await _selectDropdown(tester, 'tender-risk-level', TenderRiskLevel.high);
     await tester.enterText(
       find.byKey(const ValueKey('tender-floor-price-support')),
       '申请底价支持',
@@ -192,6 +182,51 @@ void main() {
     )).single;
     expect(tender.riskLevel, TenderRiskLevel.high.dbValue);
     expect(tender.floorPriceSupport, '申请底价支持');
+  });
+
+  testWidgets('招标表单在 320 宽度下字段和下拉菜单保持页面边距', (tester) async {
+    tester.view.physicalSize = const Size(320, 700);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final fixture = await _BusinessFixture.create();
+    addTearDown(() => fixture.dispose(tester));
+    await fixture.pump(
+      tester,
+      TenderFormPage(
+        customerId: fixture.customerId,
+        opportunityId: fixture.opportunityId,
+      ),
+    );
+
+    final date = find.byKey(const ValueKey('tender-deadline-at'));
+    final dropdown = find.byKey(const ValueKey('tender-document-status'));
+    final dateRect = tester.getRect(date);
+    final dropdownRect = tester.getRect(dropdown);
+    expect(dateRect.left, moreOrLessEquals(16, epsilon: 1));
+    expect(dateRect.right, moreOrLessEquals(304, epsilon: 1));
+    expect(dropdownRect.width, moreOrLessEquals(dateRect.width, epsilon: 1));
+    final dateLabel = find.descendant(of: date, matching: find.text('投标截止日期'));
+    final datePlaceholder = find.descendant(
+      of: date,
+      matching: find.text('请选择'),
+    );
+    expect(dateLabel, findsOneWidget);
+    expect(datePlaceholder, findsOneWidget);
+    expect(
+      tester.getRect(dateLabel).bottom,
+      lessThanOrEqualTo(tester.getRect(datePlaceholder).top),
+    );
+
+    await tester.tap(dropdown);
+    await tester.pumpAndSettle();
+    final menuItem = find.byKey(
+      appDropdownMenuItemKey(TenderDocumentStatus.complete),
+    );
+    final menuRect = tester.getRect(menuItem);
+    expect(menuRect.left, moreOrLessEquals(dropdownRect.left, epsilon: 1));
+    expect(menuRect.right, moreOrLessEquals(dropdownRect.right, epsilon: 1));
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('项目操作可进入注册和招标表单并携带项目编号', (tester) async {
@@ -329,22 +364,36 @@ class _BusinessFixture {
   }
 }
 
-Future<void> _selectDropdown(
+Future<void> _selectDropdown<T>(
   WidgetTester tester,
   String key,
-  String label,
+  T value,
 ) async {
   final finder = find.byKey(ValueKey(key));
+  FocusManager.instance.primaryFocus?.unfocus();
+  await tester.pumpAndSettle();
   await tester.scrollUntilVisible(
     finder,
     250,
     scrollable: find.byType(Scrollable).first,
   );
-  await tester.tap(finder);
+  await tester.ensureVisible(finder);
   await tester.pumpAndSettle();
-  await tester.tap(find.text(label).last);
+  await tester.tap(finder.hitTestable());
+  await tester.pumpAndSettle();
+  final item = find.byKey(appDropdownMenuItemKey(value));
+  expect(item, findsOneWidget, reason: 'menu item for $key');
+  await tester.tapAt(tester.getCenter(item));
   await tester.pumpAndSettle();
 }
+
+AppDropdownFormField<T> _dropdownWidget<T>(WidgetTester tester, String key) =>
+    tester.widget<AppDropdownFormField<T>>(
+      find.ancestor(
+        of: find.byKey(ValueKey(key)),
+        matching: find.byType(AppDropdownFormField<T>),
+      ),
+    );
 
 Future<void> _tapSave(WidgetTester tester, String key) async {
   final finder = find.byKey(ValueKey(key));
@@ -362,13 +411,14 @@ Future<void> _selectOpportunityAction(
   int opportunityId,
   String action,
 ) async {
-  final tile = find.byKey(ValueKey('opportunity-$opportunityId'));
+  final button = find.byKey(ValueKey('opportunity-menu-$opportunityId'));
   await tester.scrollUntilVisible(
-    tile,
+    button,
     300,
     scrollable: find.byType(Scrollable).first,
   );
-  final button = find.descendant(of: tile, matching: find.byTooltip('项目操作'));
+  await tester.ensureVisible(button);
+  await tester.pumpAndSettle();
   await tester.tap(button);
   await tester.pumpAndSettle();
   await tester.tap(find.text(action).last);

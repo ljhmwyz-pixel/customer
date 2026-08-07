@@ -23,61 +23,59 @@ class VendorStepsSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(AppTokens.s16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(permission.title, style: theme.textTheme.titleMedium),
-            const SizedBox(height: AppTokens.s4),
-            Text(
-              _resultNote(),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+    return Padding(
+      padding: const EdgeInsets.all(AppTokens.s16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(permission.title, style: theme.textTheme.titleMedium),
+          const SizedBox(height: AppTokens.s4),
+          Text(
+            _resultNote(),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: AppTokens.s16),
+          for (final (index, step) in _steps().indexed)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppTokens.s8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: AppTokens.s24,
+                    child: Text(
+                      '${index + 1}.',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(step, style: theme.textTheme.bodyMedium),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: AppTokens.s16),
-            for (final (index, step) in _steps().indexed)
-              Padding(
-                padding: const EdgeInsets.only(bottom: AppTokens.s8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: AppTokens.s24,
-                      child: Text(
-                        '${index + 1}.',
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(step, style: theme.textTheme.bodyMedium),
-                    ),
-                  ],
+          const SizedBox(height: AppTokens.s8),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('稍后再说'),
                 ),
               ),
-            const SizedBox(height: AppTokens.s8),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text('稍后再说'),
-                  ),
+              const SizedBox(width: AppTokens.s12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('我已开启'),
                 ),
-                const SizedBox(width: AppTokens.s12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: const Text('我已开启'),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

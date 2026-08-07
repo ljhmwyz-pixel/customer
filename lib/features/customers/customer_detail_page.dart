@@ -676,53 +676,66 @@ class _ContactTile extends StatelessWidget {
       if (position != null && position.isNotEmpty) position,
       if (phone != null && phone.isNotEmpty) phone,
     ].join(' · ');
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: const CircleAvatar(child: Icon(Icons.person_outline)),
-      title: Row(
-        children: [
-          Flexible(
-            child: Text(
-              contact.name,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          if (contact.isDecisionMaker) ...[
-            const SizedBox(width: AppTokens.s8),
-            const Chip(
-              visualDensity: VisualDensity.compact,
-              label: Text('决策人'),
-            ),
-          ],
-        ],
-      ),
-      subtitle: subtitle.isEmpty ? null : Text(subtitle),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            tooltip: '拨打电话',
-            onPressed: onCall,
-            icon: const Icon(Icons.call_outlined),
-          ),
-          PopupMenuButton<_ContactAction>(
-            tooltip: '联系人操作',
-            onSelected: (action) {
-              switch (action) {
-                case _ContactAction.edit:
-                  onEdit();
-                case _ContactAction.delete:
-                  onDelete();
-              }
-            },
-            itemBuilder: (context) => const [
-              PopupMenuItem(value: _ContactAction.edit, child: Text('编辑')),
-              PopupMenuItem(value: _ContactAction.delete, child: Text('删除')),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const CircleAvatar(child: Icon(Icons.person_outline)),
+          title: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  contact.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (contact.isDecisionMaker) ...[
+                const SizedBox(width: AppTokens.s8),
+                const Chip(
+                  visualDensity: VisualDensity.compact,
+                  label: Text('决策人'),
+                ),
+              ],
             ],
           ),
-        ],
-      ),
+          subtitle: subtitle.isEmpty ? null : Text(subtitle),
+        ),
+        Align(
+          key: ValueKey('contact-actions-${contact.id}'),
+          alignment: Alignment.centerRight,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                tooltip: '拨打电话',
+                onPressed: onCall,
+                icon: const Icon(Icons.call_outlined),
+              ),
+              PopupMenuButton<_ContactAction>(
+                key: ValueKey('contact-menu-${contact.id}'),
+                tooltip: '联系人操作',
+                onSelected: (action) {
+                  switch (action) {
+                    case _ContactAction.edit:
+                      onEdit();
+                    case _ContactAction.delete:
+                      onDelete();
+                  }
+                },
+                itemBuilder: (context) => const [
+                  PopupMenuItem(value: _ContactAction.edit, child: Text('编辑')),
+                  PopupMenuItem(
+                    value: _ContactAction.delete,
+                    child: Text('删除'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -843,7 +856,11 @@ class _OpportunityTile extends StatelessWidget {
                 ),
             ],
           ),
-          trailing: Row(
+        ),
+        Align(
+          key: ValueKey('opportunity-actions-${opportunity.id}'),
+          alignment: Alignment.centerRight,
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
@@ -861,6 +878,7 @@ class _OpportunityTile extends StatelessWidget {
                 icon: const Icon(Icons.inventory_2_outlined),
               ),
               PopupMenuButton<_OpportunityAction>(
+                key: ValueKey('opportunity-menu-${opportunity.id}'),
                 tooltip: '项目操作',
                 onSelected: (action) {
                   switch (action) {
@@ -1011,62 +1029,79 @@ class _OrderTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final description = order.description?.trim();
-    return ListTile(
+    return Column(
       key: ValueKey('order-${order.id}'),
-      contentPadding: EdgeInsets.zero,
-      leading: const CircleAvatar(child: Icon(Icons.receipt_long_outlined)),
-      title: Text(order.orderNo, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '${formatDateTime(localDateTime(order.orderedAt))} · '
-            '${formatAmountCents(order.amountCents)} · ${status.label}',
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const CircleAvatar(child: Icon(Icons.receipt_long_outlined)),
+          title: Text(
+            order.orderNo,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          if (description != null && description.isNotEmpty)
-            Text(description, maxLines: 2, overflow: TextOverflow.ellipsis),
-        ],
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _AttachmentAction(route: attachmentRoute),
-          PopupMenuButton<_OrderAction>(
-            tooltip: '订单操作',
-            onSelected: (action) {
-              switch (action) {
-                case _OrderAction.edit:
-                  onEdit();
-                case _OrderAction.advance:
-                  onAdvance?.call();
-                case _OrderAction.cancel:
-                  onCancel?.call();
-                case _OrderAction.delete:
-                  onDelete();
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: _OrderAction.edit, child: Text('编辑')),
-              if (onAdvance != null)
-                PopupMenuItem(
-                  value: _OrderAction.advance,
-                  child: Text('推进至${status.nextStatus!.label}'),
-                ),
-              if (onCancel != null)
-                const PopupMenuItem(
-                  value: _OrderAction.cancel,
-                  child: Text('取消订单'),
-                ),
-              const PopupMenuItem(
-                value: _OrderAction.delete,
-                child: Text('删除'),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${formatDateTime(localDateTime(order.orderedAt))} · '
+                '${formatAmountCents(order.amountCents)} · ${status.label}',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (description != null && description.isNotEmpty)
+                Text(description, maxLines: 2, overflow: TextOverflow.ellipsis),
+            ],
+          ),
+        ),
+        Align(
+          key: ValueKey('order-actions-${order.id}'),
+          alignment: Alignment.centerRight,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _AttachmentAction(route: attachmentRoute),
+              PopupMenuButton<_OrderAction>(
+                key: ValueKey('order-menu-${order.id}'),
+                tooltip: '订单操作',
+                onSelected: (action) {
+                  switch (action) {
+                    case _OrderAction.edit:
+                      onEdit();
+                    case _OrderAction.advance:
+                      onAdvance?.call();
+                    case _OrderAction.cancel:
+                      onCancel?.call();
+                    case _OrderAction.delete:
+                      onDelete();
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: _OrderAction.edit,
+                    child: Text('编辑'),
+                  ),
+                  if (onAdvance != null)
+                    PopupMenuItem(
+                      value: _OrderAction.advance,
+                      child: Text('推进至${status.nextStatus!.label}'),
+                    ),
+                  if (onCancel != null)
+                    const PopupMenuItem(
+                      value: _OrderAction.cancel,
+                      child: Text('取消订单'),
+                    ),
+                  const PopupMenuItem(
+                    value: _OrderAction.delete,
+                    child: Text('删除'),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -1112,6 +1147,8 @@ class _PlanTile extends StatelessWidget {
               children: [
                 Text(
                   plan.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     fontWeight: AppTokens.wMedium,
                   ),
@@ -1123,15 +1160,15 @@ class _PlanTile extends StatelessWidget {
                     context,
                   ).textTheme.bodySmall?.copyWith(color: color),
                 ),
+                const SizedBox(height: AppTokens.s4),
+                Text(
+                  status.label,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: color,
+                    fontWeight: AppTokens.wMedium,
+                  ),
+                ),
               ],
-            ),
-          ),
-          const SizedBox(width: AppTokens.s8),
-          Text(
-            status.label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: AppTokens.wMedium,
             ),
           ),
         ],
@@ -1366,41 +1403,44 @@ class _ContactDialogState extends State<_ContactDialog> {
   @override
   Widget build(BuildContext context) => AlertDialog(
     title: Text(widget.initial == null ? '新增联系人' : '编辑联系人'),
-    content: Form(
-      key: _formKey,
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              key: const ValueKey('contact-name'),
-              controller: _nameController,
-              autofocus: true,
-              maxLength: 50,
-              decoration: const InputDecoration(labelText: '名称'),
-              validator: (value) =>
-                  value == null || value.trim().isEmpty ? '联系人名称不能为空' : null,
-            ),
-            const SizedBox(height: AppTokens.s12),
-            TextFormField(
-              controller: _positionController,
-              decoration: const InputDecoration(labelText: '职位'),
-            ),
-            const SizedBox(height: AppTokens.s12),
-            TextFormField(
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(labelText: '电话'),
-            ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('决策人'),
-              value: _isDecisionMaker,
-              onChanged: (value) {
-                setState(() => _isDecisionMaker = value);
-              },
-            ),
-          ],
+    content: SizedBox(
+      width: double.maxFinite,
+      child: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                key: const ValueKey('contact-name'),
+                controller: _nameController,
+                autofocus: true,
+                maxLength: 50,
+                decoration: const InputDecoration(labelText: '名称'),
+                validator: (value) =>
+                    value == null || value.trim().isEmpty ? '联系人名称不能为空' : null,
+              ),
+              const SizedBox(height: AppTokens.s12),
+              TextFormField(
+                controller: _positionController,
+                decoration: const InputDecoration(labelText: '职位'),
+              ),
+              const SizedBox(height: AppTokens.s12),
+              TextFormField(
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(labelText: '电话'),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('决策人'),
+                value: _isDecisionMaker,
+                onChanged: (value) {
+                  setState(() => _isDecisionMaker = value);
+                },
+              ),
+            ],
+          ),
         ),
       ),
     ),

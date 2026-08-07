@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../data/database.dart';
 import '../../models/enums.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/app_dropdown_form_field.dart';
+import '../../widgets/app_form_fields.dart';
 import 'customer_providers.dart';
 import 'customer_widgets.dart';
 
@@ -203,15 +205,9 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
                     ),
                     const SizedBox(height: AppTokens.s16),
                   ] else ...[
-                    DropdownButtonFormField<int>(
-                      menuMaxHeight: 320,
-                      borderRadius: BorderRadius.circular(AppTokens.r8),
-                      dropdownColor: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerLowest,
-                      key: const ValueKey('followup-opportunity'),
+                    AppDropdownFormField<int>(
+                      fieldKey: const ValueKey('followup-opportunity'),
                       initialValue: _selectedOpportunityId,
-                      isExpanded: true,
                       decoration: const InputDecoration(labelText: '跟进项目'),
                       items: value.opportunities
                           .map(
@@ -251,21 +247,19 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
                         : null,
                   ),
                   const SizedBox(height: AppTokens.s12),
-                  DropdownButtonFormField<OpportunityStage>(
-                    menuMaxHeight: 320,
-                    borderRadius: BorderRadius.circular(AppTokens.r8),
-                    dropdownColor: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerLowest,
-                    key: const ValueKey('followup-stage'),
+                  AppDropdownFormField<OpportunityStage>(
+                    fieldKey: const ValueKey('followup-stage'),
                     initialValue: _stage,
-                    isExpanded: true,
                     decoration: const InputDecoration(labelText: '项目阶段'),
                     items: OpportunityStage.values
                         .map(
                           (stage) => DropdownMenuItem(
                             value: stage,
-                            child: Text(stage.label),
+                            child: Text(
+                              stage.label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         )
                         .toList(),
@@ -301,19 +295,19 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
                     ),
                   ),
                   const SizedBox(height: AppTokens.s16),
-                  DropdownButtonFormField<FollowMethod>(
-                    menuMaxHeight: 320,
-                    borderRadius: BorderRadius.circular(AppTokens.r8),
-                    dropdownColor: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerLowest,
+                  AppDropdownFormField<FollowMethod>(
+                    fieldKey: const ValueKey('followup-method'),
                     initialValue: _method,
                     decoration: const InputDecoration(labelText: '跟进方式'),
                     items: FollowMethod.values
                         .map(
                           (method) => DropdownMenuItem(
                             value: method,
-                            child: Text(method.label),
+                            child: Text(
+                              method.label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         )
                         .toList(),
@@ -322,9 +316,12 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
                     },
                   ),
                   const SizedBox(height: AppTokens.s12),
-                  _DateTimeTile(
+                  AppDateFormField(
+                    fieldKey: const ValueKey('followup-occurred-at'),
                     label: '发生时间',
                     value: _occurredAt,
+                    valueText: formatDateTime(_occurredAt),
+                    prefixIcon: Icons.schedule_outlined,
                     onTap: () => _pickDateTime(forPlan: false),
                   ),
                   const SizedBox(height: AppTokens.s24),
@@ -379,9 +376,12 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
                       ],
                     ),
                     const SizedBox(height: AppTokens.s12),
-                    _DateTimeTile(
+                    AppDateFormField(
+                      fieldKey: const ValueKey('followup-plan-at'),
                       label: '下次跟进时间',
                       value: _planAt,
+                      valueText: formatDateTime(_planAt),
+                      prefixIcon: Icons.schedule_outlined,
                       onTap: () => _pickDateTime(forPlan: true),
                     ),
                   ] else ...[
@@ -445,28 +445,6 @@ class _NoOpportunityMessage extends StatelessWidget {
         ],
       ),
     ),
-  );
-}
-
-class _DateTimeTile extends StatelessWidget {
-  const _DateTimeTile({
-    required this.label,
-    required this.value,
-    required this.onTap,
-  });
-
-  final String label;
-  final DateTime value;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => ListTile(
-    contentPadding: EdgeInsets.zero,
-    leading: const Icon(Icons.schedule_outlined),
-    title: Text(label),
-    subtitle: Text(formatDateTime(value)),
-    trailing: const Icon(Icons.chevron_right),
-    onTap: onTap,
   );
 }
 

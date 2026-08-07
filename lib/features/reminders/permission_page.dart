@@ -68,6 +68,7 @@ class _PermissionPageState extends ConsumerState<PermissionPage>
     final confirmed = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (context) =>
           VendorStepsSheet(permission: permission, result: result),
     );

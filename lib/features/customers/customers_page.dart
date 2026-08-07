@@ -6,6 +6,8 @@ import '../../data/daos/customer_dao.dart';
 import '../../data/database.dart';
 import '../../models/enums.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/app_dropdown_form_field.dart';
+import '../../widgets/app_form_fields.dart';
 import '../../widgets/empty_state.dart';
 import 'customer_providers.dart';
 import 'customer_widgets.dart';
@@ -564,16 +566,15 @@ class _FilterDropdown<T> extends StatelessWidget {
   final ValueChanged<T?> onChanged;
 
   @override
-  Widget build(BuildContext context) => DropdownButtonFormField<T?>(
-    menuMaxHeight: 320,
-    borderRadius: BorderRadius.circular(AppTokens.r8),
-    dropdownColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-    key: ValueKey(fieldKey),
+  Widget build(BuildContext context) => AppDropdownFormField<T?>(
+    fieldKey: ValueKey(fieldKey),
     initialValue: options.contains(value) ? value : null,
-    isExpanded: true,
     decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
     items: [
-      DropdownMenuItem<T?>(value: null, child: Text(allLabel)),
+      DropdownMenuItem<T?>(
+        value: null,
+        child: Text(allLabel, maxLines: 1, overflow: TextOverflow.ellipsis),
+      ),
       ...options.map(
         (option) => DropdownMenuItem<T?>(
           value: option,
@@ -607,24 +608,15 @@ class _FilterDateTile extends StatelessWidget {
   final ValueChanged<DateTime?> onChanged;
 
   @override
-  Widget build(BuildContext context) => ListTile(
-    key: ValueKey(fieldKey),
-    contentPadding: const EdgeInsets.symmetric(horizontal: AppTokens.s12),
-    leading: const Icon(Icons.event_outlined),
-    title: Text(label),
-    subtitle: Text(value == null ? '不限' : _formatFilterDate(value!)),
-    trailing: value == null
-        ? const Icon(Icons.chevron_right)
-        : IconButton(
-            key: ValueKey('$fieldKey-clear'),
-            onPressed: () => onChanged(null),
-            tooltip: '清除$label',
-            icon: const Icon(Icons.close),
-          ),
-    shape: RoundedRectangleBorder(
-      side: BorderSide(color: Theme.of(context).colorScheme.outline),
-      borderRadius: BorderRadius.circular(AppTokens.s12),
-    ),
+  Widget build(BuildContext context) => AppDateFormField(
+    fieldKey: ValueKey(fieldKey),
+    label: label,
+    value: value,
+    valueText: value == null ? null : _formatFilterDate(value!),
+    placeholder: '不限',
+    prefixIcon: Icons.event_outlined,
+    clearKey: ValueKey('$fieldKey-clear'),
+    onClear: value == null ? null : () => onChanged(null),
     onTap: () async {
       final today = _dateOnly(DateTime.now());
       var pickerFirstDate = _dateOnly(firstDate);

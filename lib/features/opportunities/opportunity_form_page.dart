@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../data/database.dart';
 import '../../models/enums.dart';
 import '../../theme/tokens.dart';
+import '../../widgets/app_dropdown_form_field.dart';
+import '../../widgets/app_form_fields.dart';
 import '../customers/customer_providers.dart';
 import '../customers/customer_widgets.dart';
 import 'opportunity_providers.dart';
@@ -297,34 +299,83 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
         _field('forecastAmount', '预计项目金额', decimal: true),
         _field('currency', '币种（如 USD）'),
         _field('probabilityPercent', '成交概率（0–100）', number: true),
-        DropdownButtonFormField<OpportunityStage>(
-          menuMaxHeight: 320,
-          borderRadius: BorderRadius.circular(AppTokens.r8),
-          dropdownColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-          initialValue: _stage,
-          decoration: const InputDecoration(labelText: '销售阶段'),
-          items: OpportunityStage.values
-              .map((v) => DropdownMenuItem(value: v, child: Text(v.label)))
-              .toList(),
-          onChanged: (value) => setState(() => _stage = value ?? _stage),
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppTokens.s12),
+          child: AppDropdownFormField<OpportunityStage>(
+            fieldKey: const ValueKey('opportunity-stage'),
+            initialValue: _stage,
+            decoration: const InputDecoration(labelText: '销售阶段'),
+            items: OpportunityStage.values
+                .map(
+                  (v) => DropdownMenuItem(
+                    value: v,
+                    child: Text(
+                      v.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                )
+                .toList(),
+            onChanged: (value) => setState(() => _stage = value ?? _stage),
+          ),
         ),
-        DropdownButtonFormField<OpportunityStatus>(
-          menuMaxHeight: 320,
-          borderRadius: BorderRadius.circular(AppTokens.r8),
-          dropdownColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-          initialValue: _status,
-          decoration: const InputDecoration(labelText: '投入状态'),
-          items: OpportunityStatus.values
-              .map((v) => DropdownMenuItem(value: v, child: Text(v.label)))
-              .toList(),
-          onChanged: (value) => setState(() => _status = value ?? _status),
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppTokens.s12),
+          child: AppDropdownFormField<OpportunityStatus>(
+            fieldKey: const ValueKey('opportunity-status'),
+            initialValue: _status,
+            decoration: const InputDecoration(labelText: '投入状态'),
+            items: OpportunityStatus.values
+                .map(
+                  (v) => DropdownMenuItem(
+                    value: v,
+                    child: Text(
+                      v.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                )
+                .toList(),
+            onChanged: (value) => setState(() => _status = value ?? _status),
+          ),
         ),
-        _dateTile('预计成交日期', _expectedCloseAt, () => _pickDate(true)),
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppTokens.s12),
+          child: AppDateFormField(
+            fieldKey: const ValueKey('opportunity-expected-close-at'),
+            label: '预计成交日期',
+            value: _expectedCloseAt,
+            valueText: _expectedCloseAt == null
+                ? null
+                : formatDateTime(_expectedCloseAt!),
+            onTap: () => _pickDate(true),
+            clearKey: const ValueKey('opportunity-expected-close-at-clear'),
+            onClear: _expectedCloseAt == null
+                ? null
+                : () => setState(() => _expectedCloseAt = null),
+          ),
+        ),
         _field('latestFeedback', '最新反馈', lines: 2),
         _field('currentObstacle', '当前障碍', lines: 2),
         _field('nextAction', '下一步动作', lines: 2),
-        _dateTile('下次跟进日期', _nextFollowAt, () => _pickDate(false)),
-        const SizedBox(height: AppTokens.s12),
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppTokens.s12),
+          child: AppDateFormField(
+            fieldKey: const ValueKey('opportunity-next-follow-at'),
+            label: '下次跟进日期',
+            value: _nextFollowAt,
+            valueText: _nextFollowAt == null
+                ? null
+                : formatDateTime(_nextFollowAt!),
+            onTap: () => _pickDate(false),
+            clearKey: const ValueKey('opportunity-next-follow-at-clear'),
+            onClear: _nextFollowAt == null
+                ? null
+                : () => setState(() => _nextFollowAt = null),
+          ),
+        ),
         ExpansionTile(
           tilePadding: EdgeInsets.zero,
           title: const Text('供应商与价格信息'),
@@ -466,21 +517,21 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
       padding: const EdgeInsets.only(bottom: AppTokens.s12),
       child: KeyedSubtree(
         key: ValueKey('$key-$value'),
-        child: DropdownButtonFormField<String>(
-          menuMaxHeight: 320,
-          borderRadius: BorderRadius.circular(AppTokens.r8),
-          dropdownColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-          key: ValueKey('opportunity-$key'),
+        child: AppDropdownFormField<String>(
+          fieldKey: ValueKey('opportunity-$key'),
           initialValue: value?.trim().isEmpty ?? true ? null : value,
-          isExpanded: true,
           decoration: InputDecoration(labelText: label),
           items: [
-            const DropdownMenuItem<String>(value: null, child: Text('未设置')),
+            const DropdownMenuItem<String>(
+              value: null,
+              child: Text('未设置', maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
             ...items.map(
               (item) => DropdownMenuItem(
                 value: item,
                 child: Text(
                   options.contains(item) ? item : '历史值：$item',
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -527,25 +578,4 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
       ),
     ),
   );
-
-  Widget _dateTile(String label, DateTime? value, VoidCallback onTap) =>
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(label),
-        subtitle: Text(value == null ? '未设置' : formatDateTime(value)),
-        trailing: value == null
-            ? const Icon(Icons.calendar_today_outlined)
-            : IconButton(
-                tooltip: '清除日期',
-                onPressed: () => setState(() {
-                  if (label == '预计成交日期') {
-                    _expectedCloseAt = null;
-                  } else {
-                    _nextFollowAt = null;
-                  }
-                }),
-                icon: const Icon(Icons.clear),
-              ),
-        onTap: onTap,
-      );
 }

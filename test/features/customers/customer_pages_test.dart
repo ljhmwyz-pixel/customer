@@ -14,6 +14,7 @@ import 'package:customer/models/enums.dart';
 import 'package:customer/services/reminder_scheduler.dart';
 import 'package:customer/services/service_providers.dart';
 import 'package:customer/theme/theme.dart';
+import 'package:customer/widgets/app_dropdown_form_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -799,11 +800,25 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('open-customer-filters')));
     await tester.pumpAndSettle();
-    await _selectCustomerFilter<String>(
+    await _ensureCustomerFilterVisible(
       tester,
       'customer-product-category-filter',
-      '体外诊断',
     );
+    final categoryDropdown = find.byKey(
+      const ValueKey('customer-product-category-filter'),
+    );
+    final triggerRect = tester.getRect(categoryDropdown);
+    expect(triggerRect.left, moreOrLessEquals(16, epsilon: 1));
+    expect(triggerRect.right, moreOrLessEquals(304, epsilon: 1));
+    await tester.tap(categoryDropdown);
+    await tester.pumpAndSettle();
+    final categoryItem = find.byKey(appDropdownMenuItemKey('体外诊断'));
+    final menuItemRect = tester.getRect(categoryItem.last);
+    expect(menuItemRect.left, moreOrLessEquals(triggerRect.left, epsilon: 1));
+    expect(menuItemRect.right, moreOrLessEquals(triggerRect.right, epsilon: 1));
+    expect(menuItemRect.width, moreOrLessEquals(triggerRect.width, epsilon: 1));
+    await tester.tapAt(tester.getCenter(categoryItem.last));
+    await tester.pumpAndSettle();
     await _selectCustomerFilter<String>(
       tester,
       'customer-product-model-filter',
@@ -915,11 +930,10 @@ void main() {
       expect(find.text('项目：CT 注射器'), findsOneWidget);
       expect(find.byKey(const ValueKey('followup-opportunity')), findsNothing);
       expect(
-        tester
-            .widget<DropdownButtonFormField<OpportunityStage>>(
-              find.byKey(const ValueKey('followup-stage')),
-            )
-            .initialValue,
+        _dropdownWidget<OpportunityStage>(
+          tester,
+          'followup-stage',
+        ).initialValue,
         OpportunityStage.quoted,
       );
       await tester.enterText(
@@ -980,11 +994,7 @@ void main() {
     await harness.pump(tester);
     expect(find.byKey(const ValueKey('followup-opportunity')), findsOneWidget);
     expect(
-      tester
-          .widget<DropdownButtonFormField<OpportunityStage>>(
-            find.byKey(const ValueKey('followup-stage')),
-          )
-          .initialValue,
+      _dropdownWidget<OpportunityStage>(tester, 'followup-stage').initialValue,
       OpportunityStage.needsConfirmed,
     );
 
@@ -994,11 +1004,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      tester
-          .widget<DropdownButtonFormField<OpportunityStage>>(
-            find.byKey(const ValueKey('followup-stage')),
-          )
-          .initialValue,
+      _dropdownWidget<OpportunityStage>(tester, 'followup-stage').initialValue,
       OpportunityStage.quoted,
     );
   });
@@ -1125,6 +1131,21 @@ void main() {
 
     await harness.pump(tester);
 
+    final fieldWidths = <double>[];
+    for (final key in [
+      'followup-method',
+      'followup-occurred-at',
+      'followup-plan-at',
+    ]) {
+      final field = find.byKey(ValueKey(key));
+      await tester.scrollUntilVisible(
+        field,
+        250,
+        scrollable: find.byType(Scrollable).first,
+      );
+      fieldWidths.add(tester.getSize(field).width);
+    }
+    expect(fieldWidths, everyElement(moreOrLessEquals(288, epsilon: 1)));
     expect(tester.takeException(), isNull);
   });
 
@@ -1270,11 +1291,7 @@ void main() {
 
     for (final (segment, id, _) in owners) {
       final action = find.byKey(ValueKey('attachment-$segment-$id'));
-      await tester.scrollUntilVisible(
-        action,
-        300,
-        scrollable: find.byType(Scrollable).first,
-      );
+      await _scrollToLazyChild(tester, action);
       expect(
         find.descendant(of: action, matching: find.text('1')),
         findsOneWidget,
@@ -1288,7 +1305,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('附件:$segment:$id'), findsOneWidget);
 
-      harness.router.go('/');
+      harness.router.pop();
       await tester.pumpAndSettle();
     }
     expect(tester.takeException(), isNull);
@@ -1345,6 +1362,40 @@ void main() {
     await tester.pump();
 
     expect(actions.calledPhone, phone);
+  });
+
+  testWidgets('CustomerDetailPage contact dialog keeps narrow-screen gutters', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 700);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '窄屏联系人客户');
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: CustomerDetailPage(customerId: customerId),
+    );
+    addTearDown(() => harness.dispose(tester));
+
+    await harness.pump(tester);
+    await tester.tap(find.byTooltip('新增联系人'));
+    await tester.pumpAndSettle();
+
+    final dialogSurface = find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byWidgetPredicate(
+        (widget) => widget is Material && widget.type == MaterialType.card,
+      ),
+    );
+    expect(dialogSurface, findsOneWidget);
+    final dialogRect = tester.getRect(dialogSurface);
+    expect(dialogRect.left, moreOrLessEquals(16));
+    expect(dialogRect.right, moreOrLessEquals(304));
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('CustomerDetailPage creates an order through the form', (
@@ -1420,6 +1471,7 @@ void main() {
     expect(orders.single.productionStatus, ProductionStatus.inProgress.dbValue);
     expect(orders.single.shippingStatus, ShippingStatus.shipped.dbValue);
     expect(orders.single.orderResult, OrderResult.inProgress.dbValue);
+    await _scrollToLazyChild(tester, find.text('ORDER-CREATE-001'));
     expect(find.text('ORDER-CREATE-001'), findsOneWidget);
     expect(find.textContaining('¥123.45'), findsOneWidget);
   });
@@ -1618,19 +1670,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      tester
-          .widget<DropdownButtonFormField<String>>(
-            find.byKey(const ValueKey('opportunity-entryPoint')),
-          )
-          .initialValue,
+      _dropdownWidget<String>(tester, 'opportunity-entryPoint').initialValue,
       '价格替代',
     );
     expect(
-      tester
-          .widget<DropdownButtonFormField<String>>(
-            find.byKey(const ValueKey('opportunity-investmentAdvice')),
-          )
-          .initialValue,
+      _dropdownWidget<String>(
+        tester,
+        'opportunity-investmentAdvice',
+      ).initialValue,
       '继续投入',
     );
     expect(await db.opportunityDao.listOfCustomer(customerId), isEmpty);
@@ -1731,6 +1778,22 @@ void main() {
     addTearDown(() => harness.dispose(tester));
 
     await harness.pump(tester);
+    final formFieldWidths = <double>[];
+    for (final key in [
+      'opportunity-stage',
+      'opportunity-status',
+      'opportunity-expected-close-at',
+      'opportunity-next-follow-at',
+    ]) {
+      final field = find.byKey(ValueKey(key));
+      await tester.scrollUntilVisible(
+        field,
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      formFieldWidths.add(tester.getSize(field).width);
+    }
+    expect(formFieldWidths, everyElement(moreOrLessEquals(288, epsilon: 1)));
     await tester.scrollUntilVisible(
       find.text('供应商与价格信息'),
       300,
@@ -1816,11 +1879,10 @@ void main() {
     await tester.enterText(find.byKey(const ValueKey('order-currency')), 'gbp');
     await _scrollOrderFieldIntoView(tester, 'order-payment-status');
     expect(
-      tester
-          .widget<DropdownButtonFormField<PaymentStatus>>(
-            find.byKey(const ValueKey('order-payment-status')),
-          )
-          .initialValue,
+      _dropdownWidget<PaymentStatus>(
+        tester,
+        'order-payment-status',
+      ).initialValue,
       PaymentStatus.partial,
     );
     await _selectDropdownValue<PaymentStatus>(
@@ -1830,11 +1892,10 @@ void main() {
     );
     await _scrollOrderFieldIntoView(tester, 'order-production-status');
     expect(
-      tester
-          .widget<DropdownButtonFormField<ProductionStatus>>(
-            find.byKey(const ValueKey('order-production-status')),
-          )
-          .initialValue,
+      _dropdownWidget<ProductionStatus>(
+        tester,
+        'order-production-status',
+      ).initialValue,
       ProductionStatus.inProgress,
     );
     await _selectDropdownValue<ProductionStatus>(
@@ -1844,11 +1905,10 @@ void main() {
     );
     await _scrollOrderFieldIntoView(tester, 'order-shipping-status');
     expect(
-      tester
-          .widget<DropdownButtonFormField<ShippingStatus>>(
-            find.byKey(const ValueKey('order-shipping-status')),
-          )
-          .initialValue,
+      _dropdownWidget<ShippingStatus>(
+        tester,
+        'order-shipping-status',
+      ).initialValue,
       ShippingStatus.shipped,
     );
     await _selectDropdownValue<ShippingStatus>(
@@ -1868,11 +1928,7 @@ void main() {
     );
     await _scrollOrderFieldIntoView(tester, 'order-result');
     expect(
-      tester
-          .widget<DropdownButtonFormField<OrderResult>>(
-            find.byKey(const ValueKey('order-result')),
-          )
-          .initialValue,
+      _dropdownWidget<OrderResult>(tester, 'order-result').initialValue,
       OrderResult.inProgress,
     );
     await _selectDropdownValue<OrderResult>(
@@ -1917,6 +1973,7 @@ void main() {
       order?.estimatedRepurchaseAt,
       DateTime(2027, 2, 5).toUtc().millisecondsSinceEpoch,
     );
+    await _scrollToLazyChild(tester, find.text('ORDER-EDITED'));
     expect(find.text('ORDER-EDITED'), findsOneWidget);
   });
 
@@ -2024,7 +2081,20 @@ void main() {
       db,
       name: '这是一个用于验证窄屏布局不会溢出的特别特别长的客户名称',
     );
-    await db.orderDao.insertOrder(
+    final contactId = await db.contactDao.insertContact(
+      customerId: customerId,
+      name: '这是一个用于验证联系人正文宽度的特别特别长的联系人姓名',
+      position: '国际采购与供应链决策负责人',
+      phone: '13800138000',
+      isDecisionMaker: true,
+    );
+    final opportunityId = await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '这是一个用于验证项目正文与操作按钮分离的特别特别长的项目名称',
+      productCategory: '医疗设备与耗材综合解决方案',
+      nextAction: '完成跨部门评审并确认下一轮商务谈判时间',
+    );
+    final orderId = await db.orderDao.insertOrder(
       customerId: customerId,
       orderNo: List.filled(50, 'X').join(),
       orderedAt: DateTime(2026, 8, 5),
@@ -2042,6 +2112,19 @@ void main() {
 
     await harness.pump(tester);
 
+    for (final key in [
+      'contact-actions-$contactId',
+      'opportunity-actions-$opportunityId',
+      'order-actions-$orderId',
+    ]) {
+      final actions = find.byKey(ValueKey(key));
+      await tester.scrollUntilVisible(
+        actions,
+        250,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(tester.getRect(actions).right, lessThanOrEqualTo(304.1));
+    }
     expect(tester.takeException(), isNull);
   });
 }
@@ -2170,21 +2253,30 @@ Future<void> _selectOrderAction(
   int orderId,
   String action,
 ) async {
-  final tile = find.byKey(ValueKey('order-$orderId'));
+  final actionButton = find.byKey(ValueKey('order-menu-$orderId'));
   await tester.scrollUntilVisible(
-    tile,
+    actionButton,
     300,
     scrollable: find.byType(Scrollable).first,
-  );
-  final actionButton = find.descendant(
-    of: tile,
-    matching: find.byTooltip('订单操作'),
   );
   await tester.ensureVisible(actionButton);
   await tester.pumpAndSettle();
   await tester.tap(actionButton);
   await tester.pumpAndSettle();
   await tester.tap(find.text(action).last);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _scrollToLazyChild(WidgetTester tester, Finder target) async {
+  final scrollable = find.byType(Scrollable).first;
+  await tester.drag(scrollable, const Offset(0, 3000));
+  await tester.pumpAndSettle();
+  for (var attempt = 0; attempt < 20 && target.evaluate().isEmpty; attempt++) {
+    await tester.drag(scrollable, const Offset(0, -300));
+    await tester.pumpAndSettle();
+  }
+  expect(target, findsWidgets);
+  await tester.ensureVisible(target.first);
   await tester.pumpAndSettle();
 }
 
@@ -2205,9 +2297,7 @@ Future<void> _selectDropdownValue<T>(
   await tester.pumpAndSettle();
   await tester.tap(dropdown);
   await tester.pumpAndSettle();
-  final item = find.byWidgetPredicate(
-    (widget) => widget is DropdownMenuItem<T> && widget.value == value,
-  );
+  final item = find.byKey(appDropdownMenuItemKey(value));
   await tester.ensureVisible(item.last);
   await tester.pumpAndSettle();
   await tester.tapAt(tester.getCenter(item.last));
@@ -2237,12 +2327,18 @@ Future<void> _selectCustomerFilter<T>(
   final dropdown = find.byKey(ValueKey(key));
   await tester.tap(dropdown);
   await tester.pumpAndSettle();
-  final item = find.byWidgetPredicate(
-    (widget) => widget is DropdownMenuItem && widget.value == value,
-  );
+  final item = find.byKey(appDropdownMenuItemKey(value));
   await tester.tapAt(tester.getCenter(item.last));
   await tester.pumpAndSettle();
 }
+
+AppDropdownFormField<T> _dropdownWidget<T>(WidgetTester tester, String key) =>
+    tester.widget<AppDropdownFormField<T>>(
+      find.ancestor(
+        of: find.byKey(ValueKey(key)),
+        matching: find.byType(AppDropdownFormField<T>),
+      ),
+    );
 
 Future<void> _scrollOrderFieldIntoView(WidgetTester tester, String key) async {
   final field = find.byKey(ValueKey(key));
@@ -2269,15 +2365,11 @@ Future<void> _selectOpportunityAction(
   int opportunityId,
   String action,
 ) async {
-  final tile = find.byKey(ValueKey('opportunity-$opportunityId'));
+  final actionButton = find.byKey(ValueKey('opportunity-menu-$opportunityId'));
   await tester.scrollUntilVisible(
-    tile,
+    actionButton,
     300,
     scrollable: find.byType(Scrollable).first,
-  );
-  final actionButton = find.descendant(
-    of: tile,
-    matching: find.byTooltip('项目操作'),
   );
   await tester.ensureVisible(actionButton);
   await tester.pumpAndSettle();

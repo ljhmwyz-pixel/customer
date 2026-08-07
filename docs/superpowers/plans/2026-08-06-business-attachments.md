@@ -53,13 +53,20 @@
 - Create: `lib/services/attachment_service_providers.dart`
 - Create: `test/services/attachment_file_service_test.dart`
 - Create: `test/services/attachment_service_test.dart`
+- Modify: `lib/data/attachment_path.dart`
+- Modify: `test/data/attachment_path_test.dart`
 
-- [ ] Write failing tests using an injected temporary root directory for relative-path safety, collision-free names, metadata, rollback cleanup, and missing-file behavior.
-- [ ] Implement copying into `attachments/YYYY/MM/` with generated names while retaining the original display name.
-- [ ] Implement image orientation correction and iterative compression with 1920px maximum edge, 500KB target, minimum quality, and original-file fallback on codec failure.
-- [ ] Implement atomic orchestration: copy first, insert metadata second, and delete the copied file if database insertion fails.
-- [ ] Implement attachment deletion and opening result types without leaking plugin-specific errors to UI code.
-- [ ] Run both service test files and `flutter analyze`.
+- [ ] First add red tests proving `AttachmentPath` rejects absolute paths, empty paths, the bare `attachments` directory, non-attachment roots and normalized `..` escapes; resolution must remain below `<appDir>/attachments/`.
+- [ ] Add file-service red tests with an injected temporary app directory, fixed clock and deterministic ID generator. Cover `attachments/YYYY/MM/`, collision-free generated names, byte-for-byte ordinary-file copying, retained original display name/MIME type and actual stored size.
+- [ ] Define an injectable image processor boundary so unit tests do not invoke platform plugins. Verify every attempt requests automatic orientation correction and a 1920×1920 bound, uses descending JPEG/WebP quality steps, stops at the first candidate at or below 500KB, and retains the lowest-quality candidate with its real size when the target cannot be reached.
+- [ ] Verify a codec/plugin exception removes temporary candidates and falls back to copying the original bytes. Keep file extension, encoded format and MIME type mutually consistent; PNG remains PNG and is resized without pretending JPEG bytes are PNG.
+- [ ] Implement `AttachmentFileService`: resolve the app-private root lazily, reuse `AttachmentPath` for all path construction/resolution, create year/month directories, generate non-conflicting target names, finalize one stored file, and expose stable exists/delete results.
+- [ ] Add orchestration red tests against an in-memory v7 database. On add, write the file first and insert only its relative path plus original name, MIME type and actual size; if insertion throws, remove the newly stored file and preserve the database failure.
+- [ ] Add service red tests for a missing database row, a database row whose physical file is missing, successful deletion, failed physical deletion, successful opening, no compatible application, permission/platform failure and unknown opener failure. Public results must not expose `open_filex` result classes or plugin exceptions.
+- [ ] Implement `AttachmentService` with injectable DAO, file service and opener adapter. Delete the database row before physical cleanup so a database failure cannot strand an already-deleted file; return a stable cleanup-failure result for Task 6 to make retryable.
+- [ ] Add Riverpod providers for the production app-directory loader, image processor, opener, file service and attachment service without adding new dependencies or starting Android picker/UI work.
+- [ ] Run targeted red/green checks: `flutter test test/data/attachment_path_test.dart`, `flutter test test/services/attachment_file_service_test.dart`, and `flutter test test/services/attachment_service_test.dart`.
+- [ ] Run full verification: `flutter analyze`, `flutter test`, `git diff --check`, then inspect `git status --short` and `git diff --stat`. Stop before staging or committing and request explicit user confirmation.
 
 ### Task 3: Add Android attachment sources
 
