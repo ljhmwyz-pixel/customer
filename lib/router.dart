@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -348,10 +349,11 @@ final router = GoRouter(
                   path: 'reminder-test',
                   builder: (context, state) => const ReminderTestPage(),
                 ),
-                GoRoute(
-                  path: 'sample-data',
-                  builder: (context, state) => const SampleDataPage(),
-                ),
+                if (!kReleaseMode)
+                  GoRoute(
+                    path: 'sample-data',
+                    builder: (context, state) => const SampleDataPage(),
+                  ),
                 GoRoute(
                   path: 'user-guide',
                   builder: (context, state) => const UserGuidePage(),

@@ -13,4 +13,15 @@ void main() {
     expect(find.text('1. 今日：处理跟进任务'), findsOneWidget);
     expect(find.text('7. 数据：导出和备份'), findsOneWidget);
   });
+
+  testWidgets('发布模式隐藏示例数据说明和入口', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: UserGuidePage(showSampleData: false)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('去导入示例数据'), findsNothing);
+    expect(find.textContaining('先导入示例数据'), findsNothing);
+    expect(find.text('1. 今日：处理跟进任务'), findsOneWidget);
+  });
 }

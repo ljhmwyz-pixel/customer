@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -5,7 +6,9 @@ import '../../theme/tokens.dart';
 
 /// 面向首次使用者的应用内试用说明。
 class UserGuidePage extends StatelessWidget {
-  const UserGuidePage({super.key});
+  const UserGuidePage({this.showSampleData = !kReleaseMode, super.key});
+
+  final bool showSampleData;
 
   @override
   Widget build(BuildContext context) {
@@ -20,20 +23,27 @@ class UserGuidePage extends StatelessWidget {
           AppTokens.s32,
         ),
         children: [
-          Text('三分钟开始试用', style: theme.textTheme.titleLarge),
+          Text(
+            showSampleData ? '三分钟开始试用' : '快速开始使用',
+            style: theme.textTheme.titleLarge,
+          ),
           const SizedBox(height: AppTokens.s8),
           Text(
-            '先导入示例数据熟悉流程，再录入自己的客户。数据保存在本机，无需登录。',
+            showSampleData
+                ? '先导入示例数据熟悉流程，再录入自己的客户。数据保存在本机，无需登录。'
+                : '从新建客户开始建立业务档案。数据保存在本机，无需登录。',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: AppTokens.s16),
-          FilledButton.icon(
-            onPressed: () => context.go('/settings/sample-data'),
-            icon: const Icon(Icons.science_outlined),
-            label: const Text('去导入示例数据'),
-          ),
+          if (showSampleData) ...[
+            const SizedBox(height: AppTokens.s16),
+            FilledButton.icon(
+              onPressed: () => context.go('/settings/sample-data'),
+              icon: const Icon(Icons.science_outlined),
+              label: const Text('去导入示例数据'),
+            ),
+          ],
           const SizedBox(height: AppTokens.s16),
           _GuideSection(
             icon: Icons.today_outlined,

@@ -1,11 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../theme/tokens.dart';
 
-/// 设置页。提醒、示例数据和导出入口集中在这里。
+/// 设置页。提醒、数据工具和导出入口集中在这里。
 class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
+  const SettingsPage({this.showSampleData = !kReleaseMode, super.key});
+
+  final bool showSampleData;
 
   @override
   Widget build(BuildContext context) {
@@ -65,18 +68,19 @@ class SettingsPage extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.go('/settings/user-guide'),
           ),
-          ListTile(
-            leading: const Icon(Icons.science_outlined),
-            title: const Text('示例数据'),
-            subtitle: Text(
-              '导入或整体撤销业务示例',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+          if (showSampleData)
+            ListTile(
+              leading: const Icon(Icons.science_outlined),
+              title: const Text('示例数据'),
+              subtitle: Text(
+                '导入或整体撤销业务示例',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.go('/settings/sample-data'),
             ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.go('/settings/sample-data'),
-          ),
           ListTile(
             leading: const Icon(Icons.table_view_outlined),
             title: const Text('Excel 导出'),
