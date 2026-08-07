@@ -8,6 +8,7 @@ import '../../theme/tokens.dart';
 import '../../widgets/app_dropdown_form_field.dart';
 import '../../widgets/app_form_fields.dart';
 import '../../widgets/sticky_form_scaffold.dart';
+import '../../widgets/unsaved_changes_guard.dart';
 import 'customer_providers.dart';
 import 'customer_widgets.dart';
 
@@ -37,9 +38,41 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
   DateTime _planAt = DateTime.now().add(const Duration(days: 1));
   bool _skipNextPlan = false;
   bool _saving = false;
+  bool _dirty = false;
+  bool _allowLeave = false;
+
+  @override
+  void initState() {
+    super.initState();
+    for (final controller in [
+      _feedbackController,
+      _nextActionController,
+      _contentController,
+      _pauseReasonController,
+    ]) {
+      controller.addListener(_markDirty);
+    }
+  }
+
+  void _markDirty() {
+    if (!_dirty && mounted) setState(() => _dirty = true);
+  }
+
+  void _change(VoidCallback update) {
+    _markDirty();
+    setState(update);
+  }
 
   @override
   void dispose() {
+    for (final controller in [
+      _feedbackController,
+      _nextActionController,
+      _contentController,
+      _pauseReasonController,
+    ]) {
+      controller.removeListener(_markDirty);
+    }
     _feedbackController.dispose();
     _nextActionController.dispose();
     _contentController.dispose();
@@ -67,7 +100,7 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
     final opportunity = opportunities.firstWhere(
       (item) => item.id == opportunityId,
     );
-    setState(() {
+    _change(() {
       _selectedOpportunityId = opportunity.id;
       _stage = OpportunityStage.fromDb(opportunity.stage);
     });
@@ -87,7 +120,7 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
       initialTime: TimeOfDay.fromDateTime(initial),
     );
     if (time == null || !mounted) return;
-    setState(() {
+    _change(() {
       final value = DateTime(
         date.year,
         date.month,
@@ -105,7 +138,7 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
 
   void _setPlanOffset(int days) {
     final now = DateTime.now();
-    setState(() {
+    _change(() {
       _planAt = DateTime(
         now.year,
         now.month,
@@ -152,7 +185,12 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
           context,
         ).showSnackBar(SnackBar(content: Text(result.warning!)));
       }
-      context.go('/customers/${widget.customerId}');
+      setState(() {
+        _allowLeave = true;
+        _dirty = false;
+      });
+      await WidgetsBinding.instance.endOfFrame;
+      if (mounted) context.go('/customers/${widget.customerId}');
     } on CustomerValidationException catch (error) {
       _showMessage(error.message);
     } catch (_) {
@@ -269,7 +307,7 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
                           ),
                         ],
                         onChanged: (value) =>
-                            setState(() => _selectedContactId = value),
+                            _change(() => _selectedContactId = value),
                       ),
                       const SizedBox(height: AppTokens.s12),
                     ],
@@ -286,7 +324,7 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
                           )
                           .toList(growable: false),
                       onChanged: (value) {
-                        if (value != null) setState(() => _attitude = value);
+                        if (value != null) _change(() => _attitude = value);
                       },
                     ),
                     const SizedBox(height: AppTokens.s12),
@@ -324,7 +362,7 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
                           .toList(),
                       onChanged: hasOpportunity
                           ? (stage) {
-                              if (stage != null) setState(() => _stage = stage);
+                              if (stage != null) _change(() => _stage = stage);
                             }
                           : null,
                       validator: (value) => value == null ? '请选择项目阶段' : null,
@@ -375,7 +413,7 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
                           )
                           .toList(),
                       onChanged: (value) {
-                        if (value != null) setState(() => _method = value);
+                        if (value != null) _change(() => _method = value);
                       },
                     ),
                     const SizedBox(height: AppTokens.s12),
@@ -409,7 +447,7 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
                       ],
                       selected: {_skipNextPlan},
                       onSelectionChanged: (selection) {
-                        setState(() => _skipNextPlan = selection.first);
+                        _change(() => _skipNextPlan = selection.first);
                       },
                     ),
                     if (!_skipNextPlan) ...[
@@ -477,7 +515,7 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
           );
         },
       ),
-    );
+    ).protectUnsavedChanges(hasUnsavedChanges: _dirty && !_allowLeave);
   }
 }
 

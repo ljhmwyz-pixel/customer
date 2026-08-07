@@ -7,6 +7,7 @@ import '../../models/enums.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/app_dropdown_form_field.dart';
 import '../../widgets/app_form_fields.dart';
+import '../../widgets/unsaved_changes_guard.dart';
 import '../customers/customer_providers.dart';
 import '../customers/customer_widgets.dart';
 import 'opportunity_providers.dart';
@@ -44,10 +45,24 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
   String? _investmentAdvice;
   bool _loading = true;
   bool _saving = false;
+  bool _dirty = false;
+  bool _trackingChanges = false;
+  bool _allowLeave = false;
   String? _loadError;
 
-  TextEditingController _controller(String key) =>
-      _controllers.putIfAbsent(key, TextEditingController.new);
+  TextEditingController _controller(String key) => _controllers.putIfAbsent(
+    key,
+    () => TextEditingController()..addListener(_markDirty),
+  );
+
+  void _markDirty() {
+    if (_trackingChanges && !_dirty && mounted) setState(() => _dirty = true);
+  }
+
+  void _change(VoidCallback update) {
+    _markDirty();
+    setState(update);
+  }
 
   @override
   void initState() {
@@ -134,6 +149,8 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
     setState(() {
       _loading = false;
       _loadError = error;
+      _trackingChanges = true;
+      _dirty = false;
     });
   }
 
@@ -218,7 +235,14 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
         await service.updateOpportunity(widget.customerId, id, draft);
       }
       ref.read(customerRevisionProvider.notifier).refresh();
-      if (mounted) context.go('/customers/${widget.customerId}');
+      if (mounted) {
+        setState(() {
+          _allowLeave = true;
+          _dirty = false;
+        });
+        await WidgetsBinding.instance.endOfFrame;
+        if (mounted) context.go('/customers/${widget.customerId}');
+      }
     } on OpportunityValidationException catch (error) {
       _message(error.message);
     } catch (_) {
@@ -242,7 +266,7 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
       lastDate: DateTime.now().add(const Duration(days: 3650)),
     );
     if (value == null || !mounted) return;
-    setState(() {
+    _change(() {
       if (closeDate) {
         _expectedCloseAt = value;
       } else {
@@ -278,7 +302,7 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
         : _loadError == null
         ? _form()
         : Center(child: Text(_loadError!)),
-  );
+  ).protectUnsavedChanges(hasUnsavedChanges: _dirty && !_allowLeave);
 
   Widget _form() => Form(
     key: _formKey,
@@ -317,7 +341,7 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
                   ),
                 )
                 .toList(),
-            onChanged: (value) => setState(() => _stage = value ?? _stage),
+            onChanged: (value) => _change(() => _stage = value ?? _stage),
           ),
         ),
         Padding(
@@ -338,7 +362,7 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
                   ),
                 )
                 .toList(),
-            onChanged: (value) => setState(() => _status = value ?? _status),
+            onChanged: (value) => _change(() => _status = value ?? _status),
           ),
         ),
         Padding(
@@ -354,7 +378,7 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
             clearKey: const ValueKey('opportunity-expected-close-at-clear'),
             onClear: _expectedCloseAt == null
                 ? null
-                : () => setState(() => _expectedCloseAt = null),
+                : () => _change(() => _expectedCloseAt = null),
           ),
         ),
         _field('latestFeedback', '最新反馈', lines: 2),
@@ -373,7 +397,7 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
             clearKey: const ValueKey('opportunity-next-follow-at-clear'),
             onClear: _nextFollowAt == null
                 ? null
-                : () => setState(() => _nextFollowAt = null),
+                : () => _change(() => _nextFollowAt = null),
           ),
         ),
         ExpansionTile(
@@ -444,19 +468,19 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
               contentPadding: EdgeInsets.zero,
               title: const Text('需要样品'),
               value: _needsSample,
-              onChanged: (v) => setState(() => _needsSample = v),
+              onChanged: (v) => _change(() => _needsSample = v),
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('需要注册'),
               value: _needsRegistration,
-              onChanged: (v) => setState(() => _needsRegistration = v),
+              onChanged: (v) => _change(() => _needsRegistration = v),
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('需要授权'),
               value: _needsAuthorization,
-              onChanged: (v) => setState(() => _needsAuthorization = v),
+              onChanged: (v) => _change(() => _needsAuthorization = v),
             ),
           ],
         ),
@@ -537,7 +561,7 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
               ),
             ),
           ],
-          onChanged: (next) => setState(() => onChanged(next)),
+          onChanged: (next) => _change(() => onChanged(next)),
         ),
       ),
     );
@@ -567,7 +591,7 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
           const SizedBox(height: AppTokens.s8),
           FilledButton.tonalIcon(
             key: const ValueKey('apply-supplier-recommendation'),
-            onPressed: () => setState(() {
+            onPressed: () => _change(() {
               _entryPoint = recommendation.entryPoint;
               _investmentAdvice = recommendation.investmentAdvice;
             }),

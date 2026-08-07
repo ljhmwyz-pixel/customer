@@ -276,6 +276,15 @@ void main() {
         findsOneWidget,
       );
       if (owner.type == AttachmentOwnerType.sample) {
+        expect(
+          tester
+              .widget<TextField>(
+                find.byKey(const ValueKey('sample-milestone-model')),
+              )
+              .readOnly,
+          isTrue,
+        );
+        expect(find.textContaining('当前页面只推进样品节点'), findsOneWidget);
         await tester.enterText(
           find.byKey(const ValueKey('sample-milestone-result')),
           '附件往返前的输入',
@@ -294,6 +303,19 @@ void main() {
         router.pop();
         await tester.pumpAndSettle();
         expect(find.text('附件往返前的输入'), findsOneWidget);
+        await tester.scrollUntilVisible(
+          find.byKey(const ValueKey('sample-milestone-quantity')),
+          250,
+          scrollable: find.byType(Scrollable).first,
+        );
+        expect(
+          tester
+              .widget<TextField>(
+                find.byKey(const ValueKey('sample-milestone-quantity')),
+              )
+              .readOnly,
+          isTrue,
+        );
       }
 
       await tester.pumpWidget(const SizedBox.shrink());
@@ -340,6 +362,27 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(
+      tester
+          .widget<TextField>(
+            find.byKey(const ValueKey('sample-milestone-model')),
+          )
+          .readOnly,
+      isFalse,
+    );
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('sample-milestone-quantity')),
+      250,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(
+      tester
+          .widget<TextField>(
+            find.byKey(const ValueKey('sample-milestone-quantity')),
+          )
+          .readOnly,
+      isFalse,
+    );
     expect(find.textContaining('附件（'), findsNothing);
     expect(find.text('删除记录'), findsNothing);
   });

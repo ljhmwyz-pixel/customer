@@ -24,6 +24,99 @@ import 'package:go_router/go_router.dart';
 import '../../data/helpers.dart';
 
 void main() {
+  testWidgets('核心表单未保存修改保护：订单、跟进和项目', (tester) async {
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '退出保护客户');
+    final opportunityId = await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '退出保护项目',
+    );
+    final orderId = await db.orderDao.insertOrder(
+      customerId: customerId,
+      opportunityId: opportunityId,
+      orderNo: 'ORDER-GUARD',
+      orderedAt: DateTime(2026, 8, 7),
+      amountCents: 10000,
+    );
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: CustomerDetailPage(customerId: customerId),
+    );
+    addTearDown(() => harness.dispose(tester));
+    await harness.pump(tester);
+
+    Future<void> expectDirtyGuard(String location, Key fieldKey) async {
+      harness.router.push(location);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(fieldKey), '用户修改');
+      await tester.pump();
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      expect(find.text('放弃未保存的修改？'), findsOneWidget);
+      await tester.tap(find.text('放弃修改'));
+      await tester.pumpAndSettle();
+    }
+
+    await expectDirtyGuard(
+      '/customers/$customerId/orders/new',
+      const ValueKey('order-no'),
+    );
+    await expectDirtyGuard(
+      '/customers/$customerId/followups/new',
+      const ValueKey('followup-feedback'),
+    );
+    await expectDirtyGuard(
+      '/customers/$customerId/opportunities/new',
+      const ValueKey('opportunity-name'),
+    );
+
+    harness.router.push('/customers/$customerId/orders/$orderId/edit');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.text('放弃未保存的修改？'), findsNothing);
+
+    Future<void> discardCurrentForm() async {
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      expect(find.text('放弃未保存的修改？'), findsOneWidget);
+      await tester.tap(find.text('放弃修改'));
+      await tester.pumpAndSettle();
+    }
+
+    harness.router.push('/customers/$customerId/orders/new');
+    await tester.pumpAndSettle();
+    await _scrollOrderFieldIntoView(tester, 'order-payment-status');
+    await _selectDropdownValue<PaymentStatus>(
+      tester,
+      'order-payment-status',
+      PaymentStatus.partial,
+    );
+    await discardCurrentForm();
+
+    harness.router.push('/customers/$customerId/followups/new');
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('暂不跟进'),
+      250,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('暂不跟进'));
+    await tester.pump();
+    await discardCurrentForm();
+
+    harness.router.push('/customers/$customerId/opportunities/new');
+    await tester.pumpAndSettle();
+    await _selectDropdownValue<OpportunityStage>(
+      tester,
+      'opportunity-stage',
+      OpportunityStage.contactEstablished,
+    );
+    await discardCurrentForm();
+  });
+
   test('customer advanced filter state', () {
     final container = ProviderContainer();
     addTearDown(container.dispose);

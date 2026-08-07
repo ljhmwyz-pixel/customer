@@ -8,6 +8,7 @@ import '../../models/enums.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/app_dropdown_form_field.dart';
 import '../../widgets/sticky_form_scaffold.dart';
+import '../../widgets/unsaved_changes_guard.dart';
 import '../customers/customer_providers.dart';
 import '../customers/customer_widgets.dart';
 import 'order_providers.dart';
@@ -79,18 +80,41 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
   String? _loadError;
   bool _loading = true;
   bool _saving = false;
+  bool _dirty = false;
+  bool _trackingChanges = false;
+  bool _allowLeave = false;
 
   bool get _isEditing => widget.orderId != null;
 
   @override
   void initState() {
     super.initState();
+    for (final controller in [
+      _orderNoController,
+      _piPoNoController,
+      _amountController,
+      _descriptionController,
+    ]) {
+      controller.addListener(_markDirty);
+    }
     _currencyController.addListener(_currencyChanged);
     _dateController.text = formatDateTime(_orderedAt);
     _load();
   }
 
-  void _currencyChanged() => setState(() {});
+  void _markDirty() {
+    if (_trackingChanges && !_dirty && mounted) setState(() => _dirty = true);
+  }
+
+  void _change(VoidCallback update) {
+    _markDirty();
+    setState(update);
+  }
+
+  void _currencyChanged() {
+    _markDirty();
+    setState(() {});
+  }
 
   Future<void> _load() async {
     try {
@@ -168,6 +192,8 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
     setState(() {
       _loading = false;
       _loadError = error;
+      _trackingChanges = true;
+      _dirty = false;
     });
   }
 
@@ -181,6 +207,14 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
 
   @override
   void dispose() {
+    for (final controller in [
+      _orderNoController,
+      _piPoNoController,
+      _amountController,
+      _descriptionController,
+    ]) {
+      controller.removeListener(_markDirty);
+    }
     _currencyController.removeListener(_currencyChanged);
     _orderNoController.dispose();
     _piPoNoController.dispose();
@@ -204,7 +238,7 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
       lastDate: DateTime.now().add(const Duration(days: 3650)),
     );
     if (date == null || !mounted) return;
-    setState(() {
+    _change(() {
       _orderedAt = DateTime(
         date.year,
         date.month,
@@ -271,7 +305,14 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
         await service.updateOrder(widget.customerId, orderId, draft);
       }
       ref.read(customerRevisionProvider.notifier).refresh();
-      if (mounted) context.go('/customers/${widget.customerId}');
+      if (mounted) {
+        setState(() {
+          _allowLeave = true;
+          _dirty = false;
+        });
+        await WidgetsBinding.instance.endOfFrame;
+        if (mounted) context.go('/customers/${widget.customerId}');
+      }
     } on OrderValidationException catch (error) {
       _showMessage(error.message);
     } catch (_) {
@@ -299,7 +340,7 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
       submitLabel: '保存订单',
       submitKey: const ValueKey('save-order'),
     ),
-  );
+  ).protectUnsavedChanges(hasUnsavedChanges: _dirty && !_allowLeave);
 
   Widget _buildBody() {
     if (_loading) return const Center(child: CircularProgressIndicator());
@@ -346,7 +387,7 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
                   .toList(growable: false),
               onChanged: _saving
                   ? null
-                  : (value) => setState(() => _selectedOpportunityId = value),
+                  : (value) => _change(() => _selectedOpportunityId = value),
               validator: (value) => value == null ? '请选择关联项目' : null,
             ),
           const SizedBox(height: AppTokens.s12),
@@ -416,7 +457,7 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
             onChanged: _saving
                 ? null
                 : (value) {
-                    if (value != null) setState(() => _paymentStatus = value);
+                    if (value != null) _change(() => _paymentStatus = value);
                   },
           ),
           const SizedBox(height: AppTokens.s12),
@@ -440,7 +481,7 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
                 ? null
                 : (value) {
                     if (value != null) {
-                      setState(() => _productionStatus = value);
+                      _change(() => _productionStatus = value);
                     }
                   },
           ),
@@ -464,7 +505,7 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
             onChanged: _saving
                 ? null
                 : (value) {
-                    if (value != null) setState(() => _shippingStatus = value);
+                    if (value != null) _change(() => _shippingStatus = value);
                   },
           ),
           const SizedBox(height: AppTokens.s12),
@@ -473,7 +514,7 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
             label: '预计到货日期',
             controller: _estimatedArrivalController,
             value: _estimatedArrivalAt,
-            onChanged: (value) => setState(() {
+            onChanged: (value) => _change(() {
               _estimatedArrivalAt = value;
               _estimatedArrivalController.text = _formatOptionalDate(value);
             }),
@@ -498,7 +539,7 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
             onChanged: _saving
                 ? null
                 : (value) {
-                    if (value != null) setState(() => _orderResult = value);
+                    if (value != null) _change(() => _orderResult = value);
                   },
           ),
           const SizedBox(height: AppTokens.s12),
@@ -507,7 +548,7 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
             label: '预计复购日期',
             controller: _estimatedRepurchaseController,
             value: _estimatedRepurchaseAt,
-            onChanged: (value) => setState(() {
+            onChanged: (value) => _change(() {
               _estimatedRepurchaseAt = value;
               _estimatedRepurchaseController.text = _formatOptionalDate(value);
             }),

@@ -173,9 +173,19 @@ class _SampleFormPageState extends ConsumerState<SampleFormPage> {
                 }
               },
             ),
+          if (editing) ...[
+            const ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.lock_outline),
+              title: Text('样品信息已锁定'),
+              subtitle: Text('当前页面只推进样品节点；型号或数量变化请新增样品记录。'),
+            ),
+            const SizedBox(height: AppTokens.s8),
+          ],
           TextField(
             key: const ValueKey('sample-milestone-model'),
             controller: model,
+            readOnly: editing,
             decoration: const InputDecoration(labelText: '样品型号'),
           ),
           const SizedBox(height: AppTokens.s12),
@@ -214,6 +224,7 @@ class _SampleFormPageState extends ConsumerState<SampleFormPage> {
           TextField(
             key: const ValueKey('sample-milestone-quantity'),
             controller: quantity,
+            readOnly: editing,
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(labelText: '数量'),
           ),
