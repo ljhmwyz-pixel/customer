@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -45,12 +46,22 @@ class _CustomerContactImportPageState
             ),
           ),
           const SizedBox(height: AppTokens.s16),
+          const _StepLabel(
+            number: '第 1 步',
+            title: '下载并填写模板',
+            detail: '保留第一行表头；客户名称必填，联系人可留空。',
+          ),
           OutlinedButton.icon(
             onPressed: _busy ? null : _shareTemplate,
             icon: const Icon(Icons.download_outlined),
             label: const Text('下载导入模板'),
           ),
           const SizedBox(height: AppTokens.s8),
+          const _StepLabel(
+            number: '第 2 步',
+            title: '选择文件并预览',
+            detail: '支持 UTF-8 CSV 或 Excel 第一张工作表。',
+          ),
           FilledButton.icon(
             onPressed: _busy ? null : _pick,
             icon: _busy
@@ -93,6 +104,12 @@ class _CustomerContactImportPageState
               '导入完成：新增客户 ${result.createdCustomers}，更新客户 ${result.updatedCustomers}，新增联系人 ${result.createdContacts}，更新联系人 ${result.updatedContacts}',
               style: TextStyle(color: theme.colorScheme.primary),
             ),
+            const SizedBox(height: AppTokens.s8),
+            OutlinedButton.icon(
+              onPressed: () => context.go('/customers'),
+              icon: const Icon(Icons.people_outline),
+              label: const Text('查看客户列表'),
+            ),
           ],
           if (_error case final error?) ...[
             const SizedBox(height: AppTokens.s16),
@@ -114,6 +131,10 @@ class _CustomerContactImportPageState
       if (picked.status != AttachmentSourceStatus.selected ||
           picked.file == null) {
         throw const FormatException('无法读取所选文件');
+      }
+      final name = picked.file!.originalName.toLowerCase();
+      if (!name.endsWith('.csv') && !name.endsWith('.xlsx')) {
+        throw const FormatException('仅支持 .csv 或 .xlsx 文件');
       }
       final bytes = await File(picked.file!.sourcePath).readAsBytes();
       final preview = ref
@@ -197,4 +218,37 @@ class _CustomerContactImportPageState
       if (mounted) setState(() => _busy = false);
     }
   }
+}
+
+class _StepLabel extends StatelessWidget {
+  const _StepLabel({
+    required this.number,
+    required this.title,
+    required this.detail,
+  });
+
+  final String number;
+  final String title;
+  final String detail;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: AppTokens.s8),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(number, style: Theme.of(context).textTheme.labelLarge),
+        const SizedBox(width: AppTokens.s8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: Theme.of(context).textTheme.titleSmall),
+              Text(detail, style: Theme.of(context).textTheme.bodySmall),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 }

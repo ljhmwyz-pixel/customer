@@ -8,6 +8,21 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../data/helpers.dart';
 
 void main() {
+  testWidgets('Today 首屏提供高频客户操作', (tester) async {
+    final db = await openTestDb();
+    addTearDown(db.close);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [databaseProvider.overrideWithValue(db)],
+        child: MaterialApp(home: HomePage()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('新建客户'), findsOneWidget);
+    expect(find.text('客户列表'), findsOneWidget);
+    expect(find.text('导入客户'), findsOneWidget);
+  });
+
   testWidgets('Today 页面展示完整任务上下文并排除未来任务', (tester) async {
     final db = await openTestDb();
     addTearDown(db.close);

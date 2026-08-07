@@ -18,6 +18,8 @@ void main() {
     );
     expect(find.text('下载导入模板'), findsOneWidget);
     expect(find.text('选择 Excel / CSV 文件'), findsOneWidget);
+    expect(find.text('第 1 步'), findsOneWidget);
+    expect(find.text('第 2 步'), findsOneWidget);
     expect(find.textContaining('导入前建议先在'), findsOneWidget);
   });
 }

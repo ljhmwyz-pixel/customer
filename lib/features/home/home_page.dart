@@ -49,6 +49,7 @@ class _PlanList extends StatelessWidget {
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
+            const SliverToBoxAdapter(child: _QuickActions()),
             SliverFillRemaining(
               hasScrollBody: false,
               child: EmptyState(
@@ -75,6 +76,8 @@ class _PlanList extends StatelessWidget {
           AppTokens.s24,
         ),
         children: [
+          const _QuickActions(),
+          const SizedBox(height: AppTokens.s16),
           Text(
             '逾期 ${overdue.length} · 今天 ${today.length}',
             style: Theme.of(context).textTheme.bodyMedium,
@@ -105,6 +108,41 @@ class _PlanList extends StatelessWidget {
       const SizedBox(height: AppTokens.s8),
       for (final item in items) _PlanTile(item: item, color: color),
     ],
+  );
+}
+
+class _QuickActions extends StatelessWidget {
+  const _QuickActions();
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(
+      AppTokens.s16,
+      AppTokens.s12,
+      AppTokens.s16,
+      0,
+    ),
+    child: Wrap(
+      spacing: AppTokens.s8,
+      runSpacing: AppTokens.s8,
+      children: [
+        OutlinedButton.icon(
+          onPressed: () => context.go('/customers/new'),
+          icon: const Icon(Icons.person_add_alt_1_outlined),
+          label: const Text('新建客户'),
+        ),
+        OutlinedButton.icon(
+          onPressed: () => context.go('/customers'),
+          icon: const Icon(Icons.people_outline),
+          label: const Text('客户列表'),
+        ),
+        OutlinedButton.icon(
+          onPressed: () => context.go('/settings/customer-contact-import'),
+          icon: const Icon(Icons.upload_file_outlined),
+          label: const Text('导入客户'),
+        ),
+      ],
+    ),
   );
 }
 
