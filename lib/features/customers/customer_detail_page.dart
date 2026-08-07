@@ -36,229 +36,308 @@ class CustomerDetailPage extends ConsumerWidget {
     }
 
     final detail = ref.watch(customerDetailProvider(id));
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('客户详情'),
-        actions: [
-          IconButton(
-            tooltip: '编辑客户',
-            onPressed: () => context.push('/customers/$id/edit'),
-            icon: const Icon(Icons.edit_outlined),
-          ),
-          PopupMenuButton<_CustomerAction>(
-            tooltip: '更多操作',
-            onSelected: (action) {
-              if (action == _CustomerAction.delete) {
-                _deleteCustomer(context, ref, id);
-              }
-            },
-            itemBuilder: (context) => const [
-              PopupMenuItem(
-                value: _CustomerAction.delete,
-                child: ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(Icons.delete_outline),
-                  title: Text('删除客户'),
-                ),
-              ),
+    return DefaultTabController(
+      length: 4,
+      initialIndex: highlightedPlanId != null || invalidPlanId ? 3 : 0,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('客户详情'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: '概览'),
+              Tab(text: '项目'),
+              Tab(text: '业务'),
+              Tab(text: '动态'),
             ],
           ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/customers/$id/followups/new'),
-        icon: const Icon(Icons.add_comment_outlined),
-        label: const Text('记录跟进'),
-      ),
-      body: detail.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => CustomerAsyncError(
-          onRetry: () => ref.invalidate(customerDetailProvider(id)),
-        ),
-        data: (value) {
-          if (value == null) return const _MissingCustomerBody();
-          final hasHighlightedPlan =
-              highlightedPlanId != null &&
-              value.plans.any((plan) => plan.id == highlightedPlanId);
-          final showPlanWarning =
-              invalidPlanId ||
-              (highlightedPlanId != null && !hasHighlightedPlan);
-          return RefreshIndicator(
-            onRefresh: () async {
-              ref.read(customerRevisionProvider.notifier).refresh();
-              await ref.read(customerDetailProvider(id).future);
-            },
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(
-                AppTokens.s16,
-                AppTokens.s8,
-                AppTokens.s16,
-                AppTokens.s32 + AppTokens.minTouchTarget,
-              ),
-              children: [
-                if (showPlanWarning) ...[
-                  const _InlineMessage(
-                    icon: Icons.info_outline,
-                    message: '指定的跟进计划不存在',
-                  ),
-                  const SizedBox(height: AppTokens.s16),
-                ],
-                _CustomerOverview(
-                  customer: value.customer,
-                  tags: value.tags,
-                  completedAmountCents: value.completedAmountCents,
-                  onCall: () => _call(context, ref, value.customer.phone),
-                  quickActions: _CustomerQuickActions(
-                    onAddContact: () => _editContact(context, ref, id),
-                    onAddOpportunity: () =>
-                        context.push('/customers/$id/opportunities/new'),
-                    onAddBusiness: () => _showBusinessActions(
-                      context,
-                      customerId: id,
-                      opportunities: value.opportunities,
-                    ),
-                    onAddOrder: () => context.push('/customers/$id/orders/new'),
+          actions: [
+            IconButton(
+              tooltip: '编辑客户',
+              onPressed: () => context.push('/customers/$id/edit'),
+              icon: const Icon(Icons.edit_outlined),
+            ),
+            PopupMenuButton<_CustomerAction>(
+              tooltip: '更多操作',
+              onSelected: (action) {
+                if (action == _CustomerAction.delete) {
+                  _deleteCustomer(context, ref, id);
+                }
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem(
+                  value: _CustomerAction.delete,
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.delete_outline),
+                    title: Text('删除客户'),
                   ),
                 ),
-                const SizedBox(height: AppTokens.s24),
-                _SectionHeader(
-                  title: '联系人',
-                  count: value.contacts.length,
-                  actions: [
-                    IconButton(
-                      tooltip: '从通讯录导入',
-                      onPressed: () => _importContact(context, ref, id),
-                      icon: const Icon(Icons.contact_page_outlined),
-                    ),
-                    IconButton(
-                      tooltip: '新增联系人',
-                      onPressed: () => _editContact(context, ref, id),
-                      icon: const Icon(Icons.person_add_outlined),
-                    ),
-                  ],
-                ),
-                if (value.contacts.isEmpty)
-                  const _SectionEmpty(message: '暂无联系人')
-                else
-                  ...value.contacts.map(
-                    (contact) => _ContactTile(
-                      contact: contact,
-                      onCall: () => _call(context, ref, contact.phone),
-                      onEdit: () =>
-                          _editContact(context, ref, id, contact: contact),
-                      onDelete: () => _deleteContact(context, ref, contact),
-                    ),
-                  ),
-                const SizedBox(height: AppTokens.s24),
-                _SectionHeader(
-                  title: '项目',
-                  count: value.opportunities.length,
-                  actions: [
-                    IconButton(
-                      tooltip: '新增项目',
-                      onPressed: () =>
-                          context.push('/customers/$id/opportunities/new'),
-                      icon: const Icon(Icons.add_business_outlined),
-                    ),
-                  ],
-                ),
-                if (value.opportunities.isEmpty)
-                  const _SectionEmpty(message: '暂无项目')
-                else
-                  ...value.opportunities.map(
-                    (opportunity) => _OpportunityTile(
-                      customerId: id,
-                      opportunity: opportunity,
-                      businessRecords:
-                          value.businessByOpportunity[opportunity.id] ??
-                          const OpportunityBusinessRecords(
-                            quotes: [],
-                            samples: [],
-                            registrations: [],
-                            tenders: [],
-                          ),
-                      onEdit: () => context.push(
-                        '/customers/$id/opportunities/${opportunity.id}/edit',
-                      ),
-                      onDelete: () =>
-                          _deleteOpportunity(context, ref, id, opportunity),
-                    ),
-                  ),
-                const SizedBox(height: AppTokens.s24),
-                _SectionHeader(
-                  title: '订单',
-                  count: value.orders.length,
-                  actions: [
-                    IconButton(
-                      tooltip: '新增订单',
-                      onPressed: () =>
-                          context.push('/customers/$id/orders/new'),
-                      icon: const Icon(Icons.add_shopping_cart_outlined),
-                    ),
-                  ],
-                ),
-                if (value.orders.isEmpty)
-                  const _SectionEmpty(message: '暂无订单')
-                else
-                  ...value.orders.map((order) {
-                    final status = OrderStatus.fromDb(order.status);
-                    final nextStatus = status.nextStatus;
-                    final canCancel =
-                        status != OrderStatus.completed &&
-                        status != OrderStatus.cancelled;
-                    return _OrderTile(
-                      order: order,
-                      status: status,
-                      attachmentRoute: AttachmentOwnerRoute(
-                        type: AttachmentOwnerType.order,
-                        id: order.id,
-                      ),
-                      onEdit: () => context.push(
-                        '/customers/$id/orders/${order.id}/edit',
-                      ),
-                      onAdvance: nextStatus == null
-                          ? null
-                          : () => _transitionOrder(
-                              context,
-                              ref,
-                              id,
-                              order,
-                              nextStatus,
-                            ),
-                      onCancel: canCancel
-                          ? () => _cancelOrder(context, ref, id, order)
-                          : null,
-                      onDelete: () => _deleteOrder(context, ref, id, order),
-                    );
-                  }),
-                const SizedBox(height: AppTokens.s24),
-                _SectionHeader(title: '跟进计划', count: value.plans.length),
-                if (value.plans.isEmpty)
-                  const _SectionEmpty(message: '暂无跟进计划')
-                else
-                  ...value.plans.map(
-                    (plan) => _PlanTile(
-                      plan: plan,
-                      highlighted:
-                          hasHighlightedPlan && plan.id == highlightedPlanId,
-                    ),
-                  ),
-                const SizedBox(height: AppTokens.s24),
-                _SectionHeader(title: '跟进记录', count: value.followups.length),
-                if (value.followups.isEmpty)
-                  const _SectionEmpty(message: '暂无跟进记录')
-                else
-                  _FollowupTimeline(
-                    followups: value.followups,
-                    contacts: value.contacts,
-                  ),
               ],
             ),
-          );
-        },
+          ],
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () => context.push('/customers/$id/followups/new'),
+          icon: const Icon(Icons.add_comment_outlined),
+          label: const Text('记录跟进'),
+        ),
+        body: detail.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (_, _) => CustomerAsyncError(
+            onRetry: () => ref.invalidate(customerDetailProvider(id)),
+          ),
+          data: (value) {
+            if (value == null) return const _MissingCustomerBody();
+            final hasHighlightedPlan =
+                highlightedPlanId != null &&
+                value.plans.any((plan) => plan.id == highlightedPlanId);
+            final showPlanWarning =
+                invalidPlanId ||
+                (highlightedPlanId != null && !hasHighlightedPlan);
+            return TabBarView(
+              children: [
+                _detailList(ref, id, [
+                  if (showPlanWarning) ...[
+                    const _InlineMessage(
+                      icon: Icons.info_outline,
+                      message: '指定的跟进计划不存在',
+                    ),
+                    const SizedBox(height: AppTokens.s16),
+                  ],
+                  _CustomerOverview(
+                    customer: value.customer,
+                    tags: value.tags,
+                    completedAmountCents: value.completedAmountCents,
+                    onCall: () => _call(context, ref, value.customer.phone),
+                    quickActions: _CustomerQuickActions(
+                      onAddContact: () => _editContact(context, ref, id),
+                      onAddOpportunity: () =>
+                          context.push('/customers/$id/opportunities/new'),
+                      onAddBusiness: () => _showBusinessActions(
+                        context,
+                        customerId: id,
+                        opportunities: value.opportunities,
+                      ),
+                      onAddOrder: () =>
+                          context.push('/customers/$id/orders/new'),
+                    ),
+                  ),
+                  const SizedBox(height: AppTokens.s24),
+                  _SectionHeader(
+                    title: '联系人',
+                    count: value.contacts.length,
+                    actions: [
+                      IconButton(
+                        tooltip: '从通讯录导入',
+                        onPressed: () => _importContact(context, ref, id),
+                        icon: const Icon(Icons.contact_page_outlined),
+                      ),
+                      IconButton(
+                        tooltip: '新增联系人',
+                        onPressed: () => _editContact(context, ref, id),
+                        icon: const Icon(Icons.person_add_outlined),
+                      ),
+                    ],
+                  ),
+                  if (value.contacts.isEmpty)
+                    const _SectionEmpty(message: '暂无联系人')
+                  else
+                    ...value.contacts.map(
+                      (contact) => _ContactTile(
+                        contact: contact,
+                        onCall: () => _call(context, ref, contact.phone),
+                        onEdit: () =>
+                            _editContact(context, ref, id, contact: contact),
+                        onDelete: () => _deleteContact(context, ref, contact),
+                      ),
+                    ),
+                ]),
+                _detailList(ref, id, [
+                  _SectionHeader(
+                    title: '项目',
+                    count: value.opportunities.length,
+                    actions: [
+                      IconButton(
+                        tooltip: '新增项目',
+                        onPressed: () =>
+                            context.push('/customers/$id/opportunities/new'),
+                        icon: const Icon(Icons.add_business_outlined),
+                      ),
+                    ],
+                  ),
+                  if (value.opportunities.isEmpty)
+                    const _SectionEmpty(message: '暂无项目')
+                  else
+                    ...value.opportunities.map(
+                      (opportunity) => _OpportunityTile(
+                        customerId: id,
+                        opportunity: opportunity,
+                        businessRecords:
+                            value.businessByOpportunity[opportunity.id] ??
+                            const OpportunityBusinessRecords(
+                              quotes: [],
+                              samples: [],
+                              registrations: [],
+                              tenders: [],
+                            ),
+                        showBusinessRecords: false,
+                        onEdit: () => context.push(
+                          '/customers/$id/opportunities/${opportunity.id}/edit',
+                        ),
+                        onDelete: () =>
+                            _deleteOpportunity(context, ref, id, opportunity),
+                      ),
+                    ),
+                ]),
+                _detailList(ref, id, [
+                  _SectionHeader(
+                    title: '业务记录',
+                    count: value.businessByOpportunity.values.fold<int>(
+                      0,
+                      (total, records) =>
+                          total +
+                          records.quotes.length +
+                          records.samples.length +
+                          records.registrations.length +
+                          records.tenders.length,
+                    ),
+                    actions: [
+                      IconButton(
+                        tooltip: '新增业务',
+                        onPressed: () => _showBusinessActions(
+                          context,
+                          customerId: id,
+                          opportunities: value.opportunities,
+                        ),
+                        icon: const Icon(Icons.add_circle_outline),
+                      ),
+                    ],
+                  ),
+                  if (value.opportunities.isEmpty)
+                    const _SectionEmpty(message: '请先创建项目再添加业务记录')
+                  else
+                    ...value.opportunities.map(
+                      (opportunity) => _OpportunityTile(
+                        customerId: id,
+                        opportunity: opportunity,
+                        businessRecords:
+                            value.businessByOpportunity[opportunity.id] ??
+                            const OpportunityBusinessRecords(
+                              quotes: [],
+                              samples: [],
+                              registrations: [],
+                              tenders: [],
+                            ),
+                        showProjectActions: false,
+                        onEdit: () => context.push(
+                          '/customers/$id/opportunities/${opportunity.id}/edit',
+                        ),
+                        onDelete: () =>
+                            _deleteOpportunity(context, ref, id, opportunity),
+                      ),
+                    ),
+                  const SizedBox(height: AppTokens.s24),
+                  _SectionHeader(
+                    title: '订单',
+                    count: value.orders.length,
+                    actions: [
+                      IconButton(
+                        tooltip: '新增订单',
+                        onPressed: () =>
+                            context.push('/customers/$id/orders/new'),
+                        icon: const Icon(Icons.add_shopping_cart_outlined),
+                      ),
+                    ],
+                  ),
+                  if (value.orders.isEmpty)
+                    const _SectionEmpty(message: '暂无订单')
+                  else
+                    ...value.orders.map((order) {
+                      final status = OrderStatus.fromDb(order.status);
+                      final nextStatus = status.nextStatus;
+                      final canCancel =
+                          status != OrderStatus.completed &&
+                          status != OrderStatus.cancelled;
+                      return _OrderTile(
+                        order: order,
+                        status: status,
+                        attachmentRoute: AttachmentOwnerRoute(
+                          type: AttachmentOwnerType.order,
+                          id: order.id,
+                        ),
+                        onEdit: () => context.push(
+                          '/customers/$id/orders/${order.id}/edit',
+                        ),
+                        onAdvance: nextStatus == null
+                            ? null
+                            : () => _transitionOrder(
+                                context,
+                                ref,
+                                id,
+                                order,
+                                nextStatus,
+                              ),
+                        onCancel: canCancel
+                            ? () => _cancelOrder(context, ref, id, order)
+                            : null,
+                        onDelete: () => _deleteOrder(context, ref, id, order),
+                      );
+                    }),
+                ]),
+                _detailList(ref, id, [
+                  if (showPlanWarning) ...[
+                    const _InlineMessage(
+                      icon: Icons.info_outline,
+                      message: '指定的跟进计划不存在',
+                    ),
+                    const SizedBox(height: AppTokens.s16),
+                  ],
+                  _SectionHeader(title: '跟进计划', count: value.plans.length),
+                  if (value.plans.isEmpty)
+                    const _SectionEmpty(message: '暂无跟进计划')
+                  else
+                    ...value.plans.map(
+                      (plan) => _PlanTile(
+                        plan: plan,
+                        highlighted:
+                            hasHighlightedPlan && plan.id == highlightedPlanId,
+                      ),
+                    ),
+                  const SizedBox(height: AppTokens.s24),
+                  _SectionHeader(title: '跟进记录', count: value.followups.length),
+                  if (value.followups.isEmpty)
+                    const _SectionEmpty(message: '暂无跟进记录')
+                  else
+                    _FollowupTimeline(
+                      followups: value.followups,
+                      contacts: value.contacts,
+                    ),
+                ]),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
+
+  Widget _detailList(WidgetRef ref, int customerId, List<Widget> children) =>
+      RefreshIndicator(
+        onRefresh: () async {
+          ref.read(customerRevisionProvider.notifier).refresh();
+          await ref.read(customerDetailProvider(customerId).future);
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(
+            AppTokens.s16,
+            AppTokens.s8,
+            AppTokens.s16,
+            AppTokens.s32 + AppTokens.minTouchTarget,
+          ),
+          children: children,
+        ),
+      );
 
   Future<void> _call(BuildContext context, WidgetRef ref, String? phone) async {
     try {
@@ -1019,6 +1098,8 @@ class _OpportunityTile extends StatelessWidget {
     required this.businessRecords,
     required this.onEdit,
     required this.onDelete,
+    this.showBusinessRecords = true,
+    this.showProjectActions = true,
   });
 
   final OpportunityRow opportunity;
@@ -1026,6 +1107,8 @@ class _OpportunityTile extends StatelessWidget {
   final int customerId;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final bool showBusinessRecords;
+  final bool showProjectActions;
 
   String _money(int value) {
     final whole = value ~/ 100;
@@ -1125,68 +1208,69 @@ class _OpportunityTile extends StatelessWidget {
             ],
           ),
         ),
-        Align(
-          key: ValueKey('opportunity-actions-${opportunity.id}'),
-          alignment: Alignment.centerRight,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                tooltip: '新增报价',
-                onPressed: () => context.push(
-                  '/customers/$customerId/opportunities/${opportunity.id}/quotes/new',
+        if (showProjectActions)
+          Align(
+            key: ValueKey('opportunity-actions-${opportunity.id}'),
+            alignment: Alignment.centerRight,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: '新增报价',
+                  onPressed: () => context.push(
+                    '/customers/$customerId/opportunities/${opportunity.id}/quotes/new',
+                  ),
+                  icon: const Icon(Icons.request_quote_outlined),
                 ),
-                icon: const Icon(Icons.request_quote_outlined),
-              ),
-              IconButton(
-                tooltip: '新增样品',
-                onPressed: () => context.push(
-                  '/customers/$customerId/opportunities/${opportunity.id}/samples/new',
+                IconButton(
+                  tooltip: '新增样品',
+                  onPressed: () => context.push(
+                    '/customers/$customerId/opportunities/${opportunity.id}/samples/new',
+                  ),
+                  icon: const Icon(Icons.inventory_2_outlined),
                 ),
-                icon: const Icon(Icons.inventory_2_outlined),
-              ),
-              PopupMenuButton<_OpportunityAction>(
-                key: ValueKey('opportunity-menu-${opportunity.id}'),
-                tooltip: '项目操作',
-                onSelected: (action) {
-                  switch (action) {
-                    case _OpportunityAction.registration:
-                      context.push(
-                        '/customers/$customerId/opportunities/${opportunity.id}/registrations/new',
-                      );
-                    case _OpportunityAction.tender:
-                      context.push(
-                        '/customers/$customerId/opportunities/${opportunity.id}/tenders/new',
-                      );
-                    case _OpportunityAction.edit:
-                      onEdit();
-                    case _OpportunityAction.delete:
-                      onDelete();
-                  }
-                },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(
-                    value: _OpportunityAction.registration,
-                    child: Text('新增注册'),
-                  ),
-                  PopupMenuItem(
-                    value: _OpportunityAction.tender,
-                    child: Text('新增招标'),
-                  ),
-                  PopupMenuItem(
-                    value: _OpportunityAction.edit,
-                    child: Text('编辑'),
-                  ),
-                  PopupMenuItem(
-                    value: _OpportunityAction.delete,
-                    child: Text('删除'),
-                  ),
-                ],
-              ),
-            ],
+                PopupMenuButton<_OpportunityAction>(
+                  key: ValueKey('opportunity-menu-${opportunity.id}'),
+                  tooltip: '项目操作',
+                  onSelected: (action) {
+                    switch (action) {
+                      case _OpportunityAction.registration:
+                        context.push(
+                          '/customers/$customerId/opportunities/${opportunity.id}/registrations/new',
+                        );
+                      case _OpportunityAction.tender:
+                        context.push(
+                          '/customers/$customerId/opportunities/${opportunity.id}/tenders/new',
+                        );
+                      case _OpportunityAction.edit:
+                        onEdit();
+                      case _OpportunityAction.delete:
+                        onDelete();
+                    }
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: _OpportunityAction.registration,
+                      child: Text('新增注册'),
+                    ),
+                    PopupMenuItem(
+                      value: _OpportunityAction.tender,
+                      child: Text('新增招标'),
+                    ),
+                    PopupMenuItem(
+                      value: _OpportunityAction.edit,
+                      child: Text('编辑'),
+                    ),
+                    PopupMenuItem(
+                      value: _OpportunityAction.delete,
+                      child: Text('删除'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-        if (businessCount > 0)
+        if (showBusinessRecords && businessCount > 0)
           Padding(
             padding: const EdgeInsets.only(left: AppTokens.s24),
             child: Column(

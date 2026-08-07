@@ -1197,6 +1197,7 @@ void main() {
     addTearDown(() => harness.dispose(tester));
 
     await harness.pump(tester);
+    await _tapCustomerTab(tester, '动态');
     await tester.fling(find.byType(ListView), const Offset(0, -2000), 2000);
     await tester.pumpAndSettle();
 
@@ -1284,6 +1285,7 @@ void main() {
     addTearDown(() => harness.dispose(tester));
 
     await harness.pump(tester);
+    await _tapCustomerTab(tester, '业务');
 
     expect(find.text('报价 Q-ATT · v1'), findsOneWidget);
     expect(find.text('样品 S-ATT'), findsOneWidget);
@@ -1291,6 +1293,7 @@ void main() {
     expect(find.text('招标 T-ATT'), findsOneWidget);
 
     for (final (segment, id, _) in owners) {
+      await _tapCustomerTab(tester, segment == 'followup' ? '动态' : '业务');
       final action = find.byKey(ValueKey('attachment-$segment-$id'));
       await _scrollToLazyChild(tester, action);
       expect(
@@ -1341,6 +1344,71 @@ void main() {
     await harness.pump(tester);
 
     expect(find.text('指定的跟进计划不存在'), findsOneWidget);
+  });
+
+  testWidgets('CustomerDetailPage exposes four focused tabs', (tester) async {
+    tester.view.physicalSize = const Size(320, 700);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '页签客户');
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: CustomerDetailPage(customerId: customerId),
+    );
+    addTearDown(() => harness.dispose(tester));
+
+    await harness.pump(tester);
+
+    expect(find.byType(Tab), findsNWidgets(4));
+    expect(find.text('概览'), findsOneWidget);
+    expect(find.text('项目'), findsWidgets);
+    expect(find.text('业务'), findsWidgets);
+    expect(find.text('动态'), findsOneWidget);
+    expect(find.text('页签客户'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('CustomerDetailPage opens Dynamic for a highlighted plan', (
+    tester,
+  ) async {
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '提醒客户');
+    final opportunityId = await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '提醒项目',
+    );
+    final planId = await db.planDao.insertPlan(
+      customerId: customerId,
+      opportunityId: opportunityId,
+      title: '指定提醒计划',
+      planAt: DateTime.now(),
+    );
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: CustomerDetailPage(
+        customerId: customerId,
+        highlightedPlanId: planId,
+      ),
+    );
+    addTearDown(() => harness.dispose(tester));
+
+    await harness.pump(tester);
+
+    expect(
+      DefaultTabController.of(tester.element(find.byType(TabBar))).index,
+      3,
+    );
+    await tester.tap(find.byType(Tab).last);
+    await tester.pumpAndSettle();
+    // ignore: avoid_print
+    expect(find.textContaining('跟进计划'), findsOneWidget);
+    expect(find.text('指定提醒计划'), findsOneWidget);
   });
 
   testWidgets('CustomerDetailPage exposes first-screen quick actions', (
@@ -1533,6 +1601,7 @@ void main() {
     );
     await tester.tap(find.byKey(const ValueKey('save-order')));
     await tester.pumpAndSettle();
+    await _tapCustomerTab(tester, '业务');
 
     final orders = await db.orderDao.listOf(customerId);
     expect(orders, hasLength(1));
@@ -1586,6 +1655,7 @@ void main() {
     );
     await tester.tap(find.byKey(const ValueKey('save-opportunity')));
     await tester.pumpAndSettle();
+    await _tapCustomerTab(tester, '项目');
 
     final values = await db.opportunityDao.listOfCustomer(customerId);
     expect(values, hasLength(1));
@@ -1617,6 +1687,7 @@ void main() {
     addTearDown(() => harness.dispose(tester));
 
     await harness.pump(tester);
+    await _tapCustomerTab(tester, '项目');
 
     expect(find.text('第二供应商 · 限制样品投入'), findsOneWidget);
     expect(find.text('建议：价格替代 · 继续投入'), findsNothing);
@@ -1642,6 +1713,7 @@ void main() {
     addTearDown(() => harness.dispose(tester));
 
     await harness.pump(tester);
+    await _tapCustomerTab(tester, '项目');
 
     expect(find.text('建议：价格替代 · 继续投入'), findsOneWidget);
   });
@@ -1662,6 +1734,7 @@ void main() {
     addTearDown(() => harness.dispose(tester));
 
     await harness.pump(tester);
+    await _tapCustomerTab(tester, '项目');
     await _selectOpportunityAction(tester, opportunityId, '编辑');
     await tester.enterText(
       find.byKey(const ValueKey('opportunity-name')),
@@ -1674,6 +1747,7 @@ void main() {
     );
     await tester.tap(find.byKey(const ValueKey('save-opportunity')));
     await tester.pumpAndSettle();
+    await _tapCustomerTab(tester, '项目');
 
     expect((await db.opportunityDao.findById(opportunityId))?.name, '更新后的项目');
     expect(find.text('更新后的项目'), findsOneWidget);
@@ -2029,6 +2103,7 @@ void main() {
     );
     await tester.tap(find.byKey(const ValueKey('save-order')));
     await tester.pumpAndSettle();
+    await _tapCustomerTab(tester, '业务');
 
     final order = await db.orderDao.findById(orderId);
     expect(order?.orderNo, 'ORDER-EDITED');
@@ -2072,7 +2147,10 @@ void main() {
     addTearDown(() => harness.dispose(tester));
 
     await harness.pump(tester);
+    await _tapCustomerTab(tester, '业务');
+    await _tapCustomerTab(tester, '概览');
     expect(find.text('¥0.00'), findsOneWidget);
+    await _tapCustomerTab(tester, '业务');
 
     await _selectOrderAction(tester, orderId, '推进至已发货');
     expect(
@@ -2090,6 +2168,7 @@ void main() {
       (await db.orderDao.findById(orderId))?.status,
       OrderStatus.completed.dbValue,
     );
+    await _tapCustomerTab(tester, '概览');
     await tester.scrollUntilVisible(
       find.text('¥123.45'),
       -200,
@@ -2097,6 +2176,7 @@ void main() {
     );
 
     expect(find.text('¥123.45'), findsOneWidget);
+    await _tapCustomerTab(tester, '业务');
     expect(find.textContaining('已完成'), findsOneWidget);
   });
 
@@ -2126,6 +2206,7 @@ void main() {
     addTearDown(() => harness.dispose(tester));
 
     await harness.pump(tester);
+    await _tapCustomerTab(tester, '业务');
     await _selectOrderAction(tester, cancelledOrderId, '取消订单');
     expect(find.text('确定取消订单“ORDER-CANCEL”吗？'), findsOneWidget);
     await tester.tap(find.widgetWithText(FilledButton, '确认取消'));
@@ -2187,6 +2268,35 @@ void main() {
 
     await harness.pump(tester);
 
+    await _tapCustomerTab(tester, '概览');
+    final contactActions = find.byKey(ValueKey('contact-actions-$contactId'));
+    await tester.scrollUntilVisible(
+      contactActions,
+      250,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(tester.getRect(contactActions).right, lessThanOrEqualTo(304.1));
+
+    await _tapCustomerTab(tester, '项目');
+    final opportunityActions = find.byKey(
+      ValueKey('opportunity-actions-$opportunityId'),
+    );
+    await tester.scrollUntilVisible(
+      opportunityActions,
+      250,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(tester.getRect(opportunityActions).right, lessThanOrEqualTo(304.1));
+
+    await _tapCustomerTab(tester, '业务');
+    final orderActions = find.byKey(ValueKey('order-actions-$orderId'));
+    await tester.scrollUntilVisible(
+      orderActions,
+      250,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(tester.getRect(orderActions).right, lessThanOrEqualTo(304.1));
+    /*
     for (final key in [
       'contact-actions-$contactId',
       'opportunity-actions-$opportunityId',
@@ -2200,6 +2310,7 @@ void main() {
       );
       expect(tester.getRect(actions).right, lessThanOrEqualTo(304.1));
     }
+    */
     expect(tester.takeException(), isNull);
   });
 }
@@ -2438,6 +2549,11 @@ Future<void> _scrollOrderFieldIntoView(WidgetTester tester, String key) async {
     scrollable: find.byType(Scrollable).first,
   );
   await tester.ensureVisible(field);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _tapCustomerTab(WidgetTester tester, String label) async {
+  await tester.tap(find.widgetWithText(Tab, label).first);
   await tester.pumpAndSettle();
 }
 
