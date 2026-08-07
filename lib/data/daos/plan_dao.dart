@@ -139,6 +139,26 @@ class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
             ]))
           .get();
 
+  Future<List<FollowPlanRow>> listOpenAutomaticOfOpportunity(
+    int opportunityId,
+  ) =>
+      (select(followPlans)
+            ..where(
+              (t) =>
+                  t.opportunityId.equals(opportunityId) &
+                  t.status.isIn(_openStatusValues) &
+                  t.sourceType.isIn([
+                    TaskSourceType.quote.dbValue,
+                    TaskSourceType.sample.dbValue,
+                    TaskSourceType.registration.dbValue,
+                    TaskSourceType.tender.dbValue,
+                    TaskSourceType.repurchase.dbValue,
+                  ]) &
+                  t.ruleKey.isNotNull(),
+            )
+            ..orderBy([(t) => OrderingTerm.asc(t.id)]))
+          .get();
+
   Future<int> countOf(int customerId) async {
     final q = selectOnly(followPlans)
       ..addColumns([followPlans.id.count()])

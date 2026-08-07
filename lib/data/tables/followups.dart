@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import 'customers.dart';
+import 'contacts.dart';
 import 'opportunities.dart';
 
 /// 跟进记录表。已经发生的事，只增不改。
@@ -16,6 +17,12 @@ class Followups extends Table {
   /// v2 项目归属。为兼容原表结构保持可空，迁移会为全部旧记录回填。
   IntColumn get opportunityId => integer().nullable().references(
     Opportunities,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
+
+  IntColumn get contactId => integer().nullable().references(
+    Contacts,
     #id,
     onDelete: KeyAction.setNull,
   )();
@@ -44,6 +51,10 @@ class Followups extends Table {
 
   /// 选择暂不跟进时的原因，与 [nextFollowAt] 互斥。
   TextColumn get pauseReason => text().nullable()();
+
+  TextColumn get attitude => text().nullable()();
+
+  TextColumn get owner => text().nullable()();
 
   IntColumn get createdAt => integer()();
 

@@ -7,16 +7,16 @@ import 'package:sqlite3/sqlite3.dart' as sqlite;
 
 import 'helpers.dart';
 
-/// v8 数据库初始化与 v1/v2/v3/v5 真库升级。
+/// v9 数据库初始化与旧版本真库升级。
 void main() {
   late AppDatabase db;
 
-  group('v8 新库', () {
+  group('v9 新库', () {
     setUp(() async => db = await openTestDb());
     tearDown(() async => db.close());
 
-    test('schemaVersion 为 8', () {
-      expect(db.schemaVersion, 8);
+    test('schemaVersion 为 9', () {
+      expect(db.schemaVersion, 9);
     });
 
     test('空库初始化后十三张表全部建成', () async {
@@ -62,10 +62,14 @@ void main() {
         'idx_attachments_registration',
         'idx_attachments_tender',
         'idx_customers_last_follow',
+        'idx_customers_customer_no',
         'idx_customers_phone',
         'idx_customers_sample_batch',
         'idx_customers_stage',
         'idx_followups_customer',
+        'idx_followups_contact',
+        'idx_contacts_email',
+        'idx_contacts_whatsapp',
         'idx_orders_customer',
         'idx_orders_opportunity',
         'idx_orders_estimated_repurchase',
@@ -142,11 +146,11 @@ void main() {
       );
     });
 
-    test('user_version 写入为 8', () async {
+    test('user_version 写入为 9', () async {
       // drift 用 SQLite 的 user_version 记录 schema 版本，
       // 这个值不对的话后续 onUpgrade 会走错分支。
       final row = await db.customSelect('PRAGMA user_version').getSingle();
-      expect(row.data.values.first, 8);
+      expect(row.data.values.first, 9);
     });
 
     test('外键约束在 beforeOpen 后处于开启状态', () async {
@@ -198,7 +202,7 @@ void main() {
           )
           .get();
       // 索引没有被重复创建成两条。
-      expect(rows.length, 32);
+      expect(rows.length, 36);
     });
   });
 
@@ -221,7 +225,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 8);
+      expect(version.data.values.first, 9);
 
       final opportunities = await migrated.customSelect('''
             SELECT customer_id, name, stage, status, is_legacy_default
@@ -322,7 +326,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 8);
+      expect(version.data.values.first, 9);
 
       final followup = await migrated.customSelect('''
             SELECT opportunity_id, content, conclusion, feedback, stage,
@@ -404,7 +408,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 8);
+      expect(version.data.values.first, 9);
       await _expectLegacyTaskBackfill(migrated);
 
       final followup = await migrated.customSelect('''
@@ -441,7 +445,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 8);
+      expect(version.data.values.first, 9);
 
       final orders = await migrated.customSelect('''
             SELECT customer_id, opportunity_id, order_no, ordered_at,

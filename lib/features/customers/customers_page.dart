@@ -13,7 +13,9 @@ import 'customer_providers.dart';
 import 'customer_widgets.dart';
 
 class CustomersPage extends ConsumerStatefulWidget {
-  const CustomersPage({super.key});
+  const CustomersPage({super.key, this.initialAnomaly});
+
+  final CustomerAnomalyFilter? initialAnomaly;
 
   @override
   ConsumerState<CustomersPage> createState() => _CustomersPageState();
@@ -28,6 +30,25 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
     _searchController = TextEditingController(
       text: ref.read(customerFilterProvider).keyword,
     );
+    _applyInitialAnomaly();
+  }
+
+  @override
+  void didUpdateWidget(covariant CustomersPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialAnomaly != widget.initialAnomaly) {
+      _applyInitialAnomaly();
+    }
+  }
+
+  void _applyInitialAnomaly() {
+    final anomaly = widget.initialAnomaly;
+    if (anomaly == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _searchController.clear();
+      ref.read(customerFilterProvider.notifier).applyAnomaly(anomaly);
+    });
   }
 
   @override
@@ -105,6 +126,8 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
                           ),
                   ),
                 ),
+                const SizedBox(height: AppTokens.s8),
+                _QuickFilters(filter: filter),
                 const SizedBox(height: AppTokens.s8),
                 Align(
                   alignment: Alignment.centerRight,
@@ -190,6 +213,66 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
               error: (_, _) => CustomerAsyncError(onRetry: _refresh),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickFilters extends ConsumerWidget {
+  const _QuickFilters({required this.filter});
+
+  final CustomerFilter filter;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifier = ref.read(customerFilterProvider.notifier);
+    return SingleChildScrollView(
+      key: const ValueKey('customer-quick-filters'),
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          FilterChip(
+            key: const ValueKey('customer-quick-overdue'),
+            label: const Text('逾期'),
+            avatar: const Icon(Icons.schedule_outlined, size: 18),
+            selected: filter.overdueOnly,
+            onSelected: (_) => notifier.toggleOverdue(),
+          ),
+          const SizedBox(width: AppTokens.s8),
+          FilterChip(
+            key: const ValueKey('customer-quick-grade-a'),
+            label: const Text('A 级'),
+            avatar: const Icon(Icons.grade_outlined, size: 18),
+            selected: filter.customerGrade == CustomerGrade.a,
+            onSelected: (_) => notifier.toggleGradeA(),
+          ),
+          for (final item in const [
+            (
+              CustomerAnomalyFilter.stalledQuote,
+              '报价停滞',
+              Icons.request_quote_outlined,
+            ),
+            (
+              CustomerAnomalyFilter.stalledSample,
+              '样品停滞',
+              Icons.science_outlined,
+            ),
+            (
+              CustomerAnomalyFilter.longSilence,
+              '长期沉默',
+              Icons.hourglass_empty_outlined,
+            ),
+          ]) ...[
+            const SizedBox(width: AppTokens.s8),
+            FilterChip(
+              key: ValueKey('customer-quick-${item.$1.name}'),
+              label: Text(item.$2),
+              avatar: Icon(item.$3, size: 18),
+              selected: filter.anomalies.contains(item.$1),
+              onSelected: (_) => notifier.toggleAnomaly(item.$1),
+            ),
+          ],
         ],
       ),
     );

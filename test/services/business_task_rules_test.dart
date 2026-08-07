@@ -371,6 +371,73 @@ void main() {
       expect(plan!.status, PlanStatus.pending.dbValue);
     },
   );
+
+  test(
+    'reconcile is idempotent and reports only newly created tasks',
+    () async {
+      final now = DateTime.utc(2026, 8, 5);
+      final customerId = await seedCustomer(db);
+      final opportunityId = await db.opportunityDao.insertOpportunity(
+        customerId: customerId,
+        name: '幂等项目',
+        now: now,
+      );
+      await db.registrationDao.insertRegistration(
+        opportunityId: opportunityId,
+        expectedCompletedAt: DateTime.utc(2026, 9, 20),
+        now: now,
+      );
+      final rules = BusinessTaskRules(db, scheduler);
+
+      final first = await rules.reconcileForOpportunity(
+        opportunityId,
+        now: now,
+      );
+      final second = await rules.reconcileForOpportunity(
+        opportunityId,
+        now: now,
+      );
+
+      expect(first.createdIds, hasLength(1));
+      expect(second.createdIds, isEmpty);
+      expect(second.cancelledIds, isEmpty);
+      expect(await db.planDao.listOf(customerId), hasLength(1));
+    },
+  );
+
+  test('reconcile cancels open tasks that no longer apply', () async {
+    final now = DateTime.utc(2026, 8, 5);
+    final customerId = await seedCustomer(db);
+    final opportunityId = await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '样品节点项目',
+      now: now,
+    );
+    final sampleId = await db.sampleDao.insertSample(
+      opportunityId: opportunityId,
+      quantity: 1,
+      sentAt: DateTime.utc(2026, 8, 6),
+      now: now,
+    );
+    final rules = BusinessTaskRules(db, scheduler);
+    final first = await rules.reconcileForOpportunity(opportunityId, now: now);
+    expect(first.createdIds, isNotEmpty);
+
+    await db.sampleDao.updateMilestone(
+      sampleId,
+      status: SampleStatus.cancelled,
+      now: now,
+    );
+    final result = await rules.reconcileForOpportunity(opportunityId, now: now);
+
+    expect(result.cancelledIds, first.createdIds);
+    expect(scheduler.cancelled, first.createdIds);
+    final plans = await db.planDao.listOf(customerId);
+    expect(
+      plans.map((plan) => plan.status),
+      everyElement(PlanStatus.cancelled.dbValue),
+    );
+  });
 }
 
 class _Scheduler implements ReminderScheduler {
@@ -380,6 +447,7 @@ class _Scheduler implements ReminderScheduler {
   int scheduled = 0;
   bool throwOnSchedule = false;
   final List<bool> persistedBeforeScheduling = [];
+  final List<int> cancelled = [];
 
   @override
   Future<void> init() async {}
@@ -395,7 +463,7 @@ class _Scheduler implements ReminderScheduler {
   }
 
   @override
-  Future<void> cancelForPlan(int planId) async {}
+  Future<void> cancelForPlan(int planId) async => cancelled.add(planId);
 
   @override
   Future<int> rescheduleAll() async => 0;

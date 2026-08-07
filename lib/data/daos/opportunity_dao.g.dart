@@ -6,6 +6,7 @@ part of 'opportunity_dao.dart';
 mixin _$OpportunityDaoMixin on DatabaseAccessor<AppDatabase> {
   $CustomersTable get customers => attachedDatabase.customers;
   $OpportunitiesTable get opportunities => attachedDatabase.opportunities;
+  $ContactsTable get contacts => attachedDatabase.contacts;
   $FollowupsTable get followups => attachedDatabase.followups;
   $FollowPlansTable get followPlans => attachedDatabase.followPlans;
   $OrdersTable get orders => attachedDatabase.orders;
@@ -23,6 +24,8 @@ class OpportunityDaoManager {
       $$CustomersTableTableManager(_db.attachedDatabase, _db.customers);
   $$OpportunitiesTableTableManager get opportunities =>
       $$OpportunitiesTableTableManager(_db.attachedDatabase, _db.opportunities);
+  $$ContactsTableTableManager get contacts =>
+      $$ContactsTableTableManager(_db.attachedDatabase, _db.contacts);
   $$FollowupsTableTableManager get followups =>
       $$FollowupsTableTableManager(_db.attachedDatabase, _db.followups);
   $$FollowPlansTableTableManager get followPlans =>

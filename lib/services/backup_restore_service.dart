@@ -126,9 +126,12 @@ class BackupRestoreService implements BackupRestoreActions {
       throw const FormatException('备份文件缺少必要内容');
     }
     final manifest = jsonDecode(utf8.decode(manifestFile.content as List<int>));
+    final manifestSchema = manifest is Map ? manifest['schemaVersion'] : null;
     if (manifest is! Map ||
         manifest['formatVersion'] != formatVersion ||
-        manifest['schemaVersion'] != database.schemaVersion) {
+        manifestSchema is! int ||
+        manifestSchema < 1 ||
+        manifestSchema > database.schemaVersion) {
       throw const FormatException('备份版本与当前应用不兼容');
     }
     final databaseBytes = List<int>.from(databaseEntry.content as List<int>);
@@ -306,7 +309,7 @@ class BackupRestoreService implements BackupRestoreActions {
           .first
           .values
           .first;
-      if (version != database.schemaVersion) {
+      if (version is! int || version < 1 || version > database.schemaVersion) {
         throw const FormatException('备份数据库版本无效');
       }
       final check = candidate.select('PRAGMA quick_check').first.values.first;

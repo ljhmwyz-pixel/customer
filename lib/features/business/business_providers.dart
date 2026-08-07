@@ -9,6 +9,8 @@ import '../../data/database_provider.dart';
 import '../../models/enums.dart';
 import '../../services/attachment_service.dart';
 import '../../services/attachment_service_providers.dart';
+import '../../services/business_task_rules.dart';
+import '../../services/service_providers.dart';
 import '../customers/customer_providers.dart';
 
 class BusinessService {
@@ -16,9 +18,12 @@ class BusinessService {
     this._db, {
     AttachmentGraphCleaner attachmentCleaner =
         const PassthroughAttachmentGraphCleaner(),
-  }) : _attachmentCleaner = attachmentCleaner;
+    BusinessTaskRules? taskRules,
+  }) : _attachmentCleaner = attachmentCleaner,
+       _taskRules = taskRules;
   final AppDatabase _db;
   final AttachmentGraphCleaner _attachmentCleaner;
+  final BusinessTaskRules? _taskRules;
 
   Future<int> createQuoteVersion({
     required int customerId,
@@ -43,7 +48,7 @@ class BusinessService {
     if (validUntil != null && validUntil.isBefore(quotedAt)) {
       throw const CustomerValidationException('有效期不能早于报价日期');
     }
-    return _db.quoteDao.insertVersion(
+    final id = await _db.quoteDao.insertVersion(
       opportunityId: opportunityId,
       quoteNo: quoteNo,
       productModel: productModel,
@@ -58,6 +63,8 @@ class BusinessService {
       nextFollowAt: nextFollowAt,
       result: result,
     );
+    await _syncTasks(opportunityId);
+    return id;
   }
 
   Future<int> createSample({
@@ -83,7 +90,7 @@ class BusinessService {
     if (sentAt != null && deliveredAt != null && deliveredAt.isBefore(sentAt)) {
       throw const CustomerValidationException('签收日期不能早于寄出日期');
     }
-    return _db.sampleDao.insertSample(
+    final id = await _db.sampleDao.insertSample(
       opportunityId: opportunityId,
       sampleModel: sampleModel,
       quantity: quantity,
@@ -99,6 +106,30 @@ class BusinessService {
       testResult: testResult,
       nextAction: nextAction,
     );
+    await _syncTasks(opportunityId);
+    return id;
+  }
+
+  Future<int> updateQuoteOutcome(
+    int customerId,
+    int quoteId, {
+    required bool customerReceived,
+    Value<String?> customerFeedback = const Value.absent(),
+    Value<DateTime?> nextFollowAt = const Value.absent(),
+    Value<String?> result = const Value.absent(),
+  }) async {
+    final quote = await _db.quoteDao.findById(quoteId);
+    if (quote == null) throw const CustomerValidationException('报价记录不存在');
+    await _requireRecordOwnership(customerId, quote.opportunityId);
+    final affected = await _db.quoteDao.updateOutcome(
+      quoteId,
+      customerReceived: customerReceived,
+      customerFeedback: customerFeedback,
+      nextFollowAt: nextFollowAt,
+      result: result,
+    );
+    await _syncTasks(quote.opportunityId);
+    return affected;
   }
 
   Future<int> updateSampleMilestone(
@@ -116,7 +147,7 @@ class BusinessService {
     final sample = await _db.sampleDao.findById(sampleId);
     if (sample == null) throw const CustomerValidationException('样品记录不存在');
     await _requireOpportunity(customerId, sample.opportunityId);
-    return _db.sampleDao.updateMilestone(
+    final affected = await _db.sampleDao.updateMilestone(
       sampleId,
       sentAt: sentAt,
       deliveredAt: deliveredAt,
@@ -127,6 +158,8 @@ class BusinessService {
       testResult: testResult,
       nextAction: nextAction,
     );
+    await _syncTasks(sample.opportunityId);
+    return affected;
   }
 
   Future<int> createRegistration({
@@ -156,7 +189,7 @@ class BusinessService {
       status: status,
       nextAction: nextAction,
     );
-    return _db.registrationDao.insertRegistration(
+    final id = await _db.registrationDao.insertRegistration(
       opportunityId: opportunityId,
       country: country,
       requirements: requirements,
@@ -173,6 +206,8 @@ class BusinessService {
       milestoneAt: milestoneAt,
       milestoneTitle: milestoneTitle,
     );
+    await _syncTasks(opportunityId);
+    return id;
   }
 
   Future<int> updateRegistration(
@@ -213,7 +248,7 @@ class BusinessService {
           ? nextAction.value
           : registration.nextAction,
     );
-    return _db.registrationDao.updateRegistration(
+    final affected = await _db.registrationDao.updateRegistration(
       registrationId,
       country: country,
       requirements: requirements,
@@ -230,6 +265,8 @@ class BusinessService {
       milestoneAt: milestoneAt,
       milestoneTitle: milestoneTitle,
     );
+    await _syncTasks(registration.opportunityId);
+    return affected;
   }
 
   Future<int> createTender({
@@ -273,7 +310,7 @@ class BusinessService {
       floorPriceSupport: floorPriceSupport,
       riskAcknowledged: riskAcknowledged,
     );
-    return _db.tenderDao.insertTender(
+    final id = await _db.tenderDao.insertTender(
       opportunityId: opportunityId,
       projectNo: projectNo,
       name: name,
@@ -293,6 +330,8 @@ class BusinessService {
       status: status,
       nextAction: nextAction,
     );
+    await _syncTasks(opportunityId);
+    return id;
   }
 
   Future<int> updateTender(
@@ -351,7 +390,7 @@ class BusinessService {
           : tender.floorPriceSupport,
       riskAcknowledged: riskAcknowledged,
     );
-    return _db.tenderDao.updateTender(
+    final affected = await _db.tenderDao.updateTender(
       tenderId,
       projectNo: projectNo,
       name: name,
@@ -371,6 +410,8 @@ class BusinessService {
       status: status,
       nextAction: nextAction,
     );
+    await _syncTasks(tender.opportunityId);
+    return affected;
   }
 
   Future<AttachmentCleanupReport> deleteQuote(
@@ -380,10 +421,12 @@ class BusinessService {
     final quote = await _db.quoteDao.findById(quoteId);
     if (quote == null) throw const CustomerValidationException('报价记录不存在');
     await _requireRecordOwnership(customerId, quote.opportunityId);
-    return _deleteRecord(
+    final report = await _deleteRecord(
       owner: QuoteAttachmentOwner(quoteId),
       deleteRecord: () => _db.quoteDao.deleteQuote(quoteId),
     );
+    await _syncTasks(quote.opportunityId);
+    return report;
   }
 
   Future<AttachmentCleanupReport> deleteSample(
@@ -393,10 +436,12 @@ class BusinessService {
     final sample = await _db.sampleDao.findById(sampleId);
     if (sample == null) throw const CustomerValidationException('样品记录不存在');
     await _requireRecordOwnership(customerId, sample.opportunityId);
-    return _deleteRecord(
+    final report = await _deleteRecord(
       owner: SampleAttachmentOwner(sampleId),
       deleteRecord: () => _db.sampleDao.deleteSample(sampleId),
     );
+    await _syncTasks(sample.opportunityId);
+    return report;
   }
 
   Future<AttachmentCleanupReport> deleteRegistration(
@@ -408,11 +453,13 @@ class BusinessService {
       throw const CustomerValidationException('注册记录不存在');
     }
     await _requireRecordOwnership(customerId, registration.opportunityId);
-    return _deleteRecord(
+    final report = await _deleteRecord(
       owner: RegistrationAttachmentOwner(registrationId),
       deleteRecord: () =>
           _db.registrationDao.deleteRegistration(registrationId),
     );
+    await _syncTasks(registration.opportunityId);
+    return report;
   }
 
   Future<AttachmentCleanupReport> deleteTender(
@@ -422,10 +469,12 @@ class BusinessService {
     final tender = await _db.tenderDao.findById(tenderId);
     if (tender == null) throw const CustomerValidationException('招标记录不存在');
     await _requireRecordOwnership(customerId, tender.opportunityId);
-    return _deleteRecord(
+    final report = await _deleteRecord(
       owner: TenderAttachmentOwner(tenderId),
       deleteRecord: () => _db.tenderDao.deleteTender(tenderId),
     );
+    await _syncTasks(tender.opportunityId);
+    return report;
   }
 
   Future<AttachmentCleanupReport> _deleteRecord({
@@ -537,11 +586,23 @@ class BusinessService {
     }
     return opportunity;
   }
+
+  Future<void> _syncTasks(int opportunityId) async {
+    try {
+      await _taskRules?.reconcileForOpportunity(
+        opportunityId,
+        now: DateTime.now(),
+      );
+    } catch (_) {
+      // The business record is already durable; startup rebuild is the fallback.
+    }
+  }
 }
 
 final businessServiceProvider = Provider<BusinessService>(
   (ref) => BusinessService(
     ref.watch(databaseProvider),
     attachmentCleaner: ref.watch(attachmentServiceProvider),
+    taskRules: ref.watch(businessTaskRulesProvider),
   ),
 );

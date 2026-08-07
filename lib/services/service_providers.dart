@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/database_provider.dart';
 import 'app_prefs.dart';
+import 'business_task_rules.dart';
 import 'notification_service.dart';
 import 'permission_service.dart';
 import 'reminder_scheduler.dart';
@@ -19,6 +20,13 @@ final permissionServiceProvider = Provider<PermissionService>(
 /// 降级顺序见 docs/phase2/PLAN.md 第 4.2 节。
 final reminderSchedulerProvider = Provider<ReminderScheduler>(
   (ref) => NotificationService(db: ref.watch(databaseProvider)),
+);
+
+final businessTaskRulesProvider = Provider<BusinessTaskRules>(
+  (ref) => BusinessTaskRules(
+    ref.watch(databaseProvider),
+    ref.watch(reminderSchedulerProvider),
+  ),
 );
 
 /// 全部权限的当前状态。

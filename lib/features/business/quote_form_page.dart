@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../data/database_provider.dart';
 import '../../theme/tokens.dart';
 import '../customers/customer_providers.dart';
 import 'business_providers.dart';
@@ -10,10 +11,12 @@ class QuoteFormPage extends ConsumerStatefulWidget {
   const QuoteFormPage({
     required this.customerId,
     required this.opportunityId,
+    this.sourceQuoteId,
     super.key,
   });
   final int customerId;
   final int opportunityId;
+  final int? sourceQuoteId;
 
   @override
   ConsumerState<QuoteFormPage> createState() => _QuoteFormPageState();
@@ -24,6 +27,24 @@ class _QuoteFormPageState extends ConsumerState<QuoteFormPage> {
   final quantity = TextEditingController(text: '1');
   final amount = TextEditingController();
   bool saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.sourceQuoteId != null) _loadSource(widget.sourceQuoteId!);
+  }
+
+  Future<void> _loadSource(int sourceId) async {
+    final quote = await ref.read(databaseProvider).quoteDao.findById(sourceId);
+    if (!mounted ||
+        quote == null ||
+        quote.opportunityId != widget.opportunityId) {
+      return;
+    }
+    no.text = quote.quoteNo;
+    quantity.text = '${quote.quantity}';
+    amount.text = quote.totalAmountMinor?.toString() ?? '';
+  }
 
   @override
   void dispose() {

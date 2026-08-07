@@ -46,6 +46,38 @@ class $CustomersTable extends Customers
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _customerNoMeta = const VerificationMeta(
+    'customerNo',
+  );
+  @override
+  late final GeneratedColumn<String> customerNo = GeneratedColumn<String>(
+    'customer_no',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _customerTypeMeta = const VerificationMeta(
+    'customerType',
+  );
+  @override
+  late final GeneratedColumn<String> customerType = GeneratedColumn<String>(
+    'customer_type',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _ownerMeta = const VerificationMeta('owner');
+  @override
+  late final GeneratedColumn<String> owner = GeneratedColumn<String>(
+    'owner',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('本人'),
+  );
   static const VerificationMeta _countryMeta = const VerificationMeta(
     'country',
   );
@@ -99,6 +131,61 @@ class $CustomersTable extends Customers
   @override
   late final GeneratedColumn<String> note = GeneratedColumn<String>(
     'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _tenderExperienceMeta = const VerificationMeta(
+    'tenderExperience',
+  );
+  @override
+  late final GeneratedColumn<String> tenderExperience = GeneratedColumn<String>(
+    'tender_experience',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _tenderQualificationMeta =
+      const VerificationMeta('tenderQualification');
+  @override
+  late final GeneratedColumn<String> tenderQualification =
+      GeneratedColumn<String>(
+        'tender_qualification',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _tenderBidderMeta = const VerificationMeta(
+    'tenderBidder',
+  );
+  @override
+  late final GeneratedColumn<String> tenderBidder = GeneratedColumn<String>(
+    'tender_bidder',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _localTeamStatusMeta = const VerificationMeta(
+    'localTeamStatus',
+  );
+  @override
+  late final GeneratedColumn<String> localTeamStatus = GeneratedColumn<String>(
+    'local_team_status',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _fundingStatusMeta = const VerificationMeta(
+    'fundingStatus',
+  );
+  @override
+  late final GeneratedColumn<String> fundingStatus = GeneratedColumn<String>(
+    'funding_status',
     aliasedName,
     true,
     type: DriftSqlType.string,
@@ -173,12 +260,20 @@ class $CustomersTable extends Customers
     id,
     name,
     company,
+    customerNo,
+    customerType,
+    owner,
     country,
     phone,
     wechat,
     address,
     source,
     note,
+    tenderExperience,
+    tenderQualification,
+    tenderBidder,
+    localTeamStatus,
+    fundingStatus,
     stage,
     grade,
     sampleBatchId,
@@ -215,6 +310,27 @@ class $CustomersTable extends Customers
         company.isAcceptableOrUnknown(data['company']!, _companyMeta),
       );
     }
+    if (data.containsKey('customer_no')) {
+      context.handle(
+        _customerNoMeta,
+        customerNo.isAcceptableOrUnknown(data['customer_no']!, _customerNoMeta),
+      );
+    }
+    if (data.containsKey('customer_type')) {
+      context.handle(
+        _customerTypeMeta,
+        customerType.isAcceptableOrUnknown(
+          data['customer_type']!,
+          _customerTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('owner')) {
+      context.handle(
+        _ownerMeta,
+        owner.isAcceptableOrUnknown(data['owner']!, _ownerMeta),
+      );
+    }
     if (data.containsKey('country')) {
       context.handle(
         _countryMeta,
@@ -249,6 +365,51 @@ class $CustomersTable extends Customers
       context.handle(
         _noteMeta,
         note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('tender_experience')) {
+      context.handle(
+        _tenderExperienceMeta,
+        tenderExperience.isAcceptableOrUnknown(
+          data['tender_experience']!,
+          _tenderExperienceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tender_qualification')) {
+      context.handle(
+        _tenderQualificationMeta,
+        tenderQualification.isAcceptableOrUnknown(
+          data['tender_qualification']!,
+          _tenderQualificationMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tender_bidder')) {
+      context.handle(
+        _tenderBidderMeta,
+        tenderBidder.isAcceptableOrUnknown(
+          data['tender_bidder']!,
+          _tenderBidderMeta,
+        ),
+      );
+    }
+    if (data.containsKey('local_team_status')) {
+      context.handle(
+        _localTeamStatusMeta,
+        localTeamStatus.isAcceptableOrUnknown(
+          data['local_team_status']!,
+          _localTeamStatusMeta,
+        ),
+      );
+    }
+    if (data.containsKey('funding_status')) {
+      context.handle(
+        _fundingStatusMeta,
+        fundingStatus.isAcceptableOrUnknown(
+          data['funding_status']!,
+          _fundingStatusMeta,
+        ),
       );
     }
     if (data.containsKey('stage')) {
@@ -318,6 +479,18 @@ class $CustomersTable extends Customers
         DriftSqlType.string,
         data['${effectivePrefix}company'],
       ),
+      customerNo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}customer_no'],
+      ),
+      customerType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}customer_type'],
+      ),
+      owner: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner'],
+      )!,
       country: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}country'],
@@ -341,6 +514,26 @@ class $CustomersTable extends Customers
       note: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}note'],
+      ),
+      tenderExperience: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tender_experience'],
+      ),
+      tenderQualification: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tender_qualification'],
+      ),
+      tenderBidder: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tender_bidder'],
+      ),
+      localTeamStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}local_team_status'],
+      ),
+      fundingStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}funding_status'],
       ),
       stage: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -381,6 +574,9 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
   /// 客户名称。唯一必填项。
   final String name;
   final String? company;
+  final String? customerNo;
+  final String? customerType;
+  final String owner;
 
   /// 国家/地区。v4 增量字段，旧客户无法可靠推断所以保持可空。
   final String? country;
@@ -393,6 +589,11 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
   /// 来源渠道。自由文本，不做枚举，实际来源太杂。
   final String? source;
   final String? note;
+  final String? tenderExperience;
+  final String? tenderQualification;
+  final String? tenderBidder;
+  final String? localTeamStatus;
+  final String? fundingStatus;
 
   /// 客户阶段，存 CustomerStage.dbValue。
   final String stage;
@@ -414,12 +615,20 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
     required this.id,
     required this.name,
     this.company,
+    this.customerNo,
+    this.customerType,
+    required this.owner,
     this.country,
     this.phone,
     this.wechat,
     this.address,
     this.source,
     this.note,
+    this.tenderExperience,
+    this.tenderQualification,
+    this.tenderBidder,
+    this.localTeamStatus,
+    this.fundingStatus,
     required this.stage,
     required this.grade,
     this.sampleBatchId,
@@ -435,6 +644,13 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
     if (!nullToAbsent || company != null) {
       map['company'] = Variable<String>(company);
     }
+    if (!nullToAbsent || customerNo != null) {
+      map['customer_no'] = Variable<String>(customerNo);
+    }
+    if (!nullToAbsent || customerType != null) {
+      map['customer_type'] = Variable<String>(customerType);
+    }
+    map['owner'] = Variable<String>(owner);
     if (!nullToAbsent || country != null) {
       map['country'] = Variable<String>(country);
     }
@@ -452,6 +668,21 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
     }
     if (!nullToAbsent || note != null) {
       map['note'] = Variable<String>(note);
+    }
+    if (!nullToAbsent || tenderExperience != null) {
+      map['tender_experience'] = Variable<String>(tenderExperience);
+    }
+    if (!nullToAbsent || tenderQualification != null) {
+      map['tender_qualification'] = Variable<String>(tenderQualification);
+    }
+    if (!nullToAbsent || tenderBidder != null) {
+      map['tender_bidder'] = Variable<String>(tenderBidder);
+    }
+    if (!nullToAbsent || localTeamStatus != null) {
+      map['local_team_status'] = Variable<String>(localTeamStatus);
+    }
+    if (!nullToAbsent || fundingStatus != null) {
+      map['funding_status'] = Variable<String>(fundingStatus);
     }
     map['stage'] = Variable<String>(stage);
     map['grade'] = Variable<String>(grade);
@@ -473,6 +704,13 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
       company: company == null && nullToAbsent
           ? const Value.absent()
           : Value(company),
+      customerNo: customerNo == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customerNo),
+      customerType: customerType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customerType),
+      owner: Value(owner),
       country: country == null && nullToAbsent
           ? const Value.absent()
           : Value(country),
@@ -489,6 +727,21 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
           ? const Value.absent()
           : Value(source),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      tenderExperience: tenderExperience == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tenderExperience),
+      tenderQualification: tenderQualification == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tenderQualification),
+      tenderBidder: tenderBidder == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tenderBidder),
+      localTeamStatus: localTeamStatus == null && nullToAbsent
+          ? const Value.absent()
+          : Value(localTeamStatus),
+      fundingStatus: fundingStatus == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fundingStatus),
       stage: Value(stage),
       grade: Value(grade),
       sampleBatchId: sampleBatchId == null && nullToAbsent
@@ -511,12 +764,22 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       company: serializer.fromJson<String?>(json['company']),
+      customerNo: serializer.fromJson<String?>(json['customerNo']),
+      customerType: serializer.fromJson<String?>(json['customerType']),
+      owner: serializer.fromJson<String>(json['owner']),
       country: serializer.fromJson<String?>(json['country']),
       phone: serializer.fromJson<String?>(json['phone']),
       wechat: serializer.fromJson<String?>(json['wechat']),
       address: serializer.fromJson<String?>(json['address']),
       source: serializer.fromJson<String?>(json['source']),
       note: serializer.fromJson<String?>(json['note']),
+      tenderExperience: serializer.fromJson<String?>(json['tenderExperience']),
+      tenderQualification: serializer.fromJson<String?>(
+        json['tenderQualification'],
+      ),
+      tenderBidder: serializer.fromJson<String?>(json['tenderBidder']),
+      localTeamStatus: serializer.fromJson<String?>(json['localTeamStatus']),
+      fundingStatus: serializer.fromJson<String?>(json['fundingStatus']),
       stage: serializer.fromJson<String>(json['stage']),
       grade: serializer.fromJson<String>(json['grade']),
       sampleBatchId: serializer.fromJson<String?>(json['sampleBatchId']),
@@ -532,12 +795,20 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
       'company': serializer.toJson<String?>(company),
+      'customerNo': serializer.toJson<String?>(customerNo),
+      'customerType': serializer.toJson<String?>(customerType),
+      'owner': serializer.toJson<String>(owner),
       'country': serializer.toJson<String?>(country),
       'phone': serializer.toJson<String?>(phone),
       'wechat': serializer.toJson<String?>(wechat),
       'address': serializer.toJson<String?>(address),
       'source': serializer.toJson<String?>(source),
       'note': serializer.toJson<String?>(note),
+      'tenderExperience': serializer.toJson<String?>(tenderExperience),
+      'tenderQualification': serializer.toJson<String?>(tenderQualification),
+      'tenderBidder': serializer.toJson<String?>(tenderBidder),
+      'localTeamStatus': serializer.toJson<String?>(localTeamStatus),
+      'fundingStatus': serializer.toJson<String?>(fundingStatus),
       'stage': serializer.toJson<String>(stage),
       'grade': serializer.toJson<String>(grade),
       'sampleBatchId': serializer.toJson<String?>(sampleBatchId),
@@ -551,12 +822,20 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
     int? id,
     String? name,
     Value<String?> company = const Value.absent(),
+    Value<String?> customerNo = const Value.absent(),
+    Value<String?> customerType = const Value.absent(),
+    String? owner,
     Value<String?> country = const Value.absent(),
     Value<String?> phone = const Value.absent(),
     Value<String?> wechat = const Value.absent(),
     Value<String?> address = const Value.absent(),
     Value<String?> source = const Value.absent(),
     Value<String?> note = const Value.absent(),
+    Value<String?> tenderExperience = const Value.absent(),
+    Value<String?> tenderQualification = const Value.absent(),
+    Value<String?> tenderBidder = const Value.absent(),
+    Value<String?> localTeamStatus = const Value.absent(),
+    Value<String?> fundingStatus = const Value.absent(),
     String? stage,
     String? grade,
     Value<String?> sampleBatchId = const Value.absent(),
@@ -567,12 +846,28 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
     id: id ?? this.id,
     name: name ?? this.name,
     company: company.present ? company.value : this.company,
+    customerNo: customerNo.present ? customerNo.value : this.customerNo,
+    customerType: customerType.present ? customerType.value : this.customerType,
+    owner: owner ?? this.owner,
     country: country.present ? country.value : this.country,
     phone: phone.present ? phone.value : this.phone,
     wechat: wechat.present ? wechat.value : this.wechat,
     address: address.present ? address.value : this.address,
     source: source.present ? source.value : this.source,
     note: note.present ? note.value : this.note,
+    tenderExperience: tenderExperience.present
+        ? tenderExperience.value
+        : this.tenderExperience,
+    tenderQualification: tenderQualification.present
+        ? tenderQualification.value
+        : this.tenderQualification,
+    tenderBidder: tenderBidder.present ? tenderBidder.value : this.tenderBidder,
+    localTeamStatus: localTeamStatus.present
+        ? localTeamStatus.value
+        : this.localTeamStatus,
+    fundingStatus: fundingStatus.present
+        ? fundingStatus.value
+        : this.fundingStatus,
     stage: stage ?? this.stage,
     grade: grade ?? this.grade,
     sampleBatchId: sampleBatchId.present
@@ -587,12 +882,34 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       company: data.company.present ? data.company.value : this.company,
+      customerNo: data.customerNo.present
+          ? data.customerNo.value
+          : this.customerNo,
+      customerType: data.customerType.present
+          ? data.customerType.value
+          : this.customerType,
+      owner: data.owner.present ? data.owner.value : this.owner,
       country: data.country.present ? data.country.value : this.country,
       phone: data.phone.present ? data.phone.value : this.phone,
       wechat: data.wechat.present ? data.wechat.value : this.wechat,
       address: data.address.present ? data.address.value : this.address,
       source: data.source.present ? data.source.value : this.source,
       note: data.note.present ? data.note.value : this.note,
+      tenderExperience: data.tenderExperience.present
+          ? data.tenderExperience.value
+          : this.tenderExperience,
+      tenderQualification: data.tenderQualification.present
+          ? data.tenderQualification.value
+          : this.tenderQualification,
+      tenderBidder: data.tenderBidder.present
+          ? data.tenderBidder.value
+          : this.tenderBidder,
+      localTeamStatus: data.localTeamStatus.present
+          ? data.localTeamStatus.value
+          : this.localTeamStatus,
+      fundingStatus: data.fundingStatus.present
+          ? data.fundingStatus.value
+          : this.fundingStatus,
       stage: data.stage.present ? data.stage.value : this.stage,
       grade: data.grade.present ? data.grade.value : this.grade,
       sampleBatchId: data.sampleBatchId.present
@@ -612,12 +929,20 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('company: $company, ')
+          ..write('customerNo: $customerNo, ')
+          ..write('customerType: $customerType, ')
+          ..write('owner: $owner, ')
           ..write('country: $country, ')
           ..write('phone: $phone, ')
           ..write('wechat: $wechat, ')
           ..write('address: $address, ')
           ..write('source: $source, ')
           ..write('note: $note, ')
+          ..write('tenderExperience: $tenderExperience, ')
+          ..write('tenderQualification: $tenderQualification, ')
+          ..write('tenderBidder: $tenderBidder, ')
+          ..write('localTeamStatus: $localTeamStatus, ')
+          ..write('fundingStatus: $fundingStatus, ')
           ..write('stage: $stage, ')
           ..write('grade: $grade, ')
           ..write('sampleBatchId: $sampleBatchId, ')
@@ -629,23 +954,31 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     name,
     company,
+    customerNo,
+    customerType,
+    owner,
     country,
     phone,
     wechat,
     address,
     source,
     note,
+    tenderExperience,
+    tenderQualification,
+    tenderBidder,
+    localTeamStatus,
+    fundingStatus,
     stage,
     grade,
     sampleBatchId,
     lastFollowAt,
     createdAt,
     updatedAt,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -653,12 +986,20 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
           other.id == this.id &&
           other.name == this.name &&
           other.company == this.company &&
+          other.customerNo == this.customerNo &&
+          other.customerType == this.customerType &&
+          other.owner == this.owner &&
           other.country == this.country &&
           other.phone == this.phone &&
           other.wechat == this.wechat &&
           other.address == this.address &&
           other.source == this.source &&
           other.note == this.note &&
+          other.tenderExperience == this.tenderExperience &&
+          other.tenderQualification == this.tenderQualification &&
+          other.tenderBidder == this.tenderBidder &&
+          other.localTeamStatus == this.localTeamStatus &&
+          other.fundingStatus == this.fundingStatus &&
           other.stage == this.stage &&
           other.grade == this.grade &&
           other.sampleBatchId == this.sampleBatchId &&
@@ -671,12 +1012,20 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
   final Value<int> id;
   final Value<String> name;
   final Value<String?> company;
+  final Value<String?> customerNo;
+  final Value<String?> customerType;
+  final Value<String> owner;
   final Value<String?> country;
   final Value<String?> phone;
   final Value<String?> wechat;
   final Value<String?> address;
   final Value<String?> source;
   final Value<String?> note;
+  final Value<String?> tenderExperience;
+  final Value<String?> tenderQualification;
+  final Value<String?> tenderBidder;
+  final Value<String?> localTeamStatus;
+  final Value<String?> fundingStatus;
   final Value<String> stage;
   final Value<String> grade;
   final Value<String?> sampleBatchId;
@@ -687,12 +1036,20 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.company = const Value.absent(),
+    this.customerNo = const Value.absent(),
+    this.customerType = const Value.absent(),
+    this.owner = const Value.absent(),
     this.country = const Value.absent(),
     this.phone = const Value.absent(),
     this.wechat = const Value.absent(),
     this.address = const Value.absent(),
     this.source = const Value.absent(),
     this.note = const Value.absent(),
+    this.tenderExperience = const Value.absent(),
+    this.tenderQualification = const Value.absent(),
+    this.tenderBidder = const Value.absent(),
+    this.localTeamStatus = const Value.absent(),
+    this.fundingStatus = const Value.absent(),
     this.stage = const Value.absent(),
     this.grade = const Value.absent(),
     this.sampleBatchId = const Value.absent(),
@@ -704,12 +1061,20 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
     this.id = const Value.absent(),
     required String name,
     this.company = const Value.absent(),
+    this.customerNo = const Value.absent(),
+    this.customerType = const Value.absent(),
+    this.owner = const Value.absent(),
     this.country = const Value.absent(),
     this.phone = const Value.absent(),
     this.wechat = const Value.absent(),
     this.address = const Value.absent(),
     this.source = const Value.absent(),
     this.note = const Value.absent(),
+    this.tenderExperience = const Value.absent(),
+    this.tenderQualification = const Value.absent(),
+    this.tenderBidder = const Value.absent(),
+    this.localTeamStatus = const Value.absent(),
+    this.fundingStatus = const Value.absent(),
     this.stage = const Value.absent(),
     this.grade = const Value.absent(),
     this.sampleBatchId = const Value.absent(),
@@ -723,12 +1088,20 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
     Expression<int>? id,
     Expression<String>? name,
     Expression<String>? company,
+    Expression<String>? customerNo,
+    Expression<String>? customerType,
+    Expression<String>? owner,
     Expression<String>? country,
     Expression<String>? phone,
     Expression<String>? wechat,
     Expression<String>? address,
     Expression<String>? source,
     Expression<String>? note,
+    Expression<String>? tenderExperience,
+    Expression<String>? tenderQualification,
+    Expression<String>? tenderBidder,
+    Expression<String>? localTeamStatus,
+    Expression<String>? fundingStatus,
     Expression<String>? stage,
     Expression<String>? grade,
     Expression<String>? sampleBatchId,
@@ -740,12 +1113,21 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (company != null) 'company': company,
+      if (customerNo != null) 'customer_no': customerNo,
+      if (customerType != null) 'customer_type': customerType,
+      if (owner != null) 'owner': owner,
       if (country != null) 'country': country,
       if (phone != null) 'phone': phone,
       if (wechat != null) 'wechat': wechat,
       if (address != null) 'address': address,
       if (source != null) 'source': source,
       if (note != null) 'note': note,
+      if (tenderExperience != null) 'tender_experience': tenderExperience,
+      if (tenderQualification != null)
+        'tender_qualification': tenderQualification,
+      if (tenderBidder != null) 'tender_bidder': tenderBidder,
+      if (localTeamStatus != null) 'local_team_status': localTeamStatus,
+      if (fundingStatus != null) 'funding_status': fundingStatus,
       if (stage != null) 'stage': stage,
       if (grade != null) 'grade': grade,
       if (sampleBatchId != null) 'sample_batch_id': sampleBatchId,
@@ -759,12 +1141,20 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
     Value<int>? id,
     Value<String>? name,
     Value<String?>? company,
+    Value<String?>? customerNo,
+    Value<String?>? customerType,
+    Value<String>? owner,
     Value<String?>? country,
     Value<String?>? phone,
     Value<String?>? wechat,
     Value<String?>? address,
     Value<String?>? source,
     Value<String?>? note,
+    Value<String?>? tenderExperience,
+    Value<String?>? tenderQualification,
+    Value<String?>? tenderBidder,
+    Value<String?>? localTeamStatus,
+    Value<String?>? fundingStatus,
     Value<String>? stage,
     Value<String>? grade,
     Value<String?>? sampleBatchId,
@@ -776,12 +1166,20 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
       id: id ?? this.id,
       name: name ?? this.name,
       company: company ?? this.company,
+      customerNo: customerNo ?? this.customerNo,
+      customerType: customerType ?? this.customerType,
+      owner: owner ?? this.owner,
       country: country ?? this.country,
       phone: phone ?? this.phone,
       wechat: wechat ?? this.wechat,
       address: address ?? this.address,
       source: source ?? this.source,
       note: note ?? this.note,
+      tenderExperience: tenderExperience ?? this.tenderExperience,
+      tenderQualification: tenderQualification ?? this.tenderQualification,
+      tenderBidder: tenderBidder ?? this.tenderBidder,
+      localTeamStatus: localTeamStatus ?? this.localTeamStatus,
+      fundingStatus: fundingStatus ?? this.fundingStatus,
       stage: stage ?? this.stage,
       grade: grade ?? this.grade,
       sampleBatchId: sampleBatchId ?? this.sampleBatchId,
@@ -803,6 +1201,15 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
     if (company.present) {
       map['company'] = Variable<String>(company.value);
     }
+    if (customerNo.present) {
+      map['customer_no'] = Variable<String>(customerNo.value);
+    }
+    if (customerType.present) {
+      map['customer_type'] = Variable<String>(customerType.value);
+    }
+    if (owner.present) {
+      map['owner'] = Variable<String>(owner.value);
+    }
     if (country.present) {
       map['country'] = Variable<String>(country.value);
     }
@@ -820,6 +1227,21 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
     }
     if (note.present) {
       map['note'] = Variable<String>(note.value);
+    }
+    if (tenderExperience.present) {
+      map['tender_experience'] = Variable<String>(tenderExperience.value);
+    }
+    if (tenderQualification.present) {
+      map['tender_qualification'] = Variable<String>(tenderQualification.value);
+    }
+    if (tenderBidder.present) {
+      map['tender_bidder'] = Variable<String>(tenderBidder.value);
+    }
+    if (localTeamStatus.present) {
+      map['local_team_status'] = Variable<String>(localTeamStatus.value);
+    }
+    if (fundingStatus.present) {
+      map['funding_status'] = Variable<String>(fundingStatus.value);
     }
     if (stage.present) {
       map['stage'] = Variable<String>(stage.value);
@@ -848,12 +1270,20 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('company: $company, ')
+          ..write('customerNo: $customerNo, ')
+          ..write('customerType: $customerType, ')
+          ..write('owner: $owner, ')
           ..write('country: $country, ')
           ..write('phone: $phone, ')
           ..write('wechat: $wechat, ')
           ..write('address: $address, ')
           ..write('source: $source, ')
           ..write('note: $note, ')
+          ..write('tenderExperience: $tenderExperience, ')
+          ..write('tenderQualification: $tenderQualification, ')
+          ..write('tenderBidder: $tenderBidder, ')
+          ..write('localTeamStatus: $localTeamStatus, ')
+          ..write('fundingStatus: $fundingStatus, ')
           ..write('stage: $stage, ')
           ..write('grade: $grade, ')
           ..write('sampleBatchId: $sampleBatchId, ')
@@ -3115,6 +3545,46 @@ class $ContactsTable extends Contacts
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _emailMeta = const VerificationMeta('email');
+  @override
+  late final GeneratedColumn<String> email = GeneratedColumn<String>(
+    'email',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _whatsappMeta = const VerificationMeta(
+    'whatsapp',
+  );
+  @override
+  late final GeneratedColumn<String> whatsapp = GeneratedColumn<String>(
+    'whatsapp',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _communicationPreferenceMeta =
+      const VerificationMeta('communicationPreference');
+  @override
+  late final GeneratedColumn<String> communicationPreference =
+      GeneratedColumn<String>(
+        'communication_preference',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _isDecisionMakerMeta = const VerificationMeta(
     'isDecisionMaker',
   );
@@ -3159,6 +3629,10 @@ class $ContactsTable extends Contacts
     name,
     position,
     phone,
+    email,
+    whatsapp,
+    communicationPreference,
+    note,
     isDecisionMaker,
     createdAt,
     updatedAt,
@@ -3204,6 +3678,33 @@ class $ContactsTable extends Contacts
       context.handle(
         _phoneMeta,
         phone.isAcceptableOrUnknown(data['phone']!, _phoneMeta),
+      );
+    }
+    if (data.containsKey('email')) {
+      context.handle(
+        _emailMeta,
+        email.isAcceptableOrUnknown(data['email']!, _emailMeta),
+      );
+    }
+    if (data.containsKey('whatsapp')) {
+      context.handle(
+        _whatsappMeta,
+        whatsapp.isAcceptableOrUnknown(data['whatsapp']!, _whatsappMeta),
+      );
+    }
+    if (data.containsKey('communication_preference')) {
+      context.handle(
+        _communicationPreferenceMeta,
+        communicationPreference.isAcceptableOrUnknown(
+          data['communication_preference']!,
+          _communicationPreferenceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
       );
     }
     if (data.containsKey('is_decision_maker')) {
@@ -3260,6 +3761,22 @@ class $ContactsTable extends Contacts
         DriftSqlType.string,
         data['${effectivePrefix}phone'],
       ),
+      email: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}email'],
+      ),
+      whatsapp: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}whatsapp'],
+      ),
+      communicationPreference: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}communication_preference'],
+      ),
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
       isDecisionMaker: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_decision_maker'],
@@ -3287,6 +3804,10 @@ class ContactRow extends DataClass implements Insertable<ContactRow> {
   final String name;
   final String? position;
   final String? phone;
+  final String? email;
+  final String? whatsapp;
+  final String? communicationPreference;
+  final String? note;
 
   /// 是否决策人。能拍板的那个人要能一眼看出来。
   final bool isDecisionMaker;
@@ -3298,6 +3819,10 @@ class ContactRow extends DataClass implements Insertable<ContactRow> {
     required this.name,
     this.position,
     this.phone,
+    this.email,
+    this.whatsapp,
+    this.communicationPreference,
+    this.note,
     required this.isDecisionMaker,
     required this.createdAt,
     required this.updatedAt,
@@ -3313,6 +3838,20 @@ class ContactRow extends DataClass implements Insertable<ContactRow> {
     }
     if (!nullToAbsent || phone != null) {
       map['phone'] = Variable<String>(phone);
+    }
+    if (!nullToAbsent || email != null) {
+      map['email'] = Variable<String>(email);
+    }
+    if (!nullToAbsent || whatsapp != null) {
+      map['whatsapp'] = Variable<String>(whatsapp);
+    }
+    if (!nullToAbsent || communicationPreference != null) {
+      map['communication_preference'] = Variable<String>(
+        communicationPreference,
+      );
+    }
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
     }
     map['is_decision_maker'] = Variable<bool>(isDecisionMaker);
     map['created_at'] = Variable<int>(createdAt);
@@ -3331,6 +3870,16 @@ class ContactRow extends DataClass implements Insertable<ContactRow> {
       phone: phone == null && nullToAbsent
           ? const Value.absent()
           : Value(phone),
+      email: email == null && nullToAbsent
+          ? const Value.absent()
+          : Value(email),
+      whatsapp: whatsapp == null && nullToAbsent
+          ? const Value.absent()
+          : Value(whatsapp),
+      communicationPreference: communicationPreference == null && nullToAbsent
+          ? const Value.absent()
+          : Value(communicationPreference),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
       isDecisionMaker: Value(isDecisionMaker),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -3348,6 +3897,12 @@ class ContactRow extends DataClass implements Insertable<ContactRow> {
       name: serializer.fromJson<String>(json['name']),
       position: serializer.fromJson<String?>(json['position']),
       phone: serializer.fromJson<String?>(json['phone']),
+      email: serializer.fromJson<String?>(json['email']),
+      whatsapp: serializer.fromJson<String?>(json['whatsapp']),
+      communicationPreference: serializer.fromJson<String?>(
+        json['communicationPreference'],
+      ),
+      note: serializer.fromJson<String?>(json['note']),
       isDecisionMaker: serializer.fromJson<bool>(json['isDecisionMaker']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
@@ -3362,6 +3917,12 @@ class ContactRow extends DataClass implements Insertable<ContactRow> {
       'name': serializer.toJson<String>(name),
       'position': serializer.toJson<String?>(position),
       'phone': serializer.toJson<String?>(phone),
+      'email': serializer.toJson<String?>(email),
+      'whatsapp': serializer.toJson<String?>(whatsapp),
+      'communicationPreference': serializer.toJson<String?>(
+        communicationPreference,
+      ),
+      'note': serializer.toJson<String?>(note),
       'isDecisionMaker': serializer.toJson<bool>(isDecisionMaker),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
@@ -3374,6 +3935,10 @@ class ContactRow extends DataClass implements Insertable<ContactRow> {
     String? name,
     Value<String?> position = const Value.absent(),
     Value<String?> phone = const Value.absent(),
+    Value<String?> email = const Value.absent(),
+    Value<String?> whatsapp = const Value.absent(),
+    Value<String?> communicationPreference = const Value.absent(),
+    Value<String?> note = const Value.absent(),
     bool? isDecisionMaker,
     int? createdAt,
     int? updatedAt,
@@ -3383,6 +3948,12 @@ class ContactRow extends DataClass implements Insertable<ContactRow> {
     name: name ?? this.name,
     position: position.present ? position.value : this.position,
     phone: phone.present ? phone.value : this.phone,
+    email: email.present ? email.value : this.email,
+    whatsapp: whatsapp.present ? whatsapp.value : this.whatsapp,
+    communicationPreference: communicationPreference.present
+        ? communicationPreference.value
+        : this.communicationPreference,
+    note: note.present ? note.value : this.note,
     isDecisionMaker: isDecisionMaker ?? this.isDecisionMaker,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -3396,6 +3967,12 @@ class ContactRow extends DataClass implements Insertable<ContactRow> {
       name: data.name.present ? data.name.value : this.name,
       position: data.position.present ? data.position.value : this.position,
       phone: data.phone.present ? data.phone.value : this.phone,
+      email: data.email.present ? data.email.value : this.email,
+      whatsapp: data.whatsapp.present ? data.whatsapp.value : this.whatsapp,
+      communicationPreference: data.communicationPreference.present
+          ? data.communicationPreference.value
+          : this.communicationPreference,
+      note: data.note.present ? data.note.value : this.note,
       isDecisionMaker: data.isDecisionMaker.present
           ? data.isDecisionMaker.value
           : this.isDecisionMaker,
@@ -3412,6 +3989,10 @@ class ContactRow extends DataClass implements Insertable<ContactRow> {
           ..write('name: $name, ')
           ..write('position: $position, ')
           ..write('phone: $phone, ')
+          ..write('email: $email, ')
+          ..write('whatsapp: $whatsapp, ')
+          ..write('communicationPreference: $communicationPreference, ')
+          ..write('note: $note, ')
           ..write('isDecisionMaker: $isDecisionMaker, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -3426,6 +4007,10 @@ class ContactRow extends DataClass implements Insertable<ContactRow> {
     name,
     position,
     phone,
+    email,
+    whatsapp,
+    communicationPreference,
+    note,
     isDecisionMaker,
     createdAt,
     updatedAt,
@@ -3439,6 +4024,10 @@ class ContactRow extends DataClass implements Insertable<ContactRow> {
           other.name == this.name &&
           other.position == this.position &&
           other.phone == this.phone &&
+          other.email == this.email &&
+          other.whatsapp == this.whatsapp &&
+          other.communicationPreference == this.communicationPreference &&
+          other.note == this.note &&
           other.isDecisionMaker == this.isDecisionMaker &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -3450,6 +4039,10 @@ class ContactsCompanion extends UpdateCompanion<ContactRow> {
   final Value<String> name;
   final Value<String?> position;
   final Value<String?> phone;
+  final Value<String?> email;
+  final Value<String?> whatsapp;
+  final Value<String?> communicationPreference;
+  final Value<String?> note;
   final Value<bool> isDecisionMaker;
   final Value<int> createdAt;
   final Value<int> updatedAt;
@@ -3459,6 +4052,10 @@ class ContactsCompanion extends UpdateCompanion<ContactRow> {
     this.name = const Value.absent(),
     this.position = const Value.absent(),
     this.phone = const Value.absent(),
+    this.email = const Value.absent(),
+    this.whatsapp = const Value.absent(),
+    this.communicationPreference = const Value.absent(),
+    this.note = const Value.absent(),
     this.isDecisionMaker = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -3469,6 +4066,10 @@ class ContactsCompanion extends UpdateCompanion<ContactRow> {
     required String name,
     this.position = const Value.absent(),
     this.phone = const Value.absent(),
+    this.email = const Value.absent(),
+    this.whatsapp = const Value.absent(),
+    this.communicationPreference = const Value.absent(),
+    this.note = const Value.absent(),
     this.isDecisionMaker = const Value.absent(),
     required int createdAt,
     required int updatedAt,
@@ -3482,6 +4083,10 @@ class ContactsCompanion extends UpdateCompanion<ContactRow> {
     Expression<String>? name,
     Expression<String>? position,
     Expression<String>? phone,
+    Expression<String>? email,
+    Expression<String>? whatsapp,
+    Expression<String>? communicationPreference,
+    Expression<String>? note,
     Expression<bool>? isDecisionMaker,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
@@ -3492,6 +4097,11 @@ class ContactsCompanion extends UpdateCompanion<ContactRow> {
       if (name != null) 'name': name,
       if (position != null) 'position': position,
       if (phone != null) 'phone': phone,
+      if (email != null) 'email': email,
+      if (whatsapp != null) 'whatsapp': whatsapp,
+      if (communicationPreference != null)
+        'communication_preference': communicationPreference,
+      if (note != null) 'note': note,
       if (isDecisionMaker != null) 'is_decision_maker': isDecisionMaker,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -3504,6 +4114,10 @@ class ContactsCompanion extends UpdateCompanion<ContactRow> {
     Value<String>? name,
     Value<String?>? position,
     Value<String?>? phone,
+    Value<String?>? email,
+    Value<String?>? whatsapp,
+    Value<String?>? communicationPreference,
+    Value<String?>? note,
     Value<bool>? isDecisionMaker,
     Value<int>? createdAt,
     Value<int>? updatedAt,
@@ -3514,6 +4128,11 @@ class ContactsCompanion extends UpdateCompanion<ContactRow> {
       name: name ?? this.name,
       position: position ?? this.position,
       phone: phone ?? this.phone,
+      email: email ?? this.email,
+      whatsapp: whatsapp ?? this.whatsapp,
+      communicationPreference:
+          communicationPreference ?? this.communicationPreference,
+      note: note ?? this.note,
       isDecisionMaker: isDecisionMaker ?? this.isDecisionMaker,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -3538,6 +4157,20 @@ class ContactsCompanion extends UpdateCompanion<ContactRow> {
     if (phone.present) {
       map['phone'] = Variable<String>(phone.value);
     }
+    if (email.present) {
+      map['email'] = Variable<String>(email.value);
+    }
+    if (whatsapp.present) {
+      map['whatsapp'] = Variable<String>(whatsapp.value);
+    }
+    if (communicationPreference.present) {
+      map['communication_preference'] = Variable<String>(
+        communicationPreference.value,
+      );
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
     if (isDecisionMaker.present) {
       map['is_decision_maker'] = Variable<bool>(isDecisionMaker.value);
     }
@@ -3558,6 +4191,10 @@ class ContactsCompanion extends UpdateCompanion<ContactRow> {
           ..write('name: $name, ')
           ..write('position: $position, ')
           ..write('phone: $phone, ')
+          ..write('email: $email, ')
+          ..write('whatsapp: $whatsapp, ')
+          ..write('communicationPreference: $communicationPreference, ')
+          ..write('note: $note, ')
           ..write('isDecisionMaker: $isDecisionMaker, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -3611,6 +4248,20 @@ class $FollowupsTable extends Followups
     requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES opportunities (id) ON DELETE SET NULL',
+    ),
+  );
+  static const VerificationMeta _contactIdMeta = const VerificationMeta(
+    'contactId',
+  );
+  @override
+  late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
+    'contact_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES contacts (id) ON DELETE SET NULL',
     ),
   );
   static const VerificationMeta _occurredAtMeta = const VerificationMeta(
@@ -3708,6 +4359,26 @@ class $FollowupsTable extends Followups
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _attitudeMeta = const VerificationMeta(
+    'attitude',
+  );
+  @override
+  late final GeneratedColumn<String> attitude = GeneratedColumn<String>(
+    'attitude',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _ownerMeta = const VerificationMeta('owner');
+  @override
+  late final GeneratedColumn<String> owner = GeneratedColumn<String>(
+    'owner',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -3735,6 +4406,7 @@ class $FollowupsTable extends Followups
     id,
     customerId,
     opportunityId,
+    contactId,
     occurredAt,
     method,
     content,
@@ -3744,6 +4416,8 @@ class $FollowupsTable extends Followups
     nextAction,
     nextFollowAt,
     pauseReason,
+    attitude,
+    owner,
     createdAt,
     updatedAt,
   ];
@@ -3777,6 +4451,12 @@ class $FollowupsTable extends Followups
           data['opportunity_id']!,
           _opportunityIdMeta,
         ),
+      );
+    }
+    if (data.containsKey('contact_id')) {
+      context.handle(
+        _contactIdMeta,
+        contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta),
       );
     }
     if (data.containsKey('occurred_at')) {
@@ -3845,6 +4525,18 @@ class $FollowupsTable extends Followups
         ),
       );
     }
+    if (data.containsKey('attitude')) {
+      context.handle(
+        _attitudeMeta,
+        attitude.isAcceptableOrUnknown(data['attitude']!, _attitudeMeta),
+      );
+    }
+    if (data.containsKey('owner')) {
+      context.handle(
+        _ownerMeta,
+        owner.isAcceptableOrUnknown(data['owner']!, _ownerMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -3882,6 +4574,10 @@ class $FollowupsTable extends Followups
         DriftSqlType.int,
         data['${effectivePrefix}opportunity_id'],
       ),
+      contactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}contact_id'],
+      ),
       occurredAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}occurred_at'],
@@ -3918,6 +4614,14 @@ class $FollowupsTable extends Followups
         DriftSqlType.string,
         data['${effectivePrefix}pause_reason'],
       ),
+      attitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}attitude'],
+      ),
+      owner: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
@@ -3941,6 +4645,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
 
   /// v2 项目归属。为兼容原表结构保持可空，迁移会为全部旧记录回填。
   final int? opportunityId;
+  final int? contactId;
 
   /// 发生时间，UTC 毫秒。可以补录过去的跟进，所以不用 createdAt 代替。
   final int occurredAt;
@@ -3964,12 +4669,15 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
 
   /// 选择暂不跟进时的原因，与 [nextFollowAt] 互斥。
   final String? pauseReason;
+  final String? attitude;
+  final String? owner;
   final int createdAt;
   final int updatedAt;
   const FollowupRow({
     required this.id,
     required this.customerId,
     this.opportunityId,
+    this.contactId,
     required this.occurredAt,
     required this.method,
     required this.content,
@@ -3979,6 +4687,8 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     this.nextAction,
     this.nextFollowAt,
     this.pauseReason,
+    this.attitude,
+    this.owner,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -3989,6 +4699,9 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     map['customer_id'] = Variable<int>(customerId);
     if (!nullToAbsent || opportunityId != null) {
       map['opportunity_id'] = Variable<int>(opportunityId);
+    }
+    if (!nullToAbsent || contactId != null) {
+      map['contact_id'] = Variable<int>(contactId);
     }
     map['occurred_at'] = Variable<int>(occurredAt);
     map['method'] = Variable<String>(method);
@@ -4011,6 +4724,12 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     if (!nullToAbsent || pauseReason != null) {
       map['pause_reason'] = Variable<String>(pauseReason);
     }
+    if (!nullToAbsent || attitude != null) {
+      map['attitude'] = Variable<String>(attitude);
+    }
+    if (!nullToAbsent || owner != null) {
+      map['owner'] = Variable<String>(owner);
+    }
     map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
     return map;
@@ -4023,6 +4742,9 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
       opportunityId: opportunityId == null && nullToAbsent
           ? const Value.absent()
           : Value(opportunityId),
+      contactId: contactId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(contactId),
       occurredAt: Value(occurredAt),
       method: Value(method),
       content: Value(content),
@@ -4044,6 +4766,12 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
       pauseReason: pauseReason == null && nullToAbsent
           ? const Value.absent()
           : Value(pauseReason),
+      attitude: attitude == null && nullToAbsent
+          ? const Value.absent()
+          : Value(attitude),
+      owner: owner == null && nullToAbsent
+          ? const Value.absent()
+          : Value(owner),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -4058,6 +4786,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
       id: serializer.fromJson<int>(json['id']),
       customerId: serializer.fromJson<int>(json['customerId']),
       opportunityId: serializer.fromJson<int?>(json['opportunityId']),
+      contactId: serializer.fromJson<int?>(json['contactId']),
       occurredAt: serializer.fromJson<int>(json['occurredAt']),
       method: serializer.fromJson<String>(json['method']),
       content: serializer.fromJson<String>(json['content']),
@@ -4067,6 +4796,8 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
       nextAction: serializer.fromJson<String?>(json['nextAction']),
       nextFollowAt: serializer.fromJson<int?>(json['nextFollowAt']),
       pauseReason: serializer.fromJson<String?>(json['pauseReason']),
+      attitude: serializer.fromJson<String?>(json['attitude']),
+      owner: serializer.fromJson<String?>(json['owner']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
     );
@@ -4078,6 +4809,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
       'id': serializer.toJson<int>(id),
       'customerId': serializer.toJson<int>(customerId),
       'opportunityId': serializer.toJson<int?>(opportunityId),
+      'contactId': serializer.toJson<int?>(contactId),
       'occurredAt': serializer.toJson<int>(occurredAt),
       'method': serializer.toJson<String>(method),
       'content': serializer.toJson<String>(content),
@@ -4087,6 +4819,8 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
       'nextAction': serializer.toJson<String?>(nextAction),
       'nextFollowAt': serializer.toJson<int?>(nextFollowAt),
       'pauseReason': serializer.toJson<String?>(pauseReason),
+      'attitude': serializer.toJson<String?>(attitude),
+      'owner': serializer.toJson<String?>(owner),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
     };
@@ -4096,6 +4830,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     int? id,
     int? customerId,
     Value<int?> opportunityId = const Value.absent(),
+    Value<int?> contactId = const Value.absent(),
     int? occurredAt,
     String? method,
     String? content,
@@ -4105,6 +4840,8 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     Value<String?> nextAction = const Value.absent(),
     Value<int?> nextFollowAt = const Value.absent(),
     Value<String?> pauseReason = const Value.absent(),
+    Value<String?> attitude = const Value.absent(),
+    Value<String?> owner = const Value.absent(),
     int? createdAt,
     int? updatedAt,
   }) => FollowupRow(
@@ -4113,6 +4850,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     opportunityId: opportunityId.present
         ? opportunityId.value
         : this.opportunityId,
+    contactId: contactId.present ? contactId.value : this.contactId,
     occurredAt: occurredAt ?? this.occurredAt,
     method: method ?? this.method,
     content: content ?? this.content,
@@ -4122,6 +4860,8 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     nextAction: nextAction.present ? nextAction.value : this.nextAction,
     nextFollowAt: nextFollowAt.present ? nextFollowAt.value : this.nextFollowAt,
     pauseReason: pauseReason.present ? pauseReason.value : this.pauseReason,
+    attitude: attitude.present ? attitude.value : this.attitude,
+    owner: owner.present ? owner.value : this.owner,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -4134,6 +4874,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
       opportunityId: data.opportunityId.present
           ? data.opportunityId.value
           : this.opportunityId,
+      contactId: data.contactId.present ? data.contactId.value : this.contactId,
       occurredAt: data.occurredAt.present
           ? data.occurredAt.value
           : this.occurredAt,
@@ -4153,6 +4894,8 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
       pauseReason: data.pauseReason.present
           ? data.pauseReason.value
           : this.pauseReason,
+      attitude: data.attitude.present ? data.attitude.value : this.attitude,
+      owner: data.owner.present ? data.owner.value : this.owner,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -4164,6 +4907,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
           ..write('id: $id, ')
           ..write('customerId: $customerId, ')
           ..write('opportunityId: $opportunityId, ')
+          ..write('contactId: $contactId, ')
           ..write('occurredAt: $occurredAt, ')
           ..write('method: $method, ')
           ..write('content: $content, ')
@@ -4173,6 +4917,8 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
           ..write('nextAction: $nextAction, ')
           ..write('nextFollowAt: $nextFollowAt, ')
           ..write('pauseReason: $pauseReason, ')
+          ..write('attitude: $attitude, ')
+          ..write('owner: $owner, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -4184,6 +4930,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     id,
     customerId,
     opportunityId,
+    contactId,
     occurredAt,
     method,
     content,
@@ -4193,6 +4940,8 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     nextAction,
     nextFollowAt,
     pauseReason,
+    attitude,
+    owner,
     createdAt,
     updatedAt,
   );
@@ -4203,6 +4952,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
           other.id == this.id &&
           other.customerId == this.customerId &&
           other.opportunityId == this.opportunityId &&
+          other.contactId == this.contactId &&
           other.occurredAt == this.occurredAt &&
           other.method == this.method &&
           other.content == this.content &&
@@ -4212,6 +4962,8 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
           other.nextAction == this.nextAction &&
           other.nextFollowAt == this.nextFollowAt &&
           other.pauseReason == this.pauseReason &&
+          other.attitude == this.attitude &&
+          other.owner == this.owner &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -4220,6 +4972,7 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
   final Value<int> id;
   final Value<int> customerId;
   final Value<int?> opportunityId;
+  final Value<int?> contactId;
   final Value<int> occurredAt;
   final Value<String> method;
   final Value<String> content;
@@ -4229,12 +4982,15 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
   final Value<String?> nextAction;
   final Value<int?> nextFollowAt;
   final Value<String?> pauseReason;
+  final Value<String?> attitude;
+  final Value<String?> owner;
   final Value<int> createdAt;
   final Value<int> updatedAt;
   const FollowupsCompanion({
     this.id = const Value.absent(),
     this.customerId = const Value.absent(),
     this.opportunityId = const Value.absent(),
+    this.contactId = const Value.absent(),
     this.occurredAt = const Value.absent(),
     this.method = const Value.absent(),
     this.content = const Value.absent(),
@@ -4244,6 +5000,8 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     this.nextAction = const Value.absent(),
     this.nextFollowAt = const Value.absent(),
     this.pauseReason = const Value.absent(),
+    this.attitude = const Value.absent(),
+    this.owner = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
@@ -4251,6 +5009,7 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     this.id = const Value.absent(),
     required int customerId,
     this.opportunityId = const Value.absent(),
+    this.contactId = const Value.absent(),
     required int occurredAt,
     required String method,
     required String content,
@@ -4260,6 +5019,8 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     this.nextAction = const Value.absent(),
     this.nextFollowAt = const Value.absent(),
     this.pauseReason = const Value.absent(),
+    this.attitude = const Value.absent(),
+    this.owner = const Value.absent(),
     required int createdAt,
     required int updatedAt,
   }) : customerId = Value(customerId),
@@ -4272,6 +5033,7 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     Expression<int>? id,
     Expression<int>? customerId,
     Expression<int>? opportunityId,
+    Expression<int>? contactId,
     Expression<int>? occurredAt,
     Expression<String>? method,
     Expression<String>? content,
@@ -4281,6 +5043,8 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     Expression<String>? nextAction,
     Expression<int>? nextFollowAt,
     Expression<String>? pauseReason,
+    Expression<String>? attitude,
+    Expression<String>? owner,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
   }) {
@@ -4288,6 +5052,7 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
       if (id != null) 'id': id,
       if (customerId != null) 'customer_id': customerId,
       if (opportunityId != null) 'opportunity_id': opportunityId,
+      if (contactId != null) 'contact_id': contactId,
       if (occurredAt != null) 'occurred_at': occurredAt,
       if (method != null) 'method': method,
       if (content != null) 'content': content,
@@ -4297,6 +5062,8 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
       if (nextAction != null) 'next_action': nextAction,
       if (nextFollowAt != null) 'next_follow_at': nextFollowAt,
       if (pauseReason != null) 'pause_reason': pauseReason,
+      if (attitude != null) 'attitude': attitude,
+      if (owner != null) 'owner': owner,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
@@ -4306,6 +5073,7 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     Value<int>? id,
     Value<int>? customerId,
     Value<int?>? opportunityId,
+    Value<int?>? contactId,
     Value<int>? occurredAt,
     Value<String>? method,
     Value<String>? content,
@@ -4315,6 +5083,8 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     Value<String?>? nextAction,
     Value<int?>? nextFollowAt,
     Value<String?>? pauseReason,
+    Value<String?>? attitude,
+    Value<String?>? owner,
     Value<int>? createdAt,
     Value<int>? updatedAt,
   }) {
@@ -4322,6 +5092,7 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
       id: id ?? this.id,
       customerId: customerId ?? this.customerId,
       opportunityId: opportunityId ?? this.opportunityId,
+      contactId: contactId ?? this.contactId,
       occurredAt: occurredAt ?? this.occurredAt,
       method: method ?? this.method,
       content: content ?? this.content,
@@ -4331,6 +5102,8 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
       nextAction: nextAction ?? this.nextAction,
       nextFollowAt: nextFollowAt ?? this.nextFollowAt,
       pauseReason: pauseReason ?? this.pauseReason,
+      attitude: attitude ?? this.attitude,
+      owner: owner ?? this.owner,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -4347,6 +5120,9 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     }
     if (opportunityId.present) {
       map['opportunity_id'] = Variable<int>(opportunityId.value);
+    }
+    if (contactId.present) {
+      map['contact_id'] = Variable<int>(contactId.value);
     }
     if (occurredAt.present) {
       map['occurred_at'] = Variable<int>(occurredAt.value);
@@ -4375,6 +5151,12 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     if (pauseReason.present) {
       map['pause_reason'] = Variable<String>(pauseReason.value);
     }
+    if (attitude.present) {
+      map['attitude'] = Variable<String>(attitude.value);
+    }
+    if (owner.present) {
+      map['owner'] = Variable<String>(owner.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<int>(createdAt.value);
     }
@@ -4390,6 +5172,7 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
           ..write('id: $id, ')
           ..write('customerId: $customerId, ')
           ..write('opportunityId: $opportunityId, ')
+          ..write('contactId: $contactId, ')
           ..write('occurredAt: $occurredAt, ')
           ..write('method: $method, ')
           ..write('content: $content, ')
@@ -4399,6 +5182,8 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
           ..write('nextAction: $nextAction, ')
           ..write('nextFollowAt: $nextFollowAt, ')
           ..write('pauseReason: $pauseReason, ')
+          ..write('attitude: $attitude, ')
+          ..write('owner: $owner, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -12173,6 +12958,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
+        'contacts',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('followups', kind: UpdateKind.update)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
         'customers',
         limitUpdateKind: UpdateKind.delete,
       ),
@@ -12291,12 +13083,20 @@ typedef $$CustomersTableCreateCompanionBuilder =
       Value<int> id,
       required String name,
       Value<String?> company,
+      Value<String?> customerNo,
+      Value<String?> customerType,
+      Value<String> owner,
       Value<String?> country,
       Value<String?> phone,
       Value<String?> wechat,
       Value<String?> address,
       Value<String?> source,
       Value<String?> note,
+      Value<String?> tenderExperience,
+      Value<String?> tenderQualification,
+      Value<String?> tenderBidder,
+      Value<String?> localTeamStatus,
+      Value<String?> fundingStatus,
       Value<String> stage,
       Value<String> grade,
       Value<String?> sampleBatchId,
@@ -12309,12 +13109,20 @@ typedef $$CustomersTableUpdateCompanionBuilder =
       Value<int> id,
       Value<String> name,
       Value<String?> company,
+      Value<String?> customerNo,
+      Value<String?> customerType,
+      Value<String> owner,
       Value<String?> country,
       Value<String?> phone,
       Value<String?> wechat,
       Value<String?> address,
       Value<String?> source,
       Value<String?> note,
+      Value<String?> tenderExperience,
+      Value<String?> tenderQualification,
+      Value<String?> tenderBidder,
+      Value<String?> localTeamStatus,
+      Value<String?> fundingStatus,
       Value<String> stage,
       Value<String> grade,
       Value<String?> sampleBatchId,
@@ -12461,6 +13269,21 @@ class $$CustomersTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get customerNo => $composableBuilder(
+    column: $table.customerNo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get customerType => $composableBuilder(
+    column: $table.customerType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get owner => $composableBuilder(
+    column: $table.owner,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get country => $composableBuilder(
     column: $table.country,
     builder: (column) => ColumnFilters(column),
@@ -12488,6 +13311,31 @@ class $$CustomersTableFilterComposer
 
   ColumnFilters<String> get note => $composableBuilder(
     column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tenderExperience => $composableBuilder(
+    column: $table.tenderExperience,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tenderQualification => $composableBuilder(
+    column: $table.tenderQualification,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tenderBidder => $composableBuilder(
+    column: $table.tenderBidder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get localTeamStatus => $composableBuilder(
+    column: $table.localTeamStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fundingStatus => $composableBuilder(
+    column: $table.fundingStatus,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -12696,6 +13544,21 @@ class $$CustomersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get customerNo => $composableBuilder(
+    column: $table.customerNo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get customerType => $composableBuilder(
+    column: $table.customerType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get owner => $composableBuilder(
+    column: $table.owner,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get country => $composableBuilder(
     column: $table.country,
     builder: (column) => ColumnOrderings(column),
@@ -12723,6 +13586,31 @@ class $$CustomersTableOrderingComposer
 
   ColumnOrderings<String> get note => $composableBuilder(
     column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tenderExperience => $composableBuilder(
+    column: $table.tenderExperience,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tenderQualification => $composableBuilder(
+    column: $table.tenderQualification,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tenderBidder => $composableBuilder(
+    column: $table.tenderBidder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get localTeamStatus => $composableBuilder(
+    column: $table.localTeamStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fundingStatus => $composableBuilder(
+    column: $table.fundingStatus,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -12775,6 +13663,19 @@ class $$CustomersTableAnnotationComposer
   GeneratedColumn<String> get company =>
       $composableBuilder(column: $table.company, builder: (column) => column);
 
+  GeneratedColumn<String> get customerNo => $composableBuilder(
+    column: $table.customerNo,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get customerType => $composableBuilder(
+    column: $table.customerType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get owner =>
+      $composableBuilder(column: $table.owner, builder: (column) => column);
+
   GeneratedColumn<String> get country =>
       $composableBuilder(column: $table.country, builder: (column) => column);
 
@@ -12792,6 +13693,31 @@ class $$CustomersTableAnnotationComposer
 
   GeneratedColumn<String> get note =>
       $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<String> get tenderExperience => $composableBuilder(
+    column: $table.tenderExperience,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get tenderQualification => $composableBuilder(
+    column: $table.tenderQualification,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get tenderBidder => $composableBuilder(
+    column: $table.tenderBidder,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get localTeamStatus => $composableBuilder(
+    column: $table.localTeamStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get fundingStatus => $composableBuilder(
+    column: $table.fundingStatus,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get stage =>
       $composableBuilder(column: $table.stage, builder: (column) => column);
@@ -13004,12 +13930,20 @@ class $$CustomersTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String?> company = const Value.absent(),
+                Value<String?> customerNo = const Value.absent(),
+                Value<String?> customerType = const Value.absent(),
+                Value<String> owner = const Value.absent(),
                 Value<String?> country = const Value.absent(),
                 Value<String?> phone = const Value.absent(),
                 Value<String?> wechat = const Value.absent(),
                 Value<String?> address = const Value.absent(),
                 Value<String?> source = const Value.absent(),
                 Value<String?> note = const Value.absent(),
+                Value<String?> tenderExperience = const Value.absent(),
+                Value<String?> tenderQualification = const Value.absent(),
+                Value<String?> tenderBidder = const Value.absent(),
+                Value<String?> localTeamStatus = const Value.absent(),
+                Value<String?> fundingStatus = const Value.absent(),
                 Value<String> stage = const Value.absent(),
                 Value<String> grade = const Value.absent(),
                 Value<String?> sampleBatchId = const Value.absent(),
@@ -13020,12 +13954,20 @@ class $$CustomersTableTableManager
                 id: id,
                 name: name,
                 company: company,
+                customerNo: customerNo,
+                customerType: customerType,
+                owner: owner,
                 country: country,
                 phone: phone,
                 wechat: wechat,
                 address: address,
                 source: source,
                 note: note,
+                tenderExperience: tenderExperience,
+                tenderQualification: tenderQualification,
+                tenderBidder: tenderBidder,
+                localTeamStatus: localTeamStatus,
+                fundingStatus: fundingStatus,
                 stage: stage,
                 grade: grade,
                 sampleBatchId: sampleBatchId,
@@ -13038,12 +13980,20 @@ class $$CustomersTableTableManager
                 Value<int> id = const Value.absent(),
                 required String name,
                 Value<String?> company = const Value.absent(),
+                Value<String?> customerNo = const Value.absent(),
+                Value<String?> customerType = const Value.absent(),
+                Value<String> owner = const Value.absent(),
                 Value<String?> country = const Value.absent(),
                 Value<String?> phone = const Value.absent(),
                 Value<String?> wechat = const Value.absent(),
                 Value<String?> address = const Value.absent(),
                 Value<String?> source = const Value.absent(),
                 Value<String?> note = const Value.absent(),
+                Value<String?> tenderExperience = const Value.absent(),
+                Value<String?> tenderQualification = const Value.absent(),
+                Value<String?> tenderBidder = const Value.absent(),
+                Value<String?> localTeamStatus = const Value.absent(),
+                Value<String?> fundingStatus = const Value.absent(),
                 Value<String> stage = const Value.absent(),
                 Value<String> grade = const Value.absent(),
                 Value<String?> sampleBatchId = const Value.absent(),
@@ -13054,12 +14004,20 @@ class $$CustomersTableTableManager
                 id: id,
                 name: name,
                 company: company,
+                customerNo: customerNo,
+                customerType: customerType,
+                owner: owner,
                 country: country,
                 phone: phone,
                 wechat: wechat,
                 address: address,
                 source: source,
                 note: note,
+                tenderExperience: tenderExperience,
+                tenderQualification: tenderQualification,
+                tenderBidder: tenderBidder,
+                localTeamStatus: localTeamStatus,
+                fundingStatus: fundingStatus,
                 stage: stage,
                 grade: grade,
                 sampleBatchId: sampleBatchId,
@@ -14925,6 +15883,10 @@ typedef $$ContactsTableCreateCompanionBuilder =
       required String name,
       Value<String?> position,
       Value<String?> phone,
+      Value<String?> email,
+      Value<String?> whatsapp,
+      Value<String?> communicationPreference,
+      Value<String?> note,
       Value<bool> isDecisionMaker,
       required int createdAt,
       required int updatedAt,
@@ -14936,6 +15898,10 @@ typedef $$ContactsTableUpdateCompanionBuilder =
       Value<String> name,
       Value<String?> position,
       Value<String?> phone,
+      Value<String?> email,
+      Value<String?> whatsapp,
+      Value<String?> communicationPreference,
+      Value<String?> note,
       Value<bool> isDecisionMaker,
       Value<int> createdAt,
       Value<int> updatedAt,
@@ -14959,6 +15925,24 @@ final class $$ContactsTableReferences
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$FollowupsTable, List<FollowupRow>>
+  _followupsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.followups,
+    aliasName: 'contacts__id__followups__contact_id',
+  );
+
+  $$FollowupsTableProcessedTableManager get followupsRefs {
+    final manager = $$FollowupsTableTableManager(
+      $_db,
+      $_db.followups,
+    ).filter((f) => f.contactId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_followupsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
     );
   }
 }
@@ -14989,6 +15973,26 @@ class $$ContactsTableFilterComposer
 
   ColumnFilters<String> get phone => $composableBuilder(
     column: $table.phone,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get email => $composableBuilder(
+    column: $table.email,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get whatsapp => $composableBuilder(
+    column: $table.whatsapp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get communicationPreference => $composableBuilder(
+    column: $table.communicationPreference,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -15029,6 +16033,31 @@ class $$ContactsTableFilterComposer
     );
     return composer;
   }
+
+  Expression<bool> followupsRefs(
+    Expression<bool> Function($$FollowupsTableFilterComposer f) f,
+  ) {
+    final $$FollowupsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.followups,
+      getReferencedColumn: (t) => t.contactId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FollowupsTableFilterComposer(
+            $db: $db,
+            $table: $db.followups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ContactsTableOrderingComposer
@@ -15057,6 +16086,26 @@ class $$ContactsTableOrderingComposer
 
   ColumnOrderings<String> get phone => $composableBuilder(
     column: $table.phone,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get email => $composableBuilder(
+    column: $table.email,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get whatsapp => $composableBuilder(
+    column: $table.whatsapp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get communicationPreference => $composableBuilder(
+    column: $table.communicationPreference,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -15120,6 +16169,20 @@ class $$ContactsTableAnnotationComposer
   GeneratedColumn<String> get phone =>
       $composableBuilder(column: $table.phone, builder: (column) => column);
 
+  GeneratedColumn<String> get email =>
+      $composableBuilder(column: $table.email, builder: (column) => column);
+
+  GeneratedColumn<String> get whatsapp =>
+      $composableBuilder(column: $table.whatsapp, builder: (column) => column);
+
+  GeneratedColumn<String> get communicationPreference => $composableBuilder(
+    column: $table.communicationPreference,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
   GeneratedColumn<bool> get isDecisionMaker => $composableBuilder(
     column: $table.isDecisionMaker,
     builder: (column) => column,
@@ -15153,6 +16216,31 @@ class $$ContactsTableAnnotationComposer
     );
     return composer;
   }
+
+  Expression<T> followupsRefs<T extends Object>(
+    Expression<T> Function($$FollowupsTableAnnotationComposer a) f,
+  ) {
+    final $$FollowupsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.followups,
+      getReferencedColumn: (t) => t.contactId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FollowupsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.followups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ContactsTableTableManager
@@ -15168,7 +16256,7 @@ class $$ContactsTableTableManager
           $$ContactsTableUpdateCompanionBuilder,
           (ContactRow, $$ContactsTableReferences),
           ContactRow,
-          PrefetchHooks Function({bool customerId})
+          PrefetchHooks Function({bool customerId, bool followupsRefs})
         > {
   $$ContactsTableTableManager(_$AppDatabase db, $ContactsTable table)
     : super(
@@ -15188,6 +16276,10 @@ class $$ContactsTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<String?> position = const Value.absent(),
                 Value<String?> phone = const Value.absent(),
+                Value<String?> email = const Value.absent(),
+                Value<String?> whatsapp = const Value.absent(),
+                Value<String?> communicationPreference = const Value.absent(),
+                Value<String?> note = const Value.absent(),
                 Value<bool> isDecisionMaker = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
@@ -15197,6 +16289,10 @@ class $$ContactsTableTableManager
                 name: name,
                 position: position,
                 phone: phone,
+                email: email,
+                whatsapp: whatsapp,
+                communicationPreference: communicationPreference,
+                note: note,
                 isDecisionMaker: isDecisionMaker,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -15208,6 +16304,10 @@ class $$ContactsTableTableManager
                 required String name,
                 Value<String?> position = const Value.absent(),
                 Value<String?> phone = const Value.absent(),
+                Value<String?> email = const Value.absent(),
+                Value<String?> whatsapp = const Value.absent(),
+                Value<String?> communicationPreference = const Value.absent(),
+                Value<String?> note = const Value.absent(),
                 Value<bool> isDecisionMaker = const Value.absent(),
                 required int createdAt,
                 required int updatedAt,
@@ -15217,6 +16317,10 @@ class $$ContactsTableTableManager
                 name: name,
                 position: position,
                 phone: phone,
+                email: email,
+                whatsapp: whatsapp,
+                communicationPreference: communicationPreference,
+                note: note,
                 isDecisionMaker: isDecisionMaker,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -15229,10 +16333,10 @@ class $$ContactsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({customerId = false}) {
+          prefetchHooksCallback: ({customerId = false, followupsRefs = false}) {
             return PrefetchHooks(
               db: db,
-              explicitlyWatchedTables: [],
+              explicitlyWatchedTables: [if (followupsRefs) db.followups],
               addJoins:
                   <
                     T extends TableManagerState<
@@ -15266,7 +16370,26 @@ class $$ContactsTableTableManager
                     return state;
                   },
               getPrefetchedDataCallback: (items) async {
-                return [];
+                return [
+                  if (followupsRefs)
+                    await $_getPrefetchedData<
+                      ContactRow,
+                      $ContactsTable,
+                      FollowupRow
+                    >(
+                      currentTable: table,
+                      referencedTable: $$ContactsTableReferences
+                          ._followupsRefsTable(db),
+                      managerFromTypedResult: (p0) => $$ContactsTableReferences(
+                        db,
+                        table,
+                        p0,
+                      ).followupsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.contactId == item.id),
+                      typedResults: items,
+                    ),
+                ];
               },
             );
           },
@@ -15286,13 +16409,14 @@ typedef $$ContactsTableProcessedTableManager =
       $$ContactsTableUpdateCompanionBuilder,
       (ContactRow, $$ContactsTableReferences),
       ContactRow,
-      PrefetchHooks Function({bool customerId})
+      PrefetchHooks Function({bool customerId, bool followupsRefs})
     >;
 typedef $$FollowupsTableCreateCompanionBuilder =
     FollowupsCompanion Function({
       Value<int> id,
       required int customerId,
       Value<int?> opportunityId,
+      Value<int?> contactId,
       required int occurredAt,
       required String method,
       required String content,
@@ -15302,6 +16426,8 @@ typedef $$FollowupsTableCreateCompanionBuilder =
       Value<String?> nextAction,
       Value<int?> nextFollowAt,
       Value<String?> pauseReason,
+      Value<String?> attitude,
+      Value<String?> owner,
       required int createdAt,
       required int updatedAt,
     });
@@ -15310,6 +16436,7 @@ typedef $$FollowupsTableUpdateCompanionBuilder =
       Value<int> id,
       Value<int> customerId,
       Value<int?> opportunityId,
+      Value<int?> contactId,
       Value<int> occurredAt,
       Value<String> method,
       Value<String> content,
@@ -15319,6 +16446,8 @@ typedef $$FollowupsTableUpdateCompanionBuilder =
       Value<String?> nextAction,
       Value<int?> nextFollowAt,
       Value<String?> pauseReason,
+      Value<String?> attitude,
+      Value<String?> owner,
       Value<int> createdAt,
       Value<int> updatedAt,
     });
@@ -15356,6 +16485,23 @@ final class $$FollowupsTableReferences
       $_db.opportunities,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_opportunityIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $ContactsTable _contactIdTable(_$AppDatabase db) =>
+      db.contacts.createAlias('followups__contact_id__contacts__id');
+
+  $$ContactsTableProcessedTableManager? get contactId {
+    final $_column = $_itemColumn<int>('contact_id');
+    if ($_column == null) return null;
+    final manager = $$ContactsTableTableManager(
+      $_db,
+      $_db.contacts,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
@@ -15440,6 +16586,16 @@ class $$FollowupsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get attitude => $composableBuilder(
+    column: $table.attitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get owner => $composableBuilder(
+    column: $table.owner,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<int> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnFilters(column),
@@ -15487,6 +16643,29 @@ class $$FollowupsTableFilterComposer
           }) => $$OpportunitiesTableFilterComposer(
             $db: $db,
             $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ContactsTableFilterComposer get contactId {
+    final $$ContactsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableFilterComposer(
+            $db: $db,
+            $table: $db.contacts,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -15581,6 +16760,16 @@ class $$FollowupsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get attitude => $composableBuilder(
+    column: $table.attitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get owner => $composableBuilder(
+    column: $table.owner,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -15628,6 +16817,29 @@ class $$FollowupsTableOrderingComposer
           }) => $$OpportunitiesTableOrderingComposer(
             $db: $db,
             $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ContactsTableOrderingComposer get contactId {
+    final $$ContactsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableOrderingComposer(
+            $db: $db,
+            $table: $db.contacts,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -15687,6 +16899,12 @@ class $$FollowupsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get attitude =>
+      $composableBuilder(column: $table.attitude, builder: (column) => column);
+
+  GeneratedColumn<String> get owner =>
+      $composableBuilder(column: $table.owner, builder: (column) => column);
+
   GeneratedColumn<int> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -15739,6 +16957,29 @@ class $$FollowupsTableAnnotationComposer
     return composer;
   }
 
+  $$ContactsTableAnnotationComposer get contactId {
+    final $$ContactsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
   Expression<T> attachmentsRefs<T extends Object>(
     Expression<T> Function($$AttachmentsTableAnnotationComposer a) f,
   ) {
@@ -15781,6 +17022,7 @@ class $$FollowupsTableTableManager
           PrefetchHooks Function({
             bool customerId,
             bool opportunityId,
+            bool contactId,
             bool attachmentsRefs,
           })
         > {
@@ -15800,6 +17042,7 @@ class $$FollowupsTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<int> customerId = const Value.absent(),
                 Value<int?> opportunityId = const Value.absent(),
+                Value<int?> contactId = const Value.absent(),
                 Value<int> occurredAt = const Value.absent(),
                 Value<String> method = const Value.absent(),
                 Value<String> content = const Value.absent(),
@@ -15809,12 +17052,15 @@ class $$FollowupsTableTableManager
                 Value<String?> nextAction = const Value.absent(),
                 Value<int?> nextFollowAt = const Value.absent(),
                 Value<String?> pauseReason = const Value.absent(),
+                Value<String?> attitude = const Value.absent(),
+                Value<String?> owner = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
               }) => FollowupsCompanion(
                 id: id,
                 customerId: customerId,
                 opportunityId: opportunityId,
+                contactId: contactId,
                 occurredAt: occurredAt,
                 method: method,
                 content: content,
@@ -15824,6 +17070,8 @@ class $$FollowupsTableTableManager
                 nextAction: nextAction,
                 nextFollowAt: nextFollowAt,
                 pauseReason: pauseReason,
+                attitude: attitude,
+                owner: owner,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),
@@ -15832,6 +17080,7 @@ class $$FollowupsTableTableManager
                 Value<int> id = const Value.absent(),
                 required int customerId,
                 Value<int?> opportunityId = const Value.absent(),
+                Value<int?> contactId = const Value.absent(),
                 required int occurredAt,
                 required String method,
                 required String content,
@@ -15841,12 +17090,15 @@ class $$FollowupsTableTableManager
                 Value<String?> nextAction = const Value.absent(),
                 Value<int?> nextFollowAt = const Value.absent(),
                 Value<String?> pauseReason = const Value.absent(),
+                Value<String?> attitude = const Value.absent(),
+                Value<String?> owner = const Value.absent(),
                 required int createdAt,
                 required int updatedAt,
               }) => FollowupsCompanion.insert(
                 id: id,
                 customerId: customerId,
                 opportunityId: opportunityId,
+                contactId: contactId,
                 occurredAt: occurredAt,
                 method: method,
                 content: content,
@@ -15856,6 +17108,8 @@ class $$FollowupsTableTableManager
                 nextAction: nextAction,
                 nextFollowAt: nextFollowAt,
                 pauseReason: pauseReason,
+                attitude: attitude,
+                owner: owner,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),
@@ -15871,6 +17125,7 @@ class $$FollowupsTableTableManager
               ({
                 customerId = false,
                 opportunityId = false,
+                contactId = false,
                 attachmentsRefs = false,
               }) {
                 return PrefetchHooks(
@@ -15916,6 +17171,19 @@ class $$FollowupsTableTableManager
                                         ._opportunityIdTable(db),
                                     referencedColumn: $$FollowupsTableReferences
                                         ._opportunityIdTable(db)
+                                        .id,
+                                  )
+                                  as T;
+                        }
+                        if (contactId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.contactId,
+                                    referencedTable: $$FollowupsTableReferences
+                                        ._contactIdTable(db),
+                                    referencedColumn: $$FollowupsTableReferences
+                                        ._contactIdTable(db)
                                         .id,
                                   )
                                   as T;
@@ -15969,6 +17237,7 @@ typedef $$FollowupsTableProcessedTableManager =
       PrefetchHooks Function({
         bool customerId,
         bool opportunityId,
+        bool contactId,
         bool attachmentsRefs,
       })
     >;

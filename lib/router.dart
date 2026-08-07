@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'data/daos/customer_dao.dart';
 import 'features/attachments/attachment_page.dart';
 import 'features/attachments/attachment_preview_page.dart';
 import 'features/attachments/attachment_providers.dart';
 import 'features/customers/customer_detail_page.dart';
+import 'features/customers/contact_form_page.dart';
 import 'features/business/quote_form_page.dart';
+import 'features/business/quote_outcome_page.dart';
 import 'features/business/registration_form_page.dart';
 import 'features/business/sample_form_page.dart';
 import 'features/business/tender_form_page.dart';
@@ -77,7 +80,13 @@ final router = GoRouter(
           routes: [
             GoRoute(
               path: '/customers',
-              builder: (context, state) => const CustomersPage(),
+              builder: (context, state) {
+                final anomalyName = state.uri.queryParameters['anomaly'];
+                final anomaly = CustomerAnomalyFilter.values
+                    .where((value) => value.name == anomalyName)
+                    .firstOrNull;
+                return CustomersPage(initialAnomaly: anomaly);
+              },
               routes: [
                 GoRoute(
                   path: 'new',
@@ -123,6 +132,23 @@ final router = GoRouter(
                         }
                         return FollowupFormPage(customerId: customerId);
                       },
+                    ),
+                    GoRoute(
+                      path: 'contacts/new',
+                      builder: (context, state) => ContactFormPage(
+                        customerId: int.parse(state.pathParameters['id']!),
+                        initialName: state.uri.queryParameters['name'],
+                        initialPhone: state.uri.queryParameters['phone'],
+                      ),
+                    ),
+                    GoRoute(
+                      path: 'contacts/:contactId/edit',
+                      builder: (context, state) => ContactFormPage(
+                        customerId: int.parse(state.pathParameters['id']!),
+                        contactId: int.parse(
+                          state.pathParameters['contactId']!,
+                        ),
+                      ),
                     ),
                     GoRoute(
                       path: 'opportunities/new',
@@ -173,6 +199,19 @@ final router = GoRouter(
                         opportunityId: int.parse(
                           state.pathParameters['opportunityId']!,
                         ),
+                        sourceQuoteId: int.tryParse(
+                          state.uri.queryParameters['from'] ?? '',
+                        ),
+                      ),
+                    ),
+                    GoRoute(
+                      path: 'opportunities/:opportunityId/quotes/:quoteId',
+                      builder: (context, state) => QuoteOutcomePage(
+                        customerId: int.parse(state.pathParameters['id']!),
+                        opportunityId: int.parse(
+                          state.pathParameters['opportunityId']!,
+                        ),
+                        quoteId: int.parse(state.pathParameters['quoteId']!),
                       ),
                     ),
                     GoRoute(
@@ -182,6 +221,17 @@ final router = GoRouter(
                         opportunityId: int.parse(
                           state.pathParameters['opportunityId']!,
                         ),
+                      ),
+                    ),
+                    GoRoute(
+                      path:
+                          'opportunities/:opportunityId/samples/:sampleId/edit',
+                      builder: (context, state) => SampleFormPage(
+                        customerId: int.parse(state.pathParameters['id']!),
+                        opportunityId: int.parse(
+                          state.pathParameters['opportunityId']!,
+                        ),
+                        sampleId: int.parse(state.pathParameters['sampleId']!),
                       ),
                     ),
                     GoRoute(
@@ -203,6 +253,19 @@ final router = GoRouter(
                       },
                     ),
                     GoRoute(
+                      path:
+                          'opportunities/:opportunityId/registrations/:registrationId/edit',
+                      builder: (context, state) => RegistrationFormPage(
+                        customerId: int.parse(state.pathParameters['id']!),
+                        opportunityId: int.parse(
+                          state.pathParameters['opportunityId']!,
+                        ),
+                        registrationId: int.parse(
+                          state.pathParameters['registrationId']!,
+                        ),
+                      ),
+                    ),
+                    GoRoute(
                       path: 'opportunities/:opportunityId/tenders/new',
                       builder: (context, state) {
                         final customerId = int.tryParse(
@@ -219,6 +282,17 @@ final router = GoRouter(
                           opportunityId: opportunityId,
                         );
                       },
+                    ),
+                    GoRoute(
+                      path:
+                          'opportunities/:opportunityId/tenders/:tenderId/edit',
+                      builder: (context, state) => TenderFormPage(
+                        customerId: int.parse(state.pathParameters['id']!),
+                        opportunityId: int.parse(
+                          state.pathParameters['opportunityId']!,
+                        ),
+                        tenderId: int.parse(state.pathParameters['tenderId']!),
+                      ),
                     ),
                     GoRoute(
                       path: 'orders/:orderId/edit',

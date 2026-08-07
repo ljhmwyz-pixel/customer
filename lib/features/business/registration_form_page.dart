@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:drift/drift.dart' show Value;
 
+import '../../data/database_provider.dart';
 import '../../models/enums.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/app_dropdown_form_field.dart';
@@ -13,11 +15,13 @@ class RegistrationFormPage extends ConsumerStatefulWidget {
   const RegistrationFormPage({
     required this.customerId,
     required this.opportunityId,
+    this.registrationId,
     super.key,
   });
 
   final int customerId;
   final int opportunityId;
+  final int? registrationId;
 
   @override
   ConsumerState<RegistrationFormPage> createState() =>
@@ -43,6 +47,40 @@ class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
   DateTime? _milestoneAt;
   bool _saving = false;
 
+  bool get _editing => widget.registrationId != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.registrationId != null) _load(widget.registrationId!);
+  }
+
+  Future<void> _load(int id) async {
+    final row = await ref.read(databaseProvider).registrationDao.findById(id);
+    if (!mounted || row == null || row.opportunityId != widget.opportunityId) {
+      return;
+    }
+    _country.text = row.country ?? '';
+    _requirements.text = row.requirements ?? '';
+    _documentChecklist.text = row.documentChecklist ?? '';
+    _costBearer.text = row.costBearer ?? '';
+    _currentObstacle.text = row.currentObstacle ?? '';
+    _nextAction.text = row.nextAction ?? '';
+    _milestoneTitle.text = row.milestoneTitle ?? '';
+    DateTime? date(int? value) => value == null
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(value, isUtc: true);
+    setState(() {
+      _documentStatus = RegistrationDocumentStatus.fromDb(row.documentStatus);
+      _status = RegistrationStatus.fromDb(row.status);
+      _submittedAt = date(row.submittedAt);
+      _expectedCompletedAt = date(row.expectedCompletedAt);
+      _actualCompletedAt = date(row.actualCompletedAt);
+      _documentDueAt = date(row.documentDueAt);
+      _milestoneAt = date(row.milestoneAt);
+    });
+  }
+
   @override
   void dispose() {
     _country.dispose();
@@ -58,26 +96,46 @@ class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
-      await ref
-          .read(businessServiceProvider)
-          .createRegistration(
-            customerId: widget.customerId,
-            opportunityId: widget.opportunityId,
-            country: _country.text,
-            requirements: _requirements.text,
-            documentChecklist: _documentChecklist.text,
-            documentStatus: _documentStatus,
-            submittedAt: _submittedAt,
-            expectedCompletedAt: _expectedCompletedAt,
-            actualCompletedAt: _actualCompletedAt,
-            costBearer: _costBearer.text,
-            status: _status,
-            currentObstacle: _currentObstacle.text,
-            nextAction: _nextAction.text,
-            documentDueAt: _documentDueAt,
-            milestoneAt: _milestoneAt,
-            milestoneTitle: _milestoneTitle.text,
-          );
+      final service = ref.read(businessServiceProvider);
+      if (_editing) {
+        await service.updateRegistration(
+          widget.customerId,
+          widget.registrationId!,
+          country: Value(_country.text),
+          requirements: Value(_requirements.text),
+          documentChecklist: Value(_documentChecklist.text),
+          documentStatus: _documentStatus,
+          submittedAt: Value(_submittedAt),
+          expectedCompletedAt: Value(_expectedCompletedAt),
+          actualCompletedAt: Value(_actualCompletedAt),
+          costBearer: Value(_costBearer.text),
+          status: _status,
+          currentObstacle: Value(_currentObstacle.text),
+          nextAction: Value(_nextAction.text),
+          documentDueAt: Value(_documentDueAt),
+          milestoneAt: Value(_milestoneAt),
+          milestoneTitle: Value(_milestoneTitle.text),
+        );
+      } else {
+        await service.createRegistration(
+          customerId: widget.customerId,
+          opportunityId: widget.opportunityId,
+          country: _country.text,
+          requirements: _requirements.text,
+          documentChecklist: _documentChecklist.text,
+          documentStatus: _documentStatus,
+          submittedAt: _submittedAt,
+          expectedCompletedAt: _expectedCompletedAt,
+          actualCompletedAt: _actualCompletedAt,
+          costBearer: _costBearer.text,
+          status: _status,
+          currentObstacle: _currentObstacle.text,
+          nextAction: _nextAction.text,
+          documentDueAt: _documentDueAt,
+          milestoneAt: _milestoneAt,
+          milestoneTitle: _milestoneTitle.text,
+        );
+      }
       ref.read(customerRevisionProvider.notifier).refresh();
       if (mounted) context.pop();
     } catch (error) {
@@ -93,7 +151,7 @@ class _RegistrationFormPageState extends ConsumerState<RegistrationFormPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('新增注册')),
+    appBar: AppBar(title: Text(_editing ? '编辑注册' : '新增注册')),
     body: SingleChildScrollView(
       padding: const EdgeInsets.all(AppTokens.s16),
       child: Column(

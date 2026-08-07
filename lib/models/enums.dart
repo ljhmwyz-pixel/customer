@@ -491,3 +491,21 @@ enum OrderResult {
     orElse: () => throw InvalidEnumValueException('OrderResult', value),
   );
 }
+
+enum CustomerAttitude {
+  positive('positive', '积极'),
+  normal('normal', '一般'),
+  evaluating('evaluating', '评估中'),
+  delaying('delaying', '拖延'),
+  seenNoReply('seenNoReply', '已读未回'),
+  rejected('rejected', '明确拒绝');
+
+  const CustomerAttitude(this.dbValue, this.label);
+  final String dbValue;
+  final String label;
+
+  static CustomerAttitude fromDb(String value) => values.firstWhere(
+    (attitude) => attitude.dbValue == value,
+    orElse: () => throw InvalidEnumValueException('CustomerAttitude', value),
+  );
+}

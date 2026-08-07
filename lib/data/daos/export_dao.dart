@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../models/enums.dart';
 import '../database.dart';
 import '../tables/customers.dart';
+import '../tables/contacts.dart';
 import '../tables/follow_plans.dart';
 import '../tables/followups.dart';
 import '../tables/opportunities.dart';
@@ -77,6 +78,14 @@ class CustomerProjectExportRow {
     required this.currentObstacle,
     required this.nextAction,
     required this.nextFollowAt,
+    this.customerNo,
+    this.customerType,
+    this.customerOwner,
+    this.tenderExperience,
+    this.tenderQualification,
+    this.tenderBidder,
+    this.localTeamStatus,
+    this.fundingStatus,
   });
 
   final int customerId;
@@ -102,6 +111,14 @@ class CustomerProjectExportRow {
   final String? currentObstacle;
   final String? nextAction;
   final DateTime? nextFollowAt;
+  final String? customerNo;
+  final String? customerType;
+  final String? customerOwner;
+  final String? tenderExperience;
+  final String? tenderQualification;
+  final String? tenderBidder;
+  final String? localTeamStatus;
+  final String? fundingStatus;
 }
 
 class FollowupExportRow {
@@ -117,6 +134,9 @@ class FollowupExportRow {
     required this.stageLabel,
     required this.nextAction,
     required this.nextFollowAt,
+    this.contactName,
+    this.attitudeLabel,
+    this.owner,
   });
 
   final int id;
@@ -130,6 +150,9 @@ class FollowupExportRow {
   final String? stageLabel;
   final String? nextAction;
   final DateTime? nextFollowAt;
+  final String? contactName;
+  final String? attitudeLabel;
+  final String? owner;
 }
 
 enum BusinessExportType { quote, sample, registration, tender, order }
@@ -172,6 +195,7 @@ class BusinessExportRow {
     Opportunities,
     FollowPlans,
     Followups,
+    Contacts,
     Quotes,
     Samples,
     Registrations,
@@ -248,7 +272,11 @@ class ExportDao extends DatabaseAccessor<AppDatabase> with _$ExportDaoMixin {
     final rows = await customSelect(
       '''
       SELECT customer.id AS customer_id, customer.name AS customer_name,
-             customer.company, customer.country,
+             customer.company, customer.country, customer.customer_no,
+             customer.customer_type, customer.owner AS customer_owner,
+             customer.tender_experience, customer.tender_qualification,
+             customer.tender_bidder, customer.local_team_status,
+             customer.funding_status,
              customer.stage AS customer_stage, customer.grade,
              opportunity.id AS opportunity_id,
              opportunity.name AS opportunity_name, opportunity.owner,
@@ -298,6 +326,14 @@ class ExportDao extends DatabaseAccessor<AppDatabase> with _$ExportDaoMixin {
           currentObstacle: row.readNullable<String>('current_obstacle'),
           nextAction: row.readNullable<String>('next_action'),
           nextFollowAt: _nullableDate(row, 'next_follow_at'),
+          customerNo: row.readNullable<String>('customer_no'),
+          customerType: row.readNullable<String>('customer_type'),
+          customerOwner: row.readNullable<String>('customer_owner'),
+          tenderExperience: row.readNullable<String>('tender_experience'),
+          tenderQualification: row.readNullable<String>('tender_qualification'),
+          tenderBidder: row.readNullable<String>('tender_bidder'),
+          localTeamStatus: row.readNullable<String>('local_team_status'),
+          fundingStatus: row.readNullable<String>('funding_status'),
         ),
     ];
   }
@@ -306,10 +342,12 @@ class ExportDao extends DatabaseAccessor<AppDatabase> with _$ExportDaoMixin {
     final rows = await customSelect(
       '''
       SELECT followup.*, customer.name AS customer_name,
-             opportunity.name AS opportunity_name
+             opportunity.name AS opportunity_name,
+             contact.name AS contact_name
       FROM followups followup
       JOIN customers customer ON customer.id = followup.customer_id
       LEFT JOIN opportunities opportunity ON opportunity.id = followup.opportunity_id
+      LEFT JOIN contacts contact ON contact.id = followup.contact_id
       ORDER BY followup.occurred_at, followup.id
     ''',
       readsFrom: {followups, customers, opportunities},
@@ -328,6 +366,11 @@ class ExportDao extends DatabaseAccessor<AppDatabase> with _$ExportDaoMixin {
           stageLabel: _opportunityStageLabel(row.readNullable<String>('stage')),
           nextAction: row.readNullable<String>('next_action'),
           nextFollowAt: _nullableDate(row, 'next_follow_at'),
+          contactName: row.readNullable<String>('contact_name'),
+          attitudeLabel: row.readNullable<String>('attitude') == null
+              ? null
+              : CustomerAttitude.fromDb(row.read<String>('attitude')).label,
+          owner: row.readNullable<String>('owner'),
         ),
     ];
   }

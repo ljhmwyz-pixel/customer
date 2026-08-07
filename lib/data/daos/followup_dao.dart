@@ -23,6 +23,7 @@ class FollowupDao extends DatabaseAccessor<AppDatabase>
   Future<int> insertAndTouchCustomer({
     required int customerId,
     int? opportunityId,
+    int? contactId,
     required DateTime occurredAt,
     required FollowMethod method,
     required String content,
@@ -32,6 +33,8 @@ class FollowupDao extends DatabaseAccessor<AppDatabase>
     String? nextAction,
     DateTime? nextFollowAt,
     String? pauseReason,
+    CustomerAttitude? attitude,
+    String? owner,
     DateTime? now,
   }) async {
     final ts = (now ?? DateTime.now()).toUtc().millisecondsSinceEpoch;
@@ -42,6 +45,7 @@ class FollowupDao extends DatabaseAccessor<AppDatabase>
         FollowupsCompanion.insert(
           customerId: customerId,
           opportunityId: Value(opportunityId),
+          contactId: Value(contactId),
           occurredAt: occurredMs,
           method: method.dbValue,
           content: content,
@@ -51,6 +55,8 @@ class FollowupDao extends DatabaseAccessor<AppDatabase>
           nextAction: Value(nextAction),
           nextFollowAt: Value(nextFollowAt?.toUtc().millisecondsSinceEpoch),
           pauseReason: Value(pauseReason),
+          attitude: Value(attitude?.dbValue),
+          owner: Value(owner?.trim()),
           createdAt: ts,
           updatedAt: ts,
         ),

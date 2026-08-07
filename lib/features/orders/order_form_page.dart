@@ -7,6 +7,7 @@ import '../../data/database_provider.dart';
 import '../../models/enums.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/app_dropdown_form_field.dart';
+import '../../widgets/sticky_form_scaffold.dart';
 import '../customers/customer_providers.dart';
 import '../customers/customer_widgets.dart';
 import 'order_providers.dart';
@@ -84,9 +85,12 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
   @override
   void initState() {
     super.initState();
+    _currencyController.addListener(_currencyChanged);
     _dateController.text = formatDateTime(_orderedAt);
     _load();
   }
+
+  void _currencyChanged() => setState(() {});
 
   Future<void> _load() async {
     try {
@@ -177,6 +181,7 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
 
   @override
   void dispose() {
+    _currencyController.removeListener(_currencyChanged);
     _orderNoController.dispose();
     _piPoNoController.dispose();
     _currencyController.dispose();
@@ -286,7 +291,14 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(_isEditing ? '编辑订单' : '新增订单')),
-    body: _buildBody(),
+    body: StickyFormScaffold(
+      body: _buildBody(),
+      onSubmit: _save,
+      enabled: _selectedOpportunityId != null,
+      submitting: _saving,
+      submitLabel: '保存订单',
+      submitKey: const ValueKey('save-order'),
+    ),
   );
 
   Widget _buildBody() {
@@ -362,9 +374,10 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
             key: const ValueKey('order-amount'),
             controller: _amountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: '订单金额',
-              prefixText: '¥ ',
+              prefixText:
+                  '${_currencyController.text.trim().isEmpty ? 'CNY' : _currencyController.text.trim()} ',
             ),
             validator: _validateAmount,
           ),
@@ -517,17 +530,6 @@ class _OrderFormPageState extends ConsumerState<OrderFormPage> {
             ),
           ],
           const SizedBox(height: AppTokens.s24),
-          FilledButton.icon(
-            key: const ValueKey('save-order'),
-            onPressed: _saving || _selectedOpportunityId == null ? null : _save,
-            icon: _saving
-                ? const SizedBox.square(
-                    dimension: AppTokens.s16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.save_outlined),
-            label: Text(_saving ? '保存中' : '保存'),
-          ),
         ],
       ),
     );

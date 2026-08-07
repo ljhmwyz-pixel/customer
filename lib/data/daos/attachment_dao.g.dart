@@ -6,6 +6,7 @@ part of 'attachment_dao.dart';
 mixin _$AttachmentDaoMixin on DatabaseAccessor<AppDatabase> {
   $CustomersTable get customers => attachedDatabase.customers;
   $OpportunitiesTable get opportunities => attachedDatabase.opportunities;
+  $ContactsTable get contacts => attachedDatabase.contacts;
   $FollowupsTable get followups => attachedDatabase.followups;
   $OrdersTable get orders => attachedDatabase.orders;
   $QuotesTable get quotes => attachedDatabase.quotes;
@@ -23,6 +24,8 @@ class AttachmentDaoManager {
       $$CustomersTableTableManager(_db.attachedDatabase, _db.customers);
   $$OpportunitiesTableTableManager get opportunities =>
       $$OpportunitiesTableTableManager(_db.attachedDatabase, _db.opportunities);
+  $$ContactsTableTableManager get contacts =>
+      $$ContactsTableTableManager(_db.attachedDatabase, _db.contacts);
   $$FollowupsTableTableManager get followups =>
       $$FollowupsTableTableManager(_db.attachedDatabase, _db.followups);
   $$OrdersTableTableManager get orders =>

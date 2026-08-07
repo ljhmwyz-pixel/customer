@@ -35,7 +35,6 @@ class _DashboardBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final m = data.metrics;
-    final scheme = Theme.of(context).colorScheme;
     return ListView(
       padding: const EdgeInsets.fromLTRB(
         AppTokens.s16,
@@ -77,23 +76,43 @@ class _DashboardBody extends StatelessWidget {
             _metric(
               context,
               '未来三个月预计成交',
-              _money(m.forecastAmountMinor),
+              _money(m.forecastByCurrency),
               Icons.trending_up,
               null,
             ),
             _metric(
               context,
               '未来三个月加权预计',
-              _money(m.weightedForecastAmountMinor),
+              _money(m.weightedForecastByCurrency),
               Icons.insights_outlined,
               null,
             ),
             _metric(
               context,
               '已成交金额',
-              _money(m.wonAmountMinor),
+              _money(m.wonByCurrency),
               Icons.check_circle_outline,
               '/customers',
+            ),
+          ],
+        ),
+        const SizedBox(height: AppTokens.s16),
+        _heading(context, '重点停滞'),
+        _MetricSurface(
+          children: [
+            _metric(
+              context,
+              '报价停滞',
+              '${m.stalledQuoteCount}',
+              Icons.request_quote_outlined,
+              '/customers?anomaly=stalledQuote',
+            ),
+            _metric(
+              context,
+              '样品停滞',
+              '${m.stalledSampleCount}',
+              Icons.science_outlined,
+              '/customers?anomaly=stalledSample',
             ),
           ],
         ),
@@ -103,13 +122,6 @@ class _DashboardBody extends StatelessWidget {
           const _UnavailableRow(label: '当前没有需要处理的业务异常')
         else
           for (final anomaly in data.anomalies) _AnomalyRow(anomaly: anomaly),
-        const SizedBox(height: AppTokens.s8),
-        Text(
-          '统计金额单位为数据库中的最小货币单位。',
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-        ),
       ],
     );
   }
@@ -119,7 +131,22 @@ class _DashboardBody extends StatelessWidget {
     child: Text(text, style: Theme.of(context).textTheme.titleMedium),
   );
 
-  String _money(int value) => value.toString();
+  String _money(Map<String, int> values) {
+    if (values.isEmpty) return '暂无';
+    return values.entries
+        .map((entry) => _formatMinor(entry.key, entry.value))
+        .join('\n');
+  }
+
+  String _formatMinor(String currency, int amount) {
+    const zeroDecimalCurrencies = {'JPY', 'KRW', 'VND'};
+    if (zeroDecimalCurrencies.contains(currency)) return '$currency $amount';
+    final sign = amount < 0 ? '-' : '';
+    final absolute = amount.abs();
+    final whole = absolute ~/ 100;
+    final fraction = (absolute % 100).toString().padLeft(2, '0');
+    return '$currency $sign$whole.$fraction';
+  }
 
   Widget _metric(
     BuildContext context,
@@ -178,6 +205,15 @@ class _AnomalyRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final semantic = AppSemanticColors.of(context);
     final (label, icon) = switch (anomaly.kind) {
+      DashboardAnomalyKind.stalledQuote => (
+        '报价停滞',
+        Icons.request_quote_outlined,
+      ),
+      DashboardAnomalyKind.quoteExpiring => (
+        '报价即将到期',
+        Icons.event_busy_outlined,
+      ),
+      DashboardAnomalyKind.stalledSample => ('样品停滞', Icons.science_outlined),
       DashboardAnomalyKind.longSilence => ('长期沉默', Icons.hourglass_empty),
       DashboardAnomalyKind.internalSupport => ('需要内部支持', Icons.support_agent),
       DashboardAnomalyKind.registrationDue => (

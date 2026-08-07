@@ -71,23 +71,26 @@ class DashboardMetrics {
     required this.followupsThisWeek,
     required this.stalledQuoteCount,
     required this.stalledSampleCount,
-    required this.forecastAmountMinor,
-    required this.weightedForecastAmountMinor,
-    required this.wonAmountMinor,
+    required this.forecastByCurrency,
+    required this.weightedForecastByCurrency,
+    required this.wonByCurrency,
   });
 
   final int totalCustomers;
   final Map<CustomerGrade, int> customerCountsByGrade;
   final Map<OpportunityStage, int> projectCountsByStage;
   final int followupsThisWeek;
-  final int? stalledQuoteCount;
-  final int? stalledSampleCount;
-  final int forecastAmountMinor;
-  final int weightedForecastAmountMinor;
-  final int wonAmountMinor;
+  final int stalledQuoteCount;
+  final int stalledSampleCount;
+  final Map<String, int> forecastByCurrency;
+  final Map<String, int> weightedForecastByCurrency;
+  final Map<String, int> wonByCurrency;
 }
 
 enum DashboardAnomalyKind {
+  stalledQuote,
+  quoteExpiring,
+  stalledSample,
   longSilence,
   internalSupport,
   registrationDue,
@@ -139,6 +142,9 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
 
   Future<int> insertCustomer({
     required String name,
+    String? customerNo,
+    String? customerType,
+    String owner = '本人',
     String? company,
     String? country,
     String? phone,
@@ -146,6 +152,11 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
     String? address,
     String? source,
     String? note,
+    String? tenderExperience,
+    String? tenderQualification,
+    String? tenderBidder,
+    String? localTeamStatus,
+    String? fundingStatus,
     CustomerStage stage = CustomerStage.potential,
     CustomerGrade grade = CustomerGrade.c,
     String? sampleBatchId,
@@ -155,6 +166,9 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
     return into(customers).insert(
       CustomersCompanion.insert(
         name: name,
+        customerNo: Value(customerNo),
+        customerType: Value(customerType),
+        owner: Value(owner),
         company: Value(company),
         country: Value(country),
         phone: Value(phone),
@@ -162,6 +176,11 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
         address: Value(address),
         source: Value(source),
         note: Value(note),
+        tenderExperience: Value(tenderExperience),
+        tenderQualification: Value(tenderQualification),
+        tenderBidder: Value(tenderBidder),
+        localTeamStatus: Value(localTeamStatus),
+        fundingStatus: Value(fundingStatus),
         stage: Value(stage.dbValue),
         grade: Value(grade.dbValue),
         sampleBatchId: Value(sampleBatchId),
@@ -201,12 +220,20 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
   Future<int> updateCustomer(
     int id, {
     String? name,
+    Value<String?> customerNo = const Value.absent(),
+    Value<String?> customerType = const Value.absent(),
+    String? owner,
     Value<String?> company = const Value.absent(),
     Value<String?> phone = const Value.absent(),
     Value<String?> wechat = const Value.absent(),
     Value<String?> address = const Value.absent(),
     Value<String?> source = const Value.absent(),
     Value<String?> note = const Value.absent(),
+    Value<String?> tenderExperience = const Value.absent(),
+    Value<String?> tenderQualification = const Value.absent(),
+    Value<String?> tenderBidder = const Value.absent(),
+    Value<String?> localTeamStatus = const Value.absent(),
+    Value<String?> fundingStatus = const Value.absent(),
     CustomerStage? stage,
     CustomerGrade? grade,
     DateTime? now,
@@ -215,12 +242,20 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
     return (update(customers)..where((t) => t.id.equals(id))).write(
       CustomersCompanion(
         name: name == null ? const Value.absent() : Value(name),
+        customerNo: customerNo,
+        customerType: customerType,
+        owner: owner == null ? const Value.absent() : Value(owner),
         company: company,
         phone: phone,
         wechat: wechat,
         address: address,
         source: source,
         note: note,
+        tenderExperience: tenderExperience,
+        tenderQualification: tenderQualification,
+        tenderBidder: tenderBidder,
+        localTeamStatus: localTeamStatus,
+        fundingStatus: fundingStatus,
         stage: stage == null ? const Value.absent() : Value(stage.dbValue),
         grade: grade == null ? const Value.absent() : Value(grade.dbValue),
         updatedAt: Value(ts),
@@ -273,6 +308,7 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
     OpportunityStatus? opportunityStatus,
     DateTime? expectedCloseFrom,
     DateTime? expectedCloseTo,
+    bool overdueOnly = false,
     Set<CustomerAnomalyFilter> anomalies = const {},
     int? limit,
   }) async {
@@ -297,6 +333,11 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
     final trimmedProductModel = productModel?.trim() ?? '';
     final trimmedEquipmentBrand = equipmentBrand?.trim() ?? '';
 
+    if (overdueOnly) {
+      conditions.add('p.next_plan_at < ?');
+      filterVariables.add(Variable.withInt(nowMs));
+    }
+
     if (trimmedKeyword.isNotEmpty) {
       final escaped = trimmedKeyword
           .replaceAll(r'\', r'\\')
@@ -306,14 +347,22 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
       conditions.add('''
         (c.name LIKE ? ESCAPE '\\'
          OR c.phone LIKE ? ESCAPE '\\'
+         OR c.customer_no LIKE ? ESCAPE '\\'
          OR EXISTS (
            SELECT 1
            FROM contacts contact
            WHERE contact.customer_id = c.id
-             AND contact.phone LIKE ? ESCAPE '\\'
+             AND (contact.name LIKE ? ESCAPE '\\'
+                  OR contact.phone LIKE ? ESCAPE '\\'
+                  OR contact.email LIKE ? ESCAPE '\\'
+                  OR contact.whatsapp LIKE ? ESCAPE '\\')
          ))
       ''');
       filterVariables.addAll([
+        Variable.withString(pattern),
+        Variable.withString(pattern),
+        Variable.withString(pattern),
+        Variable.withString(pattern),
         Variable.withString(pattern),
         Variable.withString(pattern),
         Variable.withString(pattern),
@@ -585,12 +634,19 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
   }
 
   /// 按名称或电话模糊搜索。
-  Future<List<CustomerRow>> search(String keyword) {
+  Future<List<CustomerRow>> search(String keyword) async {
     final pattern = '%${keyword.trim()}%';
-    return (select(customers)
-          ..where((t) => t.name.like(pattern) | t.phone.like(pattern))
-          ..orderBy([(t) => OrderingTerm.asc(t.name)]))
-        .get();
+    final rows = await customSelect(
+      '''SELECT DISTINCT c.* FROM customers c
+         LEFT JOIN contacts contact ON contact.customer_id = c.id
+         WHERE c.name LIKE ? OR c.phone LIKE ? OR c.customer_no LIKE ?
+            OR contact.name LIKE ? OR contact.phone LIKE ?
+            OR contact.email LIKE ? OR contact.whatsapp LIKE ?
+         ORDER BY c.name''',
+      variables: List.generate(7, (_) => Variable.withString(pattern)),
+      readsFrom: {customers, contacts},
+    ).get();
+    return Future.wait(rows.map(customers.mapFromRow));
   }
 
   /// 按阶段筛选。
@@ -650,6 +706,10 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
         .toUtc()
         .add(const Duration(days: 90))
         .millisecondsSinceEpoch;
+    final stalledCutoff = now
+        .toUtc()
+        .subtract(const Duration(days: 30))
+        .millisecondsSinceEpoch;
     final customersCount = await customSelect(
       'SELECT COUNT(*) AS value FROM customers',
       readsFrom: {customers},
@@ -670,18 +730,41 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
       readsFrom: {db.followups},
     ).getSingle();
     final forecast = await customSelect(
-      '''SELECT COALESCE(SUM(forecast_amount_minor), 0) AS total,
+      '''SELECT UPPER(currency) AS currency,
+                COALESCE(SUM(forecast_amount_minor), 0) AS total,
                 COALESCE(SUM(forecast_amount_minor * probability_percent / 100), 0) AS weighted
          FROM opportunities
          WHERE expected_close_at IS NOT NULL AND expected_close_at <= ?
+           AND forecast_amount_minor IS NOT NULL
            AND status NOT IN ('paused', 'won', 'closed')
-           AND stage NOT IN ('lost', 'paused')''',
+           AND stage NOT IN ('lost', 'paused')
+         GROUP BY UPPER(currency)
+         ORDER BY UPPER(currency)''',
       variables: [Variable.withInt(threeMonths)],
       readsFrom: {db.opportunities},
-    ).getSingle();
+    ).get();
     final won = await customSelect(
-      "SELECT COALESCE(SUM(amount_cents), 0) AS value FROM orders WHERE status = 'completed'",
+      '''SELECT UPPER(currency) AS currency,
+                COALESCE(SUM(amount_cents), 0) AS value
+         FROM orders
+         WHERE order_result = 'completed'
+         GROUP BY UPPER(currency)
+         ORDER BY UPPER(currency)''',
       readsFrom: {db.orders},
+    ).get();
+    final stalled = await customSelect(
+      '''SELECT
+           (SELECT COUNT(*) FROM quotes
+            WHERE customer_received = 0 AND quoted_at <= ?) AS quote_count,
+           (SELECT COUNT(*) FROM samples
+            WHERE delivered_at IS NOT NULL AND delivered_at <= ?
+              AND status NOT IN ('passed', 'failed', 'cancelled')
+              AND (test_result IS NULL OR TRIM(test_result) = '')) AS sample_count''',
+      variables: [
+        Variable.withInt(stalledCutoff),
+        Variable.withInt(stalledCutoff),
+      ],
+      readsFrom: {db.quotes, db.samples},
     ).getSingle();
     return DashboardMetrics(
       totalCustomers: customersCount.read<int>('value'),
@@ -704,11 +787,20 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
               0,
       },
       followupsThisWeek: followupResult.read<int>('value'),
-      stalledQuoteCount: null,
-      stalledSampleCount: null,
-      forecastAmountMinor: forecast.read<int>('total'),
-      weightedForecastAmountMinor: forecast.read<int>('weighted'),
-      wonAmountMinor: won.read<int>('value'),
+      stalledQuoteCount: stalled.read<int>('quote_count'),
+      stalledSampleCount: stalled.read<int>('sample_count'),
+      forecastByCurrency: {
+        for (final row in forecast)
+          row.read<String>('currency'): row.read<int>('total'),
+      },
+      weightedForecastByCurrency: {
+        for (final row in forecast)
+          row.read<String>('currency'): row.read<int>('weighted'),
+      },
+      wonByCurrency: {
+        for (final row in won)
+          row.read<String>('currency'): row.read<int>('value'),
+      },
     );
   }
 
@@ -731,6 +823,44 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
                CASE c.grade WHEN 'a' THEN 14 * 86400000
                             WHEN 'b' THEN 30 * 86400000
                             ELSE 60 * 86400000 END
+           UNION ALL
+           SELECT c.id, c.name, o.id, o.name, 'stalled_quote',
+                  CAST((? - MIN(q.quoted_at)) / 86400000 AS INTEGER),
+                  '报价后 ' || CAST((? - MIN(q.quoted_at)) / 86400000 AS TEXT) || ' 天未确认收到',
+                  0, MIN(q.quoted_at), o.id
+           FROM customers c
+           JOIN opportunities o ON o.customer_id = c.id
+           JOIN quotes q ON q.opportunity_id = o.id
+           WHERE q.customer_received = 0 AND q.quoted_at <= ?
+             AND o.status NOT IN ('paused', 'won', 'closed')
+             AND o.stage NOT IN ('lost', 'paused')
+           GROUP BY c.id, c.name, o.id, o.name
+           UNION ALL
+           SELECT c.id, c.name, o.id, o.name, 'quote_expiring', 0,
+                  '报价将在 ' || CAST((MIN(q.valid_until) - ?) / 86400000 AS TEXT) || ' 天内到期',
+                  0, MIN(q.valid_until), o.id
+           FROM customers c
+           JOIN opportunities o ON o.customer_id = c.id
+           JOIN quotes q ON q.opportunity_id = o.id
+           WHERE q.valid_until IS NOT NULL AND q.valid_until >= ?
+             AND q.valid_until <= ?
+             AND o.status NOT IN ('paused', 'won', 'closed')
+             AND o.stage NOT IN ('lost', 'paused')
+           GROUP BY c.id, c.name, o.id, o.name
+           UNION ALL
+           SELECT c.id, c.name, o.id, o.name, 'stalled_sample',
+                  CAST((? - MIN(s.delivered_at)) / 86400000 AS INTEGER),
+                  '样品签收后 ' || CAST((? - MIN(s.delivered_at)) / 86400000 AS TEXT) || ' 天无测试结果',
+                  0, MIN(s.delivered_at), o.id
+           FROM customers c
+           JOIN opportunities o ON o.customer_id = c.id
+           JOIN samples s ON s.opportunity_id = o.id
+           WHERE s.delivered_at IS NOT NULL AND s.delivered_at <= ?
+             AND s.status NOT IN ('passed', 'failed', 'cancelled')
+             AND (s.test_result IS NULL OR TRIM(s.test_result) = '')
+             AND o.status NOT IN ('paused', 'won', 'closed')
+             AND o.stage NOT IN ('lost', 'paused')
+           GROUP BY c.id, c.name, o.id, o.name
            UNION ALL
            SELECT c.id, c.name, o.id, o.name, 'internal_support', 1000,
                   o.current_obstacle, 0, 0, c.id
@@ -762,8 +892,29 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
         Variable.withInt(now.toUtc().millisecondsSinceEpoch),
         Variable.withInt(now.toUtc().millisecondsSinceEpoch),
         Variable.withInt(now.toUtc().millisecondsSinceEpoch),
+        Variable.withInt(now.toUtc().millisecondsSinceEpoch),
+        Variable.withInt(
+          now.toUtc().subtract(const Duration(days: 30)).millisecondsSinceEpoch,
+        ),
+        Variable.withInt(now.toUtc().millisecondsSinceEpoch),
+        Variable.withInt(now.toUtc().millisecondsSinceEpoch),
+        Variable.withInt(
+          now.toUtc().add(const Duration(days: 7)).millisecondsSinceEpoch,
+        ),
+        Variable.withInt(now.toUtc().millisecondsSinceEpoch),
+        Variable.withInt(now.toUtc().millisecondsSinceEpoch),
+        Variable.withInt(
+          now.toUtc().subtract(const Duration(days: 30)).millisecondsSinceEpoch,
+        ),
+        Variable.withInt(now.toUtc().millisecondsSinceEpoch),
       ],
-      readsFrom: {customers, db.opportunities, followPlans},
+      readsFrom: {
+        customers,
+        db.opportunities,
+        db.quotes,
+        db.samples,
+        followPlans,
+      },
     ).get();
     return rows.map((row) {
       return DashboardAnomaly(
@@ -772,6 +923,9 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
         opportunityId: row.readNullable<int>('opportunity_id'),
         opportunityName: row.readNullable<String>('opportunity_name'),
         kind: switch (row.read<String>('kind')) {
+          'stalled_quote' => DashboardAnomalyKind.stalledQuote,
+          'quote_expiring' => DashboardAnomalyKind.quoteExpiring,
+          'stalled_sample' => DashboardAnomalyKind.stalledSample,
           'long_silence' => DashboardAnomalyKind.longSilence,
           'internal_support' => DashboardAnomalyKind.internalSupport,
           'registration_due' => DashboardAnomalyKind.registrationDue,

@@ -18,24 +18,40 @@ import '../opportunities/supplier_substitution.dart';
 class CustomerDraft {
   const CustomerDraft({
     required this.name,
+    this.customerNo,
+    this.customerType,
+    this.owner = '本人',
     this.company,
     this.phone,
     this.wechat,
     this.address,
     this.source,
     this.note,
+    this.tenderExperience,
+    this.tenderQualification,
+    this.tenderBidder,
+    this.localTeamStatus,
+    this.fundingStatus,
     this.stage = CustomerStage.potential,
     this.grade = CustomerGrade.c,
     this.tagNames = const [],
   });
 
   final String name;
+  final String? customerNo;
+  final String? customerType;
+  final String owner;
   final String? company;
   final String? phone;
   final String? wechat;
   final String? address;
   final String? source;
   final String? note;
+  final String? tenderExperience;
+  final String? tenderQualification;
+  final String? tenderBidder;
+  final String? localTeamStatus;
+  final String? fundingStatus;
   final CustomerStage stage;
   final CustomerGrade grade;
   final List<String> tagNames;
@@ -46,12 +62,20 @@ class ContactDraft {
     required this.name,
     this.position,
     this.phone,
+    this.email,
+    this.whatsapp,
+    this.communicationPreference,
+    this.note,
     this.isDecisionMaker = false,
   });
 
   final String name;
   final String? position;
   final String? phone;
+  final String? email;
+  final String? whatsapp;
+  final String? communicationPreference;
+  final String? note;
   final bool isDecisionMaker;
 }
 
@@ -84,6 +108,8 @@ class FollowupDraft {
     this.content,
     this.nextFollowAt,
     this.pauseReason,
+    this.contactId,
+    this.attitude,
   });
 
   final int opportunityId;
@@ -95,6 +121,8 @@ class FollowupDraft {
   final String? content;
   final DateTime? nextFollowAt;
   final String? pauseReason;
+  final int? contactId;
+  final CustomerAttitude? attitude;
 }
 
 class WriteResult<T> {
@@ -157,6 +185,7 @@ class CustomerFilter {
     this.opportunityStatus,
     this.expectedCloseFrom,
     this.expectedCloseTo,
+    this.overdueOnly = false,
     Set<CustomerAnomalyFilter> anomalies = const {},
   }) : anomalies = Set.unmodifiable(anomalies);
 
@@ -177,6 +206,7 @@ class CustomerFilter {
   final OpportunityStatus? opportunityStatus;
   final DateTime? expectedCloseFrom;
   final DateTime? expectedCloseTo;
+  final bool overdueOnly;
   final Set<CustomerAnomalyFilter> anomalies;
 
   int get activeFilterCount =>
@@ -196,6 +226,7 @@ class CustomerFilter {
         expectedCloseFrom,
         expectedCloseTo,
       ].where((value) => value != null).length +
+      (overdueOnly ? 1 : 0) +
       anomalies.length;
 
   bool get hasNonKeywordFilters => activeFilterCount > 0;
@@ -218,6 +249,7 @@ class CustomerFilter {
     Object? opportunityStatus = _unset,
     Object? expectedCloseFrom = _unset,
     Object? expectedCloseTo = _unset,
+    bool? overdueOnly,
     Object? anomalies = _unset,
   }) => CustomerFilter(
     keyword: keyword ?? this.keyword,
@@ -257,6 +289,7 @@ class CustomerFilter {
     expectedCloseTo: identical(expectedCloseTo, _unset)
         ? this.expectedCloseTo
         : expectedCloseTo as DateTime?,
+    overdueOnly: overdueOnly ?? this.overdueOnly,
     anomalies: identical(anomalies, _unset)
         ? this.anomalies
         : anomalies as Set<CustomerAnomalyFilter>,
@@ -332,12 +365,20 @@ class CustomerService {
     return _db.transaction(() async {
       final id = await _db.customerDao.insertCustomer(
         name: normalized.name,
+        customerNo: normalized.customerNo,
+        customerType: normalized.customerType,
+        owner: normalized.owner,
         company: normalized.company,
         phone: normalized.phone,
         wechat: normalized.wechat,
         address: normalized.address,
         source: normalized.source,
         note: normalized.note,
+        tenderExperience: normalized.tenderExperience,
+        tenderQualification: normalized.tenderQualification,
+        tenderBidder: normalized.tenderBidder,
+        localTeamStatus: normalized.localTeamStatus,
+        fundingStatus: normalized.fundingStatus,
         stage: normalized.stage,
         grade: normalized.grade,
       );
@@ -357,12 +398,20 @@ class CustomerService {
       await _db.customerDao.updateCustomer(
         id,
         name: normalized.name,
+        customerNo: Value(normalized.customerNo),
+        customerType: Value(normalized.customerType),
+        owner: normalized.owner,
         company: Value(normalized.company),
         phone: Value(normalized.phone),
         wechat: Value(normalized.wechat),
         address: Value(normalized.address),
         source: Value(normalized.source),
         note: Value(normalized.note),
+        tenderExperience: Value(normalized.tenderExperience),
+        tenderQualification: Value(normalized.tenderQualification),
+        tenderBidder: Value(normalized.tenderBidder),
+        localTeamStatus: Value(normalized.localTeamStatus),
+        fundingStatus: Value(normalized.fundingStatus),
         stage: normalized.stage,
         grade: normalized.grade,
       );
@@ -379,12 +428,22 @@ class CustomerService {
       name: normalized.name,
       position: normalized.position,
       phone: normalized.phone,
+      email: normalized.email,
+      whatsapp: normalized.whatsapp,
+      communicationPreference: normalized.communicationPreference,
+      note: normalized.note,
       isDecisionMaker: normalized.isDecisionMaker,
     );
   }
 
-  Future<void> updateContact(int id, ContactDraft draft) async {
-    if (await _db.contactDao.findById(id) == null) {
+  Future<void> updateContact(
+    int id,
+    ContactDraft draft, {
+    int? customerId,
+  }) async {
+    final current = await _db.contactDao.findById(id);
+    if (current == null ||
+        customerId != null && current.customerId != customerId) {
       throw const CustomerValidationException('联系人不存在');
     }
     final normalized = _normalizeContact(draft);
@@ -393,6 +452,10 @@ class CustomerService {
       name: normalized.name,
       position: Value(normalized.position),
       phone: Value(normalized.phone),
+      email: Value(normalized.email),
+      whatsapp: Value(normalized.whatsapp),
+      communicationPreference: Value(normalized.communicationPreference),
+      note: Value(normalized.note),
       isDecisionMaker: normalized.isDecisionMaker,
     );
   }
@@ -455,6 +518,13 @@ class CustomerService {
     final pauseReason = _optional(draft.pauseReason);
     final content = _optional(draft.content) ?? feedback;
     final owner = _required(opportunity.owner, '负责人', 100);
+    final contactId = draft.contactId;
+    if (contactId != null) {
+      final contact = await _db.contactDao.findById(contactId);
+      if (contact == null || contact.customerId != customerId) {
+        throw const CustomerValidationException('联系人不存在或不属于当前客户');
+      }
+    }
     final hasNextFollowAt = draft.nextFollowAt != null;
     final hasPauseReason = pauseReason != null;
     if (hasNextFollowAt == hasPauseReason) {
@@ -495,6 +565,9 @@ class CustomerService {
         nextAction: nextAction,
         nextFollowAt: draft.nextFollowAt,
         pauseReason: pauseReason,
+        contactId: contactId,
+        attitude: draft.attitude,
+        owner: owner,
       );
       await _db.opportunityDao.syncLatestFollowup(
         opportunityId: draft.opportunityId,
@@ -628,12 +701,20 @@ class CustomerService {
     }
     return CustomerDraft(
       name: _required(draft.name, '客户名称', 50),
+      customerNo: _optional(draft.customerNo),
+      customerType: _optional(draft.customerType),
+      owner: _required(draft.owner, '负责人', 100),
       company: _optional(draft.company),
       phone: _optional(draft.phone),
       wechat: _optional(draft.wechat),
       address: _optional(draft.address),
       source: _optional(draft.source),
       note: _optional(draft.note),
+      tenderExperience: _optional(draft.tenderExperience),
+      tenderQualification: _optional(draft.tenderQualification),
+      tenderBidder: _optional(draft.tenderBidder),
+      localTeamStatus: _optional(draft.localTeamStatus),
+      fundingStatus: _optional(draft.fundingStatus),
       stage: draft.stage,
       grade: draft.grade,
       tagNames: tags,
@@ -644,8 +725,22 @@ class CustomerService {
     name: _required(draft.name, '联系人名称', 50),
     position: _optional(draft.position),
     phone: _optional(draft.phone),
+    email: _validateEmail(draft.email),
+    whatsapp: _optional(draft.whatsapp),
+    communicationPreference: _optional(draft.communicationPreference),
+    note: _optional(draft.note),
     isDecisionMaker: draft.isDecisionMaker,
   );
+
+  String? _validateEmail(String? raw) {
+    final email = _optional(raw);
+    if (email == null) return null;
+    final parts = email.split('@');
+    if (parts.length != 2 || parts.first.isEmpty || parts.last.isEmpty) {
+      throw const CustomerValidationException('请输入有效的邮箱地址');
+    }
+    return email;
+  }
 
   PlanDraft _normalizePlan(PlanDraft draft) => PlanDraft(
     opportunityId: draft.opportunityId,
@@ -695,6 +790,15 @@ class CustomerFilterNotifier extends Notifier<CustomerFilter> {
   void setCustomerGrade(CustomerGrade? value) =>
       state = state.copyWith(customerGrade: value);
 
+  void toggleGradeA() => state = state.copyWith(
+    customerGrade: state.customerGrade == CustomerGrade.a
+        ? null
+        : CustomerGrade.a,
+  );
+
+  void toggleOverdue() =>
+      state = state.copyWith(overdueOnly: !state.overdueOnly);
+
   void setCurrentSupplier(String? value) =>
       state = state.copyWith(currentSupplier: value);
 
@@ -742,6 +846,9 @@ class CustomerFilterNotifier extends Notifier<CustomerFilter> {
     next.contains(value) ? next.remove(value) : next.add(value);
     state = state.copyWith(anomalies: next);
   }
+
+  void applyAnomaly(CustomerAnomalyFilter value) =>
+      state = CustomerFilter(anomalies: {value});
 
   void clearAnomalies() => state = state.copyWith(anomalies: const {});
 
@@ -794,6 +901,7 @@ final customerListProvider = FutureProvider<CustomerListData>((ref) async {
     opportunityStatus: filter.opportunityStatus,
     expectedCloseFrom: filter.expectedCloseFrom,
     expectedCloseTo: filter.expectedCloseTo,
+    overdueOnly: filter.overdueOnly,
     anomalies: filter.anomalies,
   );
   final tags = await dao.tagsForCustomers(

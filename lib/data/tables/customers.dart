@@ -12,6 +12,12 @@ class Customers extends Table {
 
   TextColumn get company => text().nullable()();
 
+  TextColumn get customerNo => text().nullable()();
+
+  TextColumn get customerType => text().nullable()();
+
+  TextColumn get owner => text().withDefault(const Constant('本人'))();
+
   /// 国家/地区。v4 增量字段，旧客户无法可靠推断所以保持可空。
   TextColumn get country => text().nullable()();
 
@@ -26,6 +32,16 @@ class Customers extends Table {
   TextColumn get source => text().nullable()();
 
   TextColumn get note => text().nullable()();
+
+  TextColumn get tenderExperience => text().nullable()();
+
+  TextColumn get tenderQualification => text().nullable()();
+
+  TextColumn get tenderBidder => text().nullable()();
+
+  TextColumn get localTeamStatus => text().nullable()();
+
+  TextColumn get fundingStatus => text().nullable()();
 
   /// 客户阶段，存 CustomerStage.dbValue。
   TextColumn get stage => text().withDefault(const Constant('potential'))();

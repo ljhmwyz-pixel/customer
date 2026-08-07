@@ -19,6 +19,14 @@ class Contacts extends Table {
 
   TextColumn get phone => text().nullable()();
 
+  TextColumn get email => text().nullable()();
+
+  TextColumn get whatsapp => text().nullable()();
+
+  TextColumn get communicationPreference => text().nullable()();
+
+  TextColumn get note => text().nullable()();
+
   /// 是否决策人。能拍板的那个人要能一眼看出来。
   BoolColumn get isDecisionMaker =>
       boolean().withDefault(const Constant(false))();

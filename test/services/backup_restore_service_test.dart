@@ -20,7 +20,7 @@ void main() {
     final raw = sqlite.sqlite3.open(databaseFile.path);
     raw.execute('CREATE TABLE customers (id INTEGER PRIMARY KEY)');
     raw.execute('CREATE TABLE attachments (id INTEGER PRIMARY KEY)');
-    raw.execute('PRAGMA user_version = 8');
+    raw.execute('PRAGMA user_version = 9');
     raw.close();
   });
 
@@ -51,7 +51,7 @@ void main() {
 
     expect(result.fileName, '客户跟进备份_20260806_101112.zip');
     expect(manifest['formatVersion'], 1);
-    expect(manifest['schemaVersion'], 8);
+    expect(manifest['schemaVersion'], 9);
     expect(
       archive.findFile('customer.sqlite')!.content,
       await databaseFile.readAsBytes(),

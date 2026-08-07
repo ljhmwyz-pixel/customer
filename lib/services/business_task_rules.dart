@@ -7,6 +7,18 @@ class BusinessTaskRules {
   final AppDatabase _db;
   final ReminderScheduler _scheduler;
 
+  Future<List<String>> cancelScheduledPlans(Iterable<int> planIds) async {
+    final warnings = <String>[];
+    for (final id in planIds) {
+      try {
+        await _scheduler.cancelForPlan(id);
+      } catch (_) {
+        warnings.add('任务 $id 已完成，但提醒清理失败');
+      }
+    }
+    return warnings;
+  }
+
   Future<List<int>> generateForOpportunity(
     int opportunityId, {
     required DateTime now,
@@ -67,6 +79,59 @@ class BusinessTaskRules {
     return created;
   }
 
+  Future<BusinessTaskSyncResult> reconcileForOpportunity(
+    int opportunityId, {
+    required DateTime now,
+  }) async {
+    final opportunity = await _db.opportunityDao.findById(opportunityId);
+    if (opportunity == null) return const BusinessTaskSyncResult();
+    final existing = await _db.planDao.listOpenAutomaticOfOpportunity(
+      opportunityId,
+    );
+    final candidateKeys = <String>{};
+    if (!_isClosed(opportunity)) {
+      final quoteRows = await _db.quoteDao.listVersions(opportunityId);
+      final sampleRows = await _db.sampleDao.listOf(opportunityId);
+      final registrationRows = await _db.registrationDao.listOf(opportunityId);
+      final tenderRows = await _db.tenderDao.listOf(opportunityId);
+      final orderRows = await _db.orderDao.listOf(opportunity.customerId);
+      for (final candidate in <_Candidate>[
+        for (final quote in quoteRows) ..._quoteCandidates(quote, now),
+        for (final sample in sampleRows) ..._sampleCandidates(sample, now),
+        for (final registration in registrationRows)
+          ..._registrationCandidates(registration),
+        for (final tender in tenderRows) ..._tenderCandidates(tender),
+        for (final order in orderRows)
+          if (order.opportunityId == opportunityId)
+            ..._repurchaseCandidates(order),
+      ]) {
+        candidateKeys.add(candidate.identity);
+      }
+    }
+
+    final cancelledIds = <int>[];
+    final warnings = <String>[];
+    for (final plan in existing) {
+      final identity = '${plan.sourceType}:${plan.sourceId}:${plan.ruleKey}';
+      if (candidateKeys.contains(identity)) continue;
+      final affected = await _db.planDao.markCancelled(plan.id, at: now);
+      if (affected == 0) continue;
+      cancelledIds.add(plan.id);
+      try {
+        await _scheduler.cancelForPlan(plan.id);
+      } catch (_) {
+        warnings.add('任务 ${plan.id} 已取消，但提醒清理失败');
+      }
+    }
+
+    final createdIds = await generateForOpportunity(opportunityId, now: now);
+    return BusinessTaskSyncResult(
+      createdIds: createdIds,
+      cancelledIds: cancelledIds,
+      warnings: warnings,
+    );
+  }
+
   List<_Candidate> _quoteCandidates(QuoteRow quote, DateTime now) {
     final base = _local(quote.quotedAt);
     final result = <_Candidate>[];
@@ -118,6 +183,12 @@ class BusinessTaskRules {
   }
 
   List<_Candidate> _sampleCandidates(SampleRow sample, DateTime now) {
+    if ({
+      SampleStatus.failed.dbValue,
+      SampleStatus.cancelled.dbValue,
+    }.contains(sample.status)) {
+      return [];
+    }
     final result = <_Candidate>[];
     final sent = sample.sentAt == null ? null : _local(sample.sentAt!);
     final delivered = sample.deliveredAt == null
@@ -332,4 +403,18 @@ class _Candidate {
   final String reason;
   final String direction;
   final String nextAction;
+
+  String get identity => '${source.dbValue}:$sourceId:$ruleKey';
+}
+
+class BusinessTaskSyncResult {
+  const BusinessTaskSyncResult({
+    this.createdIds = const [],
+    this.cancelledIds = const [],
+    this.warnings = const [],
+  });
+
+  final List<int> createdIds;
+  final List<int> cancelledIds;
+  final List<String> warnings;
 }

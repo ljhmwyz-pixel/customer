@@ -63,6 +63,8 @@ void main() {
     expect(find.text('客户总数'), findsOneWidget);
     expect(find.text('客户等级'), findsOneWidget);
     expect(find.text('未来三个月加权预计'), findsOneWidget);
+    expect(find.text('报价停滞'), findsOneWidget);
+    expect(find.text('样品停滞'), findsOneWidget);
     expect(find.textContaining('长期沉默'), findsOneWidget);
     expect(find.textContaining('注册节点到期'), findsOneWidget);
     expect(find.textContaining('招标临近截止'), findsOneWidget);

@@ -7,6 +7,7 @@ import '../../models/enums.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/app_dropdown_form_field.dart';
 import '../../widgets/app_form_fields.dart';
+import '../../widgets/sticky_form_scaffold.dart';
 import 'customer_providers.dart';
 import 'customer_widgets.dart';
 
@@ -27,6 +28,9 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
   final _pauseReasonController = TextEditingController();
 
   int? _selectedOpportunityId;
+  int? _selectedContactId;
+  bool _contactInitialized = false;
+  CustomerAttitude _attitude = CustomerAttitude.normal;
   OpportunityStage? _stage;
   FollowMethod _method = FollowMethod.phone;
   DateTime _occurredAt = DateTime.now();
@@ -48,6 +52,12 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
     final opportunity = opportunities.first;
     _selectedOpportunityId = opportunity.id;
     _stage = OpportunityStage.fromDb(opportunity.stage);
+  }
+
+  void _initializeContact(List<ContactRow> contacts) {
+    if (_contactInitialized) return;
+    _contactInitialized = true;
+    if (contacts.isNotEmpty) _selectedContactId = contacts.first.id;
   }
 
   void _selectOpportunity(
@@ -131,6 +141,8 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
               content: _contentController.text,
               nextFollowAt: _skipNextPlan ? null : _planAt,
               pauseReason: _skipNextPlan ? _pauseReasonController.text : null,
+              contactId: _selectedContactId,
+              attitude: _attitude,
             ),
           );
       ref.read(customerRevisionProvider.notifier).refresh();
@@ -173,249 +185,293 @@ class _FollowupFormPageState extends ConsumerState<FollowupFormPage> {
             return _MissingCustomer(onBack: () => context.go('/customers'));
           }
           _initializeOpportunity(value.opportunities);
+          _initializeContact(value.contacts);
           final hasOpportunity = value.opportunities.isNotEmpty;
-          return Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                AppTokens.s16,
-                AppTokens.s16,
-                AppTokens.s16,
-                AppTokens.s16 + AppTokens.minTouchTarget,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    value.customer.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: AppTokens.s16),
-                  if (!hasOpportunity) ...[
-                    const _NoOpportunityMessage(),
-                    const SizedBox(height: AppTokens.s16),
-                  ] else if (value.opportunities.length == 1) ...[
+          return StickyFormScaffold(
+            onSubmit: _save,
+            enabled: hasOpportunity,
+            submitting: _saving,
+            submitLabel: '保存跟进',
+            submitKey: const ValueKey('save-followup'),
+            body: Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  AppTokens.s16,
+                  AppTokens.s16,
+                  AppTokens.s16,
+                  AppTokens.s16 + AppTokens.minTouchTarget,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                     Text(
-                      '项目：${value.opportunities.single.name}',
+                      value.customer.name,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: AppTokens.s16),
-                  ] else ...[
-                    AppDropdownFormField<int>(
-                      fieldKey: const ValueKey('followup-opportunity'),
-                      initialValue: _selectedOpportunityId,
-                      decoration: const InputDecoration(labelText: '跟进项目'),
-                      items: value.opportunities
+                    if (!hasOpportunity) ...[
+                      const _NoOpportunityMessage(),
+                      const SizedBox(height: AppTokens.s16),
+                    ] else if (value.opportunities.length == 1) ...[
+                      Text(
+                        '项目：${value.opportunities.single.name}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: AppTokens.s16),
+                    ] else ...[
+                      AppDropdownFormField<int>(
+                        fieldKey: const ValueKey('followup-opportunity'),
+                        initialValue: _selectedOpportunityId,
+                        decoration: const InputDecoration(labelText: '跟进项目'),
+                        items: value.opportunities
+                            .map(
+                              (opportunity) => DropdownMenuItem(
+                                value: opportunity.id,
+                                child: Text(
+                                  opportunity.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (opportunityId) {
+                          if (opportunityId != null) {
+                            _selectOpportunity(
+                              opportunityId,
+                              value.opportunities,
+                            );
+                          }
+                        },
+                      ),
+                      const SizedBox(height: AppTokens.s12),
+                    ],
+                    if (value.contacts.isNotEmpty) ...[
+                      DropdownButtonFormField<int?>(
+                        key: const ValueKey('followup-contact'),
+                        initialValue: _selectedContactId,
+                        decoration: const InputDecoration(labelText: '联系人'),
+                        items: [
+                          const DropdownMenuItem<int?>(
+                            value: null,
+                            child: Text('未指定联系人'),
+                          ),
+                          ...value.contacts.map(
+                            (contact) => DropdownMenuItem<int?>(
+                              value: contact.id,
+                              child: Text(contact.name),
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) =>
+                            setState(() => _selectedContactId = value),
+                      ),
+                      const SizedBox(height: AppTokens.s12),
+                    ],
+                    DropdownButtonFormField<CustomerAttitude>(
+                      key: const ValueKey('followup-attitude'),
+                      initialValue: _attitude,
+                      decoration: const InputDecoration(labelText: '客户态度'),
+                      items: CustomerAttitude.values
                           .map(
-                            (opportunity) => DropdownMenuItem(
-                              value: opportunity.id,
+                            (value) => DropdownMenuItem(
+                              value: value,
+                              child: Text(value.label),
+                            ),
+                          )
+                          .toList(growable: false),
+                      onChanged: (value) {
+                        if (value != null) setState(() => _attitude = value);
+                      },
+                    ),
+                    const SizedBox(height: AppTokens.s12),
+                    TextFormField(
+                      key: const ValueKey('followup-feedback'),
+                      controller: _feedbackController,
+                      minLines: 3,
+                      maxLines: 6,
+                      maxLength: 10000,
+                      decoration: const InputDecoration(
+                        labelText: '客户反馈',
+                        alignLabelWithHint: true,
+                      ),
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty
+                          ? '客户反馈不能为空'
+                          : null,
+                    ),
+                    const SizedBox(height: AppTokens.s12),
+                    AppDropdownFormField<OpportunityStage>(
+                      fieldKey: const ValueKey('followup-stage'),
+                      initialValue: _stage,
+                      decoration: const InputDecoration(labelText: '项目阶段'),
+                      items: OpportunityStage.values
+                          .map(
+                            (stage) => DropdownMenuItem(
+                              value: stage,
                               child: Text(
-                                opportunity.name,
+                                stage.label,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           )
                           .toList(),
-                      onChanged: (opportunityId) {
-                        if (opportunityId != null) {
-                          _selectOpportunity(
-                            opportunityId,
-                            value.opportunities,
-                          );
-                        }
-                      },
+                      onChanged: hasOpportunity
+                          ? (stage) {
+                              if (stage != null) setState(() => _stage = stage);
+                            }
+                          : null,
+                      validator: (value) => value == null ? '请选择项目阶段' : null,
                     ),
                     const SizedBox(height: AppTokens.s12),
-                  ],
-                  TextFormField(
-                    key: const ValueKey('followup-feedback'),
-                    controller: _feedbackController,
-                    minLines: 3,
-                    maxLines: 6,
-                    maxLength: 10000,
-                    decoration: const InputDecoration(
-                      labelText: '客户反馈',
-                      alignLabelWithHint: true,
+                    TextFormField(
+                      key: const ValueKey('followup-next-action'),
+                      controller: _nextActionController,
+                      maxLength: 100,
+                      decoration: const InputDecoration(labelText: '下一步行动'),
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty
+                          ? '下一步行动不能为空'
+                          : null,
                     ),
-                    validator: (value) => value == null || value.trim().isEmpty
-                        ? '客户反馈不能为空'
-                        : null,
-                  ),
-                  const SizedBox(height: AppTokens.s12),
-                  AppDropdownFormField<OpportunityStage>(
-                    fieldKey: const ValueKey('followup-stage'),
-                    initialValue: _stage,
-                    decoration: const InputDecoration(labelText: '项目阶段'),
-                    items: OpportunityStage.values
-                        .map(
-                          (stage) => DropdownMenuItem(
-                            value: stage,
-                            child: Text(
-                              stage.label,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: hasOpportunity
-                        ? (stage) {
-                            if (stage != null) setState(() => _stage = stage);
-                          }
-                        : null,
-                    validator: (value) => value == null ? '请选择项目阶段' : null,
-                  ),
-                  const SizedBox(height: AppTokens.s12),
-                  TextFormField(
-                    key: const ValueKey('followup-next-action'),
-                    controller: _nextActionController,
-                    maxLength: 100,
-                    decoration: const InputDecoration(labelText: '下一步行动'),
-                    validator: (value) => value == null || value.trim().isEmpty
-                        ? '下一步行动不能为空'
-                        : null,
-                  ),
-                  const SizedBox(height: AppTokens.s24),
-                  Text('补充信息', style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: AppTokens.s12),
-                  TextFormField(
-                    key: const ValueKey('followup-content'),
-                    controller: _contentController,
-                    minLines: 2,
-                    maxLines: 5,
-                    maxLength: 10000,
-                    decoration: const InputDecoration(
-                      labelText: '跟进内容（选填）',
-                      alignLabelWithHint: true,
+                    const SizedBox(height: AppTokens.s24),
+                    Text(
+                      '补充信息',
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
-                  ),
-                  const SizedBox(height: AppTokens.s16),
-                  AppDropdownFormField<FollowMethod>(
-                    fieldKey: const ValueKey('followup-method'),
-                    initialValue: _method,
-                    decoration: const InputDecoration(labelText: '跟进方式'),
-                    items: FollowMethod.values
-                        .map(
-                          (method) => DropdownMenuItem(
-                            value: method,
-                            child: Text(
-                              method.label,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) setState(() => _method = value);
-                    },
-                  ),
-                  const SizedBox(height: AppTokens.s12),
-                  AppDateFormField(
-                    fieldKey: const ValueKey('followup-occurred-at'),
-                    label: '发生时间',
-                    value: _occurredAt,
-                    valueText: formatDateTime(_occurredAt),
-                    prefixIcon: Icons.schedule_outlined,
-                    onTap: () => _pickDateTime(forPlan: false),
-                  ),
-                  const SizedBox(height: AppTokens.s24),
-                  Text('后续安排', style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: AppTokens.s12),
-                  SegmentedButton<bool>(
-                    key: const ValueKey('followup-next-choice'),
-                    segments: const [
-                      ButtonSegment(
-                        value: false,
-                        icon: Icon(Icons.event_outlined),
-                        label: Text('安排下次'),
+                    const SizedBox(height: AppTokens.s12),
+                    TextFormField(
+                      key: const ValueKey('followup-content'),
+                      controller: _contentController,
+                      minLines: 2,
+                      maxLines: 5,
+                      maxLength: 10000,
+                      decoration: const InputDecoration(
+                        labelText: '跟进内容（选填）',
+                        alignLabelWithHint: true,
                       ),
-                      ButtonSegment(
-                        value: true,
-                        icon: Icon(Icons.event_busy_outlined),
-                        label: Text('暂不跟进'),
-                      ),
-                    ],
-                    selected: {_skipNextPlan},
-                    onSelectionChanged: (selection) {
-                      setState(() => _skipNextPlan = selection.first);
-                    },
-                  ),
-                  if (!_skipNextPlan) ...[
+                    ),
                     const SizedBox(height: AppTokens.s16),
-                    Wrap(
-                      spacing: AppTokens.s8,
-                      runSpacing: AppTokens.s8,
-                      children: [
-                        ActionChip(
-                          label: const Text('明天'),
-                          onPressed: () => _setPlanOffset(1),
-                        ),
-                        ActionChip(
-                          label: const Text('三天后'),
-                          onPressed: () => _setPlanOffset(3),
-                        ),
-                        ActionChip(
-                          label: const Text('一周后'),
-                          onPressed: () => _setPlanOffset(7),
-                        ),
-                        ActionChip(
-                          label: const Text('一个月后'),
-                          onPressed: () => _setPlanOffset(30),
-                        ),
-                        ActionChip(
-                          avatar: const Icon(Icons.edit_calendar_outlined),
-                          label: const Text('自定义'),
-                          onPressed: () => _pickDateTime(forPlan: true),
-                        ),
-                      ],
+                    AppDropdownFormField<FollowMethod>(
+                      fieldKey: const ValueKey('followup-method'),
+                      initialValue: _method,
+                      decoration: const InputDecoration(labelText: '跟进方式'),
+                      items: FollowMethod.values
+                          .map(
+                            (method) => DropdownMenuItem(
+                              value: method,
+                              child: Text(
+                                method.label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) setState(() => _method = value);
+                      },
                     ),
                     const SizedBox(height: AppTokens.s12),
                     AppDateFormField(
-                      fieldKey: const ValueKey('followup-plan-at'),
-                      label: '下次跟进时间',
-                      value: _planAt,
-                      valueText: formatDateTime(_planAt),
+                      fieldKey: const ValueKey('followup-occurred-at'),
+                      label: '发生时间',
+                      value: _occurredAt,
+                      valueText: formatDateTime(_occurredAt),
                       prefixIcon: Icons.schedule_outlined,
-                      onTap: () => _pickDateTime(forPlan: true),
+                      onTap: () => _pickDateTime(forPlan: false),
                     ),
-                  ] else ...[
-                    const SizedBox(height: AppTokens.s16),
-                    TextFormField(
-                      key: const ValueKey('followup-pause-reason'),
-                      controller: _pauseReasonController,
-                      minLines: 2,
-                      maxLines: 4,
-                      decoration: const InputDecoration(
-                        labelText: '暂停原因',
-                        alignLabelWithHint: true,
-                      ),
-                      validator: (value) {
-                        if (!_skipNextPlan) return null;
-                        return value == null || value.trim().isEmpty
-                            ? '暂停原因不能为空'
-                            : null;
+                    const SizedBox(height: AppTokens.s24),
+                    Text(
+                      '后续安排',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: AppTokens.s12),
+                    SegmentedButton<bool>(
+                      key: const ValueKey('followup-next-choice'),
+                      segments: const [
+                        ButtonSegment(
+                          value: false,
+                          icon: Icon(Icons.event_outlined),
+                          label: Text('安排下次'),
+                        ),
+                        ButtonSegment(
+                          value: true,
+                          icon: Icon(Icons.event_busy_outlined),
+                          label: Text('暂不跟进'),
+                        ),
+                      ],
+                      selected: {_skipNextPlan},
+                      onSelectionChanged: (selection) {
+                        setState(() => _skipNextPlan = selection.first);
                       },
                     ),
+                    if (!_skipNextPlan) ...[
+                      const SizedBox(height: AppTokens.s16),
+                      Wrap(
+                        spacing: AppTokens.s8,
+                        runSpacing: AppTokens.s8,
+                        children: [
+                          ActionChip(
+                            label: const Text('明天'),
+                            onPressed: () => _setPlanOffset(1),
+                          ),
+                          ActionChip(
+                            label: const Text('三天后'),
+                            onPressed: () => _setPlanOffset(3),
+                          ),
+                          ActionChip(
+                            label: const Text('一周后'),
+                            onPressed: () => _setPlanOffset(7),
+                          ),
+                          ActionChip(
+                            label: const Text('一个月后'),
+                            onPressed: () => _setPlanOffset(30),
+                          ),
+                          ActionChip(
+                            avatar: const Icon(Icons.edit_calendar_outlined),
+                            label: const Text('自定义'),
+                            onPressed: () => _pickDateTime(forPlan: true),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppTokens.s12),
+                      AppDateFormField(
+                        fieldKey: const ValueKey('followup-plan-at'),
+                        label: '下次跟进时间',
+                        value: _planAt,
+                        valueText: formatDateTime(_planAt),
+                        prefixIcon: Icons.schedule_outlined,
+                        onTap: () => _pickDateTime(forPlan: true),
+                      ),
+                    ] else ...[
+                      const SizedBox(height: AppTokens.s16),
+                      TextFormField(
+                        key: const ValueKey('followup-pause-reason'),
+                        controller: _pauseReasonController,
+                        minLines: 2,
+                        maxLines: 4,
+                        decoration: const InputDecoration(
+                          labelText: '暂停原因',
+                          alignLabelWithHint: true,
+                        ),
+                        validator: (value) {
+                          if (!_skipNextPlan) return null;
+                          return value == null || value.trim().isEmpty
+                              ? '暂停原因不能为空'
+                              : null;
+                        },
+                      ),
+                    ],
+                    const SizedBox(height: AppTokens.s24),
                   ],
-                  const SizedBox(height: AppTokens.s24),
-                  FilledButton.icon(
-                    key: const ValueKey('save-followup'),
-                    onPressed: _saving || !hasOpportunity ? null : _save,
-                    icon: _saving
-                        ? const SizedBox.square(
-                            dimension: AppTokens.s16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.save_outlined),
-                    label: Text(_saving ? '保存中' : '保存跟进'),
-                  ),
-                ],
+                ),
               ),
             ),
           );

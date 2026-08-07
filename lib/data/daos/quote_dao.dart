@@ -89,6 +89,31 @@ class QuoteDao extends DatabaseAccessor<AppDatabase> with _$QuoteDaoMixin {
     return rows.firstOrNull;
   }
 
+  Future<int> updateOutcome(
+    int id, {
+    required bool customerReceived,
+    Value<String?> customerFeedback = const Value.absent(),
+    Value<DateTime?> nextFollowAt = const Value.absent(),
+    Value<String?> result = const Value.absent(),
+    DateTime? now,
+  }) {
+    final ts = (now ?? DateTime.now()).toUtc().millisecondsSinceEpoch;
+    return (update(quotes)..where((t) => t.id.equals(id))).write(
+      QuotesCompanion(
+        customerReceived: Value(customerReceived),
+        customerFeedback: _trimmed(customerFeedback),
+        nextFollowAt: nextFollowAt.present
+            ? Value(nextFollowAt.value?.toUtc().millisecondsSinceEpoch)
+            : const Value.absent(),
+        result: _trimmed(result),
+        updatedAt: Value(ts),
+      ),
+    );
+  }
+
   Future<int> deleteQuote(int id) =>
       (delete(quotes)..where((t) => t.id.equals(id))).go();
+
+  Value<String?> _trimmed(Value<String?> value) =>
+      value.present ? Value(value.value?.trim()) : const Value.absent();
 }

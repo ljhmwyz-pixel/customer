@@ -7,6 +7,7 @@ mixin _$ExportDaoMixin on DatabaseAccessor<AppDatabase> {
   $CustomersTable get customers => attachedDatabase.customers;
   $OpportunitiesTable get opportunities => attachedDatabase.opportunities;
   $FollowPlansTable get followPlans => attachedDatabase.followPlans;
+  $ContactsTable get contacts => attachedDatabase.contacts;
   $FollowupsTable get followups => attachedDatabase.followups;
   $QuotesTable get quotes => attachedDatabase.quotes;
   $SamplesTable get samples => attachedDatabase.samples;
@@ -25,6 +26,8 @@ class ExportDaoManager {
       $$OpportunitiesTableTableManager(_db.attachedDatabase, _db.opportunities);
   $$FollowPlansTableTableManager get followPlans =>
       $$FollowPlansTableTableManager(_db.attachedDatabase, _db.followPlans);
+  $$ContactsTableTableManager get contacts =>
+      $$ContactsTableTableManager(_db.attachedDatabase, _db.contacts);
   $$FollowupsTableTableManager get followups =>
       $$FollowupsTableTableManager(_db.attachedDatabase, _db.followups);
   $$QuotesTableTableManager get quotes =>

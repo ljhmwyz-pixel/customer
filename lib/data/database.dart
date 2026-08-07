@@ -74,7 +74,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -85,6 +85,7 @@ class AppDatabase extends _$AppDatabase {
       await _createRegistrationTenderOrderIndexes();
       await _createAttachmentOwnerIndexes();
       await _createSampleDataIndexes();
+      await _createV9Indexes();
     },
     onUpgrade: (m, from, to) async {
       if (from < 2) {
@@ -108,6 +109,9 @@ class AppDatabase extends _$AppDatabase {
       if (from < 8) {
         await _migrateV7ToV8(m);
       }
+      if (from < 9) {
+        await _migrateV8ToV9(m);
+      }
     },
     beforeOpen: (details) async {
       // SQLite 默认不开外键约束，不执行这句的话级联删除会静默失效，
@@ -125,6 +129,64 @@ class AppDatabase extends _$AppDatabase {
       'ON customers(sample_batch_id) '
       'WHERE sample_batch_id IS NOT NULL',
     );
+  }
+
+  Future<void> _createV9Indexes() async {
+    if (await _tableExists('customers')) {
+      await customStatement(
+        'CREATE UNIQUE INDEX IF NOT EXISTS idx_customers_customer_no '
+        'ON customers(customer_no) '
+        "WHERE customer_no IS NOT NULL AND TRIM(customer_no) <> ''",
+      );
+    }
+    if (await _tableExists('contacts')) {
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_contacts_email ON contacts(email)',
+      );
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_contacts_whatsapp ON contacts(whatsapp)',
+      );
+    }
+    if (await _tableExists('followups')) {
+      final columns = await customSelect('PRAGMA table_info(followups)').get();
+      final hasOccurredAt = columns.any(
+        (row) => row.read<String>('name') == 'occurred_at',
+      );
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_followups_contact '
+        '${hasOccurredAt ? 'ON followups(contact_id, occurred_at DESC)' : 'ON followups(contact_id)'}',
+      );
+    }
+  }
+
+  Future<bool> _tableExists(String name) async => (await customSelect(
+    "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
+    variables: [Variable.withString(name)],
+  ).get()).isNotEmpty;
+
+  Future<void> _migrateV8ToV9(Migrator m) async {
+    if (await _tableExists('customers')) {
+      await m.addColumn(customers, customers.customerNo);
+      await m.addColumn(customers, customers.customerType);
+      await m.addColumn(customers, customers.owner);
+      await m.addColumn(customers, customers.tenderExperience);
+      await m.addColumn(customers, customers.tenderQualification);
+      await m.addColumn(customers, customers.tenderBidder);
+      await m.addColumn(customers, customers.localTeamStatus);
+      await m.addColumn(customers, customers.fundingStatus);
+    }
+    if (await _tableExists('contacts')) {
+      await m.addColumn(contacts, contacts.email);
+      await m.addColumn(contacts, contacts.whatsapp);
+      await m.addColumn(contacts, contacts.communicationPreference);
+      await m.addColumn(contacts, contacts.note);
+    }
+    if (await _tableExists('followups')) {
+      await m.addColumn(followups, followups.contactId);
+      await m.addColumn(followups, followups.attitude);
+      await m.addColumn(followups, followups.owner);
+    }
+    await _createV9Indexes();
   }
 
   Future<void> _migrateV7ToV8(Migrator m) async {

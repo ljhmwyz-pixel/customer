@@ -40,12 +40,31 @@ void main() {
       status: OpportunityStatus.paused,
       now: now,
     );
+    await db.opportunityDao.insertOpportunity(
+      customerId: b,
+      name: '欧元项目',
+      currency: 'EUR',
+      forecastAmountMinor: 90000,
+      probabilityPercent: 25,
+      expectedCloseAt: now.add(const Duration(days: 45)),
+      now: now,
+    );
     await db.followupDao.insertAndTouchCustomer(
       customerId: a,
       opportunityId: opportunity,
       occurredAt: now,
       method: FollowMethod.phone,
       content: '本周跟进',
+      now: now,
+    );
+    await db.orderDao.insertOrder(
+      customerId: b,
+      opportunityId: opportunity,
+      orderNo: 'D-JPY',
+      orderedAt: now,
+      amountCents: 1200000,
+      currency: 'JPY',
+      orderResult: OrderResult.completed,
       now: now,
     );
     final completedOrderId = await db.orderDao.insertOrder(
@@ -83,13 +102,67 @@ void main() {
     final metrics = await db.customerDao.dashboardMetrics(now: now);
     expect(metrics.totalCustomers, 2);
     expect(metrics.customerCountsByGrade[CustomerGrade.a], 1);
-    expect(metrics.projectCountsByStage[OpportunityStage.newLead], 1);
+    expect(metrics.projectCountsByStage[OpportunityStage.newLead], 2);
     expect(metrics.followupsThisWeek, 1);
-    expect(metrics.forecastAmountMinor, 120000);
-    expect(metrics.weightedForecastAmountMinor, 60000);
-    expect(metrics.wonAmountMinor, 88000);
-    expect(metrics.stalledQuoteCount, isNull);
+    expect(metrics.forecastByCurrency, {'EUR': 90000, 'USD': 120000});
+    expect(metrics.weightedForecastByCurrency, {'EUR': 22500, 'USD': 60000});
+    expect(metrics.wonByCurrency, {'CNY': 88000, 'JPY': 1200000});
+    expect(metrics.stalledQuoteCount, 0);
+    expect(metrics.stalledSampleCount, 0);
   });
+
+  test(
+    'dashboard reports stalled quote, expiring quote and stalled sample',
+    () async {
+      final now = DateTime.utc(2026, 8, 5, 12);
+      final customerId = await db.customerDao.insertCustomer(
+        name: '异常客户',
+        now: now,
+      );
+      final opportunityId = await db.opportunityDao.insertOpportunity(
+        customerId: customerId,
+        name: '异常项目',
+        now: now,
+      );
+      await db.quoteDao.insertVersion(
+        opportunityId: opportunityId,
+        quoteNo: 'STALE',
+        quantity: 1,
+        quotedAt: now.subtract(const Duration(days: 30)),
+        now: now,
+      );
+      await db.quoteDao.insertVersion(
+        opportunityId: opportunityId,
+        quoteNo: 'EXPIRING',
+        quantity: 1,
+        quotedAt: now,
+        validUntil: now.add(const Duration(days: 7)),
+        customerReceived: true,
+        now: now,
+      );
+      await db.sampleDao.insertSample(
+        opportunityId: opportunityId,
+        quantity: 1,
+        deliveredAt: now.subtract(const Duration(days: 30)),
+        status: SampleStatus.delivered,
+        now: now,
+      );
+
+      final metrics = await db.customerDao.dashboardMetrics(now: now);
+      final anomalies = await db.customerDao.dashboardAnomalies(now: now);
+
+      expect(metrics.stalledQuoteCount, 1);
+      expect(metrics.stalledSampleCount, 1);
+      expect(
+        anomalies.map((item) => item.kind),
+        containsAll({
+          DashboardAnomalyKind.stalledQuote,
+          DashboardAnomalyKind.quoteExpiring,
+          DashboardAnomalyKind.stalledSample,
+        }),
+      );
+    },
+  );
 
   test(
     'dashboardAnomalies reports long silence and internal support',

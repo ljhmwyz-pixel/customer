@@ -77,6 +77,14 @@ class ExcelWorkbookBuilder {
       '当前阻碍',
       '下一步',
       '下次跟进',
+      '客户编号',
+      '客户类型',
+      '客户负责人',
+      '招标经验',
+      '投标资格',
+      '投标主体',
+      '当地团队',
+      '资金状态',
     ]);
     for (final row in rows) {
       sheet.appendRow([
@@ -101,6 +109,14 @@ class ExcelWorkbookBuilder {
         _text(row.currentObstacle),
         _text(row.nextAction),
         _date(row.nextFollowAt),
+        _text(row.customerNo),
+        _text(row.customerType),
+        _text(row.customerOwner),
+        _text(row.tenderExperience),
+        _text(row.tenderQualification),
+        _text(row.tenderBidder),
+        _text(row.localTeamStatus),
+        _text(row.fundingStatus),
       ]);
     }
     _finish(sheet, moneyColumns: const {10}, percentColumns: const {12});
@@ -118,6 +134,9 @@ class ExcelWorkbookBuilder {
       '阶段',
       '下一步',
       '下次跟进',
+      '联系人',
+      '客户态度',
+      '负责人',
     ]);
     for (final row in rows) {
       sheet.appendRow([
@@ -131,6 +150,9 @@ class ExcelWorkbookBuilder {
         _text(row.stageLabel),
         _text(row.nextAction),
         _date(row.nextFollowAt),
+        _text(row.contactName),
+        _text(row.attitudeLabel),
+        _text(row.owner),
       ]);
     }
     _finish(sheet, moneyColumns: const {}, percentColumns: const {});

@@ -9,6 +9,8 @@ import '../../data/database_provider.dart';
 import '../../models/enums.dart';
 import '../../services/attachment_service.dart';
 import '../../services/attachment_service_providers.dart';
+import '../../services/business_task_rules.dart';
+import '../../services/service_providers.dart';
 
 class OrderDraft {
   const OrderDraft({
@@ -56,10 +58,13 @@ class OrderService {
     this._db, {
     AttachmentGraphCleaner attachmentCleaner =
         const PassthroughAttachmentGraphCleaner(),
-  }) : _attachmentCleaner = attachmentCleaner;
+    BusinessTaskRules? taskRules,
+  }) : _attachmentCleaner = attachmentCleaner,
+       _taskRules = taskRules;
 
   final AppDatabase _db;
   final AttachmentGraphCleaner _attachmentCleaner;
+  final BusinessTaskRules? _taskRules;
 
   Future<String> nextOrderNo({DateTime? at}) =>
       _db.orderDao.nextOrderNo(at: at);
@@ -76,7 +81,15 @@ class OrderService {
       draft.opportunityId,
     );
     final normalized = await _normalizeDraft(draft);
-    return _db.transaction(() async {
+    final repurchasePlanIds = (await _db.planDao.listOpenOf(customerId))
+        .where(
+          (plan) =>
+              plan.opportunityId == opportunityId &&
+              plan.sourceType == TaskSourceType.repurchase.dbValue,
+        )
+        .map((plan) => plan.id)
+        .toList(growable: false);
+    final orderId = await _db.transaction(() async {
       final orderId = await _db.orderDao.insertOrder(
         customerId: customerId,
         opportunityId: opportunityId,
@@ -99,6 +112,9 @@ class OrderService {
       );
       return orderId;
     });
+    await _taskRules?.cancelScheduledPlans(repurchasePlanIds);
+    await _syncTasks(opportunityId);
+    return orderId;
   }
 
   Future<void> updateOrder(
@@ -128,6 +144,10 @@ class OrderService {
       estimatedRepurchaseAt: Value(normalized.estimatedRepurchaseAt),
       description: Value(normalized.description),
     );
+    await _syncTasks(opportunityId);
+    if (order.opportunityId != null && order.opportunityId != opportunityId) {
+      await _syncTasks(order.opportunityId!);
+    }
   }
 
   Future<void> transitionOrder(
@@ -153,13 +173,15 @@ class OrderService {
     int orderId,
   ) async {
     final order = await _requireOrder(customerId, orderId);
-    return _attachmentCleaner.deleteGraph(
+    final report = await _attachmentCleaner.deleteGraph(
       loadAttachments: () =>
           _db.attachmentDao.listOf(OrderAttachmentOwner(order.id)),
       deleteDatabaseGraph: () => _db.transaction(() async {
         await _db.orderDao.deleteOrder(order.id);
       }),
     );
+    if (order.opportunityId != null) await _syncTasks(order.opportunityId!);
+    return report;
   }
 
   Future<CustomerRow> _requireCustomer(int customerId) async {
@@ -244,11 +266,23 @@ class OrderService {
           : description,
     );
   }
+
+  Future<void> _syncTasks(int opportunityId) async {
+    try {
+      await _taskRules?.reconcileForOpportunity(
+        opportunityId,
+        now: DateTime.now(),
+      );
+    } catch (_) {
+      // The order is already durable; startup rebuild is the fallback.
+    }
+  }
 }
 
 final orderServiceProvider = Provider<OrderService>(
   (ref) => OrderService(
     ref.watch(databaseProvider),
     attachmentCleaner: ref.watch(attachmentServiceProvider),
+    taskRules: ref.watch(businessTaskRulesProvider),
   ),
 );

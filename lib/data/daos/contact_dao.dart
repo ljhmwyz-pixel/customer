@@ -15,6 +15,10 @@ class ContactDao extends DatabaseAccessor<AppDatabase> with _$ContactDaoMixin {
     required String name,
     String? position,
     String? phone,
+    String? email,
+    String? whatsapp,
+    String? communicationPreference,
+    String? note,
     bool isDecisionMaker = false,
     DateTime? now,
   }) {
@@ -25,6 +29,10 @@ class ContactDao extends DatabaseAccessor<AppDatabase> with _$ContactDaoMixin {
         name: name,
         position: Value(position),
         phone: Value(phone),
+        email: Value(email),
+        whatsapp: Value(whatsapp),
+        communicationPreference: Value(communicationPreference),
+        note: Value(note),
         isDecisionMaker: Value(isDecisionMaker),
         createdAt: ts,
         updatedAt: ts,
@@ -58,6 +66,10 @@ class ContactDao extends DatabaseAccessor<AppDatabase> with _$ContactDaoMixin {
     String? name,
     Value<String?> position = const Value.absent(),
     Value<String?> phone = const Value.absent(),
+    Value<String?> email = const Value.absent(),
+    Value<String?> whatsapp = const Value.absent(),
+    Value<String?> communicationPreference = const Value.absent(),
+    Value<String?> note = const Value.absent(),
     bool? isDecisionMaker,
     DateTime? now,
   }) {
@@ -67,6 +79,10 @@ class ContactDao extends DatabaseAccessor<AppDatabase> with _$ContactDaoMixin {
         name: name == null ? const Value.absent() : Value(name),
         position: position,
         phone: phone,
+        email: email,
+        whatsapp: whatsapp,
+        communicationPreference: communicationPreference,
+        note: note,
         isDecisionMaker: isDecisionMaker == null
             ? const Value.absent()
             : Value(isDecisionMaker),

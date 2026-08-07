@@ -38,7 +38,7 @@ void main() {
     tearDown(() async => db.close());
 
     test('版本、六个归属列、六个索引和 CHECK 均已落地', () async {
-      expect(db.schemaVersion, 8);
+      expect(db.schemaVersion, 9);
 
       final columns = await db
           .customSelect('PRAGMA table_info(attachments)')
@@ -176,7 +176,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 8);
+      expect(version.data.values.first, 9);
 
       final rows = await migrated.customSelect('''
         SELECT id, followup_id, order_id, quote_id, sample_id,

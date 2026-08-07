@@ -108,6 +108,17 @@ class CustomerDetailPage extends ConsumerWidget {
                   tags: value.tags,
                   completedAmountCents: value.completedAmountCents,
                   onCall: () => _call(context, ref, value.customer.phone),
+                  quickActions: _CustomerQuickActions(
+                    onAddContact: () => _editContact(context, ref, id),
+                    onAddOpportunity: () =>
+                        context.push('/customers/$id/opportunities/new'),
+                    onAddBusiness: () => _showBusinessActions(
+                      context,
+                      customerId: id,
+                      opportunities: value.opportunities,
+                    ),
+                    onAddOrder: () => context.push('/customers/$id/orders/new'),
+                  ),
                 ),
                 const SizedBox(height: AppTokens.s24),
                 _SectionHeader(
@@ -237,7 +248,10 @@ class CustomerDetailPage extends ConsumerWidget {
                 if (value.followups.isEmpty)
                   const _SectionEmpty(message: '暂无跟进记录')
                 else
-                  _FollowupTimeline(followups: value.followups),
+                  _FollowupTimeline(
+                    followups: value.followups,
+                    contacts: value.contacts,
+                  ),
               ],
             ),
           );
@@ -254,6 +268,144 @@ class CustomerDetailPage extends ConsumerWidget {
     } catch (_) {
       if (context.mounted) _showMessage(context, '当前设备无法拨打电话');
     }
+  }
+
+  Future<void> _showBusinessActions(
+    BuildContext context, {
+    required int customerId,
+    required List<OpportunityRow> opportunities,
+  }) async {
+    if (opportunities.isEmpty) {
+      final create = await showModalBottomSheet<bool>(
+        context: context,
+        showDragHandle: true,
+        builder: (sheetContext) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTokens.s24,
+              AppTokens.s8,
+              AppTokens.s24,
+              AppTokens.s24,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  '先创建项目',
+                  style: Theme.of(sheetContext).textTheme.titleLarge,
+                ),
+                const SizedBox(height: AppTokens.s8),
+                const Text('报价、样品、注册和招标都需要关联到具体项目。'),
+                const SizedBox(height: AppTokens.s24),
+                FilledButton.icon(
+                  key: const ValueKey('business-create-opportunity'),
+                  onPressed: () => Navigator.pop(sheetContext, true),
+                  icon: const Icon(Icons.add_business_outlined),
+                  label: const Text('新增项目'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      if (create == true && context.mounted) {
+        await context.push('/customers/$customerId/opportunities/new');
+      }
+      return;
+    }
+
+    var selectedOpportunityId = opportunities.first.id;
+    final route = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final base =
+              '/customers/$customerId/opportunities/$selectedOpportunityId';
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppTokens.s16,
+                AppTokens.s4,
+                AppTokens.s16,
+                AppTokens.s16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('新增业务记录', style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: AppTokens.s16),
+                  if (opportunities.length == 1)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.work_outline),
+                      title: const Text('关联项目'),
+                      subtitle: Text(opportunities.single.name),
+                    )
+                  else
+                    DropdownButtonFormField<int>(
+                      key: const ValueKey('business-opportunity-selector'),
+                      initialValue: selectedOpportunityId,
+                      decoration: const InputDecoration(labelText: '关联项目'),
+                      items: opportunities
+                          .map(
+                            (opportunity) => DropdownMenuItem(
+                              value: opportunity.id,
+                              child: Text(
+                                opportunity.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          )
+                          .toList(growable: false),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setSheetState(() => selectedOpportunityId = value);
+                        }
+                      },
+                    ),
+                  const SizedBox(height: AppTokens.s12),
+                  _BusinessActionTile(
+                    key: const ValueKey('business-action-quote'),
+                    icon: Icons.request_quote_outlined,
+                    title: '报价',
+                    subtitle: '创建新报价版本',
+                    onTap: () => Navigator.pop(context, '$base/quotes/new'),
+                  ),
+                  _BusinessActionTile(
+                    key: const ValueKey('business-action-sample'),
+                    icon: Icons.inventory_2_outlined,
+                    title: '样品',
+                    subtitle: '登记寄样与测试进度',
+                    onTap: () => Navigator.pop(context, '$base/samples/new'),
+                  ),
+                  _BusinessActionTile(
+                    key: const ValueKey('business-action-registration'),
+                    icon: Icons.assignment_outlined,
+                    title: '注册',
+                    subtitle: '维护资料、提交与结果',
+                    onTap: () =>
+                        Navigator.pop(context, '$base/registrations/new'),
+                  ),
+                  _BusinessActionTile(
+                    key: const ValueKey('business-action-tender'),
+                    icon: Icons.gavel_outlined,
+                    title: '招标',
+                    subtitle: '维护资格、授权与风险',
+                    onTap: () => Navigator.pop(context, '$base/tenders/new'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+    if (route != null && context.mounted) await context.push(route);
   }
 
   Future<void> _importContact(
@@ -290,35 +442,18 @@ class CustomerDetailPage extends ConsumerWidget {
     ContactRow? contact,
     ContactDraft? initial,
   }) async {
-    final draft = await showDialog<ContactDraft>(
-      context: context,
-      builder: (context) => _ContactDialog(
-        initial:
-            initial ??
-            (contact == null
-                ? null
-                : ContactDraft(
-                    name: contact.name,
-                    position: contact.position,
-                    phone: contact.phone,
-                    isDecisionMaker: contact.isDecisionMaker,
-                  )),
-      ),
-    );
-    if (draft == null || !context.mounted) return;
-    try {
-      final service = ref.read(customerServiceProvider);
-      if (contact == null) {
-        await service.createContact(customerId, draft);
-      } else {
-        await service.updateContact(contact.id, draft);
-      }
-      ref.read(customerRevisionProvider.notifier).refresh();
-    } on CustomerValidationException catch (error) {
-      if (context.mounted) _showMessage(context, error.message);
-    } catch (_) {
-      if (context.mounted) _showMessage(context, '联系人保存失败，请重试');
-    }
+    final location = contact == null
+        ? Uri(
+            path: '/customers/$customerId/contacts/new',
+            queryParameters: {
+              if (initial?.name.trim().isNotEmpty == true)
+                'name': initial!.name,
+              if (initial?.phone?.trim().isNotEmpty == true)
+                'phone': initial!.phone,
+            },
+          ).toString()
+        : '/customers/$customerId/contacts/${contact.id}/edit';
+    await context.push(location);
   }
 
   Future<void> _deleteContact(
@@ -496,24 +631,34 @@ class _CustomerOverview extends StatelessWidget {
     required this.tags,
     required this.completedAmountCents,
     required this.onCall,
+    required this.quickActions,
   });
 
   final CustomerRow customer;
   final List<TagRow> tags;
   final int completedAmountCents;
   final VoidCallback onCall;
+  final Widget quickActions;
 
   @override
   Widget build(BuildContext context) {
     final company = customer.company?.trim();
     final phone = customer.phone?.trim();
     final fields = <(IconData, String, String?)>[
+      (Icons.badge_outlined, '编号', customer.customerNo),
+      (Icons.category_outlined, '类型', customer.customerType),
+      (Icons.person_pin_outlined, '负责人', customer.owner),
       (Icons.business_outlined, '公司', company),
       (Icons.phone_outlined, '电话', phone),
       (Icons.chat_outlined, '微信', customer.wechat),
       (Icons.location_on_outlined, '地址', customer.address),
       (Icons.input_outlined, '来源', customer.source),
       (Icons.notes_outlined, '备注', customer.note),
+      (Icons.history_edu_outlined, '招标经验', customer.tenderExperience),
+      (Icons.verified_outlined, '投标资格', customer.tenderQualification),
+      (Icons.account_balance_outlined, '投标主体', customer.tenderBidder),
+      (Icons.groups_outlined, '当地团队', customer.localTeamStatus),
+      (Icons.payments_outlined, '资金状态', customer.fundingStatus),
     ];
 
     return Column(
@@ -553,6 +698,8 @@ class _CustomerOverview extends StatelessWidget {
           ),
         ],
         const SizedBox(height: AppTokens.s16),
+        quickActions,
+        const SizedBox(height: AppTokens.s16),
         const Divider(height: 1),
         _InfoRow(
           icon: Icons.account_balance_wallet_outlined,
@@ -580,6 +727,124 @@ class _CustomerOverview extends StatelessWidget {
       ],
     );
   }
+}
+
+class _CustomerQuickActions extends StatelessWidget {
+  const _CustomerQuickActions({
+    required this.onAddContact,
+    required this.onAddOpportunity,
+    required this.onAddBusiness,
+    required this.onAddOrder,
+  });
+
+  final VoidCallback onAddContact;
+  final VoidCallback onAddOpportunity;
+  final VoidCallback onAddBusiness;
+  final VoidCallback onAddOrder;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    key: const ValueKey('customer-quick-actions'),
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text('快捷操作', style: Theme.of(context).textTheme.labelLarge),
+      const SizedBox(height: AppTokens.s8),
+      Row(
+        children: [
+          Expanded(
+            child: _QuickActionButton(
+              key: const ValueKey('quick-add-contact'),
+              icon: Icons.person_add_outlined,
+              label: '联系人',
+              onPressed: onAddContact,
+            ),
+          ),
+          const SizedBox(width: AppTokens.s8),
+          Expanded(
+            child: _QuickActionButton(
+              key: const ValueKey('quick-add-opportunity'),
+              icon: Icons.add_business_outlined,
+              label: '项目',
+              onPressed: onAddOpportunity,
+            ),
+          ),
+          const SizedBox(width: AppTokens.s8),
+          Expanded(
+            child: _QuickActionButton(
+              key: const ValueKey('quick-add-business'),
+              icon: Icons.post_add_outlined,
+              label: '业务',
+              onPressed: onAddBusiness,
+            ),
+          ),
+          const SizedBox(width: AppTokens.s8),
+          Expanded(
+            child: _QuickActionButton(
+              key: const ValueKey('quick-add-order'),
+              icon: Icons.add_shopping_cart_outlined,
+              label: '订单',
+              onPressed: onAddOrder,
+            ),
+          ),
+        ],
+      ),
+    ],
+  );
+}
+
+class _QuickActionButton extends StatelessWidget {
+  const _QuickActionButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+    super.key,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => OutlinedButton(
+    onPressed: onPressed,
+    style: OutlinedButton.styleFrom(
+      minimumSize: const Size.fromHeight(68),
+      padding: const EdgeInsets.symmetric(horizontal: AppTokens.s4),
+    ),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon),
+        const SizedBox(height: AppTokens.s4),
+        Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+      ],
+    ),
+  );
+}
+
+class _BusinessActionTile extends StatelessWidget {
+  const _BusinessActionTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    super.key,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+    contentPadding: EdgeInsets.zero,
+    leading: Icon(icon),
+    title: Text(title),
+    subtitle: Text(subtitle),
+    trailing: const Icon(Icons.chevron_right),
+    onTap: onTap,
+  );
 }
 
 class _InfoRow extends StatelessWidget {
@@ -675,6 +940,9 @@ class _ContactTile extends StatelessWidget {
     final subtitle = [
       if (position != null && position.isNotEmpty) position,
       if (phone != null && phone.isNotEmpty) phone,
+      if (contact.email?.trim().isNotEmpty == true) contact.email!.trim(),
+      if (contact.whatsapp?.trim().isNotEmpty == true)
+        'WhatsApp ${contact.whatsapp!.trim()}',
     ].join(' · ');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -933,6 +1201,9 @@ class _OpportunityTile extends StatelessWidget {
                     title: '报价 ${quote.quoteNo} · v${quote.version}',
                     subtitle: formatDateTime(localDateTime(quote.quotedAt)),
                     icon: Icons.request_quote_outlined,
+                    onTap: () => context.push(
+                      '/customers/$customerId/opportunities/${opportunity.id}/quotes/${quote.id}',
+                    ),
                     attachmentRoute: AttachmentOwnerRoute(
                       type: AttachmentOwnerType.quote,
                       id: quote.id,
@@ -944,6 +1215,9 @@ class _OpportunityTile extends StatelessWidget {
                     title: '样品 ${_recordLabel(sample.sampleModel)}',
                     subtitle: SampleStatus.fromDb(sample.status).label,
                     icon: Icons.inventory_2_outlined,
+                    onTap: () => context.push(
+                      '/customers/$customerId/opportunities/${opportunity.id}/samples/${sample.id}/edit',
+                    ),
                     attachmentRoute: AttachmentOwnerRoute(
                       type: AttachmentOwnerType.sample,
                       id: sample.id,
@@ -957,6 +1231,9 @@ class _OpportunityTile extends StatelessWidget {
                       registration.status,
                     ).label,
                     icon: Icons.assignment_outlined,
+                    onTap: () => context.push(
+                      '/customers/$customerId/opportunities/${opportunity.id}/registrations/${registration.id}/edit',
+                    ),
                     attachmentRoute: AttachmentOwnerRoute(
                       type: AttachmentOwnerType.registration,
                       id: registration.id,
@@ -969,6 +1246,9 @@ class _OpportunityTile extends StatelessWidget {
                         '招标 ${_recordLabel(tender.projectNo, fallback: tender.name)}',
                     subtitle: TenderStatus.fromDb(tender.status).label,
                     icon: Icons.gavel_outlined,
+                    onTap: () => context.push(
+                      '/customers/$customerId/opportunities/${opportunity.id}/tenders/${tender.id}/edit',
+                    ),
                     attachmentRoute: AttachmentOwnerRoute(
                       type: AttachmentOwnerType.tender,
                       id: tender.id,
@@ -988,12 +1268,14 @@ class _BusinessRecordTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.icon,
+    required this.onTap,
     required this.attachmentRoute,
   });
 
   final String title;
   final String subtitle;
   final IconData icon;
+  final VoidCallback onTap;
   final AttachmentOwnerRoute attachmentRoute;
 
   @override
@@ -1004,6 +1286,7 @@ class _BusinessRecordTile extends StatelessWidget {
     title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
     subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
     trailing: _AttachmentAction(route: attachmentRoute),
+    onTap: onTap,
   );
 }
 
@@ -1178,19 +1461,24 @@ class _PlanTile extends StatelessWidget {
 }
 
 class _FollowupTimeline extends StatelessWidget {
-  const _FollowupTimeline({required this.followups});
+  const _FollowupTimeline({required this.followups, required this.contacts});
 
   final List<FollowupRow> followups;
+  final List<ContactRow> contacts;
 
   @override
   Widget build(BuildContext context) {
     final ordered = [...followups]
       ..sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
+    final contactNames = {
+      for (final contact in contacts) contact.id: contact.name,
+    };
     return Column(
       children: [
         for (var index = 0; index < ordered.length; index++)
           _TimelineEntry(
             followup: ordered[index],
+            contactName: contactNames[ordered[index].contactId],
             isLast: index == ordered.length - 1,
           ),
       ],
@@ -1199,9 +1487,14 @@ class _FollowupTimeline extends StatelessWidget {
 }
 
 class _TimelineEntry extends StatelessWidget {
-  const _TimelineEntry({required this.followup, required this.isLast});
+  const _TimelineEntry({
+    required this.followup,
+    required this.contactName,
+    required this.isLast,
+  });
 
   final FollowupRow followup;
+  final String? contactName;
   final bool isLast;
 
   @override
@@ -1214,6 +1507,10 @@ class _TimelineEntry extends StatelessWidget {
     final nextAction = followup.nextAction?.trim();
     final pauseReason = followup.pauseReason?.trim();
     final conclusion = followup.conclusion?.trim();
+    final attitude = followup.attitude == null
+        ? null
+        : CustomerAttitude.fromDb(followup.attitude!).label;
+    final owner = followup.owner?.trim();
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1278,6 +1575,21 @@ class _TimelineEntry extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: AppTokens.s8),
+                  if (contactName != null ||
+                      attitude != null ||
+                      owner != null) ...[
+                    Text(
+                      [
+                        if (contactName != null) '联系人：$contactName',
+                        if (attitude != null) '态度：$attitude',
+                        if (owner != null && owner.isNotEmpty) '负责人：$owner',
+                      ].join(' · '),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: AppTokens.s8),
+                  ],
                   if (feedback != null && feedback.isNotEmpty) ...[
                     Text('客户反馈：$feedback'),
                     if (stage != null) ...[
@@ -1350,108 +1662,6 @@ String _recordLabel(String? primary, {String? fallback}) {
   final alternate = fallback?.trim();
   if (alternate != null && alternate.isNotEmpty) return alternate;
   return '未命名';
-}
-
-class _ContactDialog extends StatefulWidget {
-  const _ContactDialog({this.initial});
-
-  final ContactDraft? initial;
-
-  @override
-  State<_ContactDialog> createState() => _ContactDialogState();
-}
-
-class _ContactDialogState extends State<_ContactDialog> {
-  final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _nameController;
-  late final TextEditingController _positionController;
-  late final TextEditingController _phoneController;
-  late bool _isDecisionMaker;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController(text: widget.initial?.name ?? '');
-    _positionController = TextEditingController(
-      text: widget.initial?.position ?? '',
-    );
-    _phoneController = TextEditingController(text: widget.initial?.phone ?? '');
-    _isDecisionMaker = widget.initial?.isDecisionMaker ?? false;
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _positionController.dispose();
-    _phoneController.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    if (!_formKey.currentState!.validate()) return;
-    Navigator.pop(
-      context,
-      ContactDraft(
-        name: _nameController.text,
-        position: _positionController.text,
-        phone: _phoneController.text,
-        isDecisionMaker: _isDecisionMaker,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: Text(widget.initial == null ? '新增联系人' : '编辑联系人'),
-    content: SizedBox(
-      width: double.maxFinite,
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                key: const ValueKey('contact-name'),
-                controller: _nameController,
-                autofocus: true,
-                maxLength: 50,
-                decoration: const InputDecoration(labelText: '名称'),
-                validator: (value) =>
-                    value == null || value.trim().isEmpty ? '联系人名称不能为空' : null,
-              ),
-              const SizedBox(height: AppTokens.s12),
-              TextFormField(
-                controller: _positionController,
-                decoration: const InputDecoration(labelText: '职位'),
-              ),
-              const SizedBox(height: AppTokens.s12),
-              TextFormField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(labelText: '电话'),
-              ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('决策人'),
-                value: _isDecisionMaker,
-                onChanged: (value) {
-                  setState(() => _isDecisionMaker = value);
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: const Text('取消'),
-      ),
-      FilledButton(onPressed: _submit, child: const Text('保存')),
-    ],
-  );
 }
 
 class _SectionEmpty extends StatelessWidget {

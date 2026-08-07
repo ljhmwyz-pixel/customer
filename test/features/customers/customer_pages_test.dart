@@ -3,6 +3,7 @@ import 'package:customer/data/database_provider.dart';
 import 'package:customer/data/daos/attachment_dao.dart';
 import 'package:customer/data/daos/customer_dao.dart';
 import 'package:customer/features/customers/contact_actions.dart';
+import 'package:customer/features/customers/contact_form_page.dart';
 import 'package:customer/features/customers/customer_detail_page.dart';
 import 'package:customer/features/customers/customer_form_page.dart';
 import 'package:customer/features/customers/customer_providers.dart';
@@ -1342,6 +1343,85 @@ void main() {
     expect(find.text('指定的跟进计划不存在'), findsOneWidget);
   });
 
+  testWidgets('CustomerDetailPage exposes first-screen quick actions', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 700);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '快捷操作客户');
+    await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '快捷操作项目',
+    );
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: CustomerDetailPage(customerId: customerId),
+    );
+    addTearDown(() => harness.dispose(tester));
+
+    await harness.pump(tester);
+
+    expect(
+      find.byKey(const ValueKey('customer-quick-actions')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('quick-add-contact')), findsOneWidget);
+    expect(find.byKey(const ValueKey('quick-add-opportunity')), findsOneWidget);
+    expect(find.byKey(const ValueKey('quick-add-business')), findsOneWidget);
+    expect(find.byKey(const ValueKey('quick-add-order')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('quick-add-business')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('新增业务记录'), findsOneWidget);
+    expect(find.text('快捷操作项目'), findsWidgets);
+    expect(find.byKey(const ValueKey('business-action-quote')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('business-action-sample')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('business-action-registration')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('business-action-tender')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('CustomerDetailPage guides business entry without a project', (
+    tester,
+  ) async {
+    final db = await openTestDb();
+    final customerId = await seedCustomer(db, name: '无项目客户');
+    final harness = _TestHarness(
+      db: db,
+      scheduler: _FakeReminderScheduler(),
+      contactActions: _FakeContactActions(),
+      home: CustomerDetailPage(customerId: customerId),
+    );
+    addTearDown(() => harness.dispose(tester));
+
+    await harness.pump(tester);
+    await tester.tap(find.byKey(const ValueKey('quick-add-business')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('先创建项目'), findsOneWidget);
+    expect(find.text('报价、样品、注册和招标都需要关联到具体项目。'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('business-create-opportunity')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('CustomerDetailPage delegates phone calls to ContactActions', (
     tester,
   ) async {
@@ -1364,7 +1444,7 @@ void main() {
     expect(actions.calledPhone, phone);
   });
 
-  testWidgets('CustomerDetailPage contact dialog keeps narrow-screen gutters', (
+  testWidgets('CustomerDetailPage contact form keeps narrow-screen gutters', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(320, 700);
@@ -1385,16 +1465,11 @@ void main() {
     await tester.tap(find.byTooltip('新增联系人'));
     await tester.pumpAndSettle();
 
-    final dialogSurface = find.descendant(
-      of: find.byType(AlertDialog),
-      matching: find.byWidgetPredicate(
-        (widget) => widget is Material && widget.type == MaterialType.card,
-      ),
-    );
-    expect(dialogSurface, findsOneWidget);
-    final dialogRect = tester.getRect(dialogSurface);
-    expect(dialogRect.left, moreOrLessEquals(16));
-    expect(dialogRect.right, moreOrLessEquals(304));
+    expect(find.text('新增联系人'), findsWidgets);
+    final nameRect = tester.getRect(find.byKey(const ValueKey('contact-name')));
+    expect(nameRect.left, moreOrLessEquals(16));
+    expect(nameRect.right, moreOrLessEquals(304));
+    expect(find.byKey(const ValueKey('contact-save')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -1490,7 +1565,7 @@ void main() {
     addTearDown(() => harness.dispose(tester));
 
     await harness.pump(tester);
-    await tester.tap(find.byTooltip('新增项目'));
+    await tester.tap(find.byKey(const ValueKey('quick-add-opportunity')));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const ValueKey('opportunity-name')),
@@ -2171,6 +2246,21 @@ class _TestHarness {
               path: 'followups/new',
               builder: (_, state) => FollowupFormPage(
                 customerId: int.parse(state.pathParameters['id']!),
+              ),
+            ),
+            GoRoute(
+              path: 'contacts/new',
+              builder: (_, state) => ContactFormPage(
+                customerId: int.parse(state.pathParameters['id']!),
+                initialName: state.uri.queryParameters['name'],
+                initialPhone: state.uri.queryParameters['phone'],
+              ),
+            ),
+            GoRoute(
+              path: 'contacts/:contactId/edit',
+              builder: (_, state) => ContactFormPage(
+                customerId: int.parse(state.pathParameters['id']!),
+                contactId: int.parse(state.pathParameters['contactId']!),
               ),
             ),
             GoRoute(

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:drift/drift.dart' show Value;
 
+import '../../data/database_provider.dart';
 import '../../models/enums.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/app_dropdown_form_field.dart';
@@ -13,11 +15,13 @@ class TenderFormPage extends ConsumerStatefulWidget {
   const TenderFormPage({
     required this.customerId,
     required this.opportunityId,
+    this.tenderId,
     super.key,
   });
 
   final int customerId;
   final int opportunityId;
+  final int? tenderId;
 
   @override
   ConsumerState<TenderFormPage> createState() => _TenderFormPageState();
@@ -46,16 +50,52 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
   bool _riskAcknowledged = false;
   bool _saving = false;
 
-  bool get _requiresRiskAcknowledgement =>
-      _riskLevel == TenderRiskLevel.high &&
-      (_authorizationType != TenderAuthorizationType.none ||
-          _floorPriceSupport.text.trim().isNotEmpty);
+  bool get _editing => widget.tenderId != null;
 
   @override
   void initState() {
     super.initState();
     _floorPriceSupport.addListener(_handleRiskInputChanged);
+    if (widget.tenderId != null) _load(widget.tenderId!);
   }
+
+  Future<void> _load(int id) async {
+    final row = await ref.read(databaseProvider).tenderDao.findById(id);
+    if (!mounted || row == null || row.opportunityId != widget.opportunityId) {
+      return;
+    }
+    DateTime? date(int? value) => value == null
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(value, isUtc: true);
+    _projectNo.text = row.projectNo ?? '';
+    _name.text = row.name ?? '';
+    _bidder.text = row.bidder ?? '';
+    _depositMinor.text = row.depositMinor?.toString() ?? '';
+    _customerExperience.text = row.customerExperience ?? '';
+    _exclusiveQuoteScope.text = row.exclusiveQuoteScope ?? '';
+    _floorPriceSupport.text = row.floorPriceSupport ?? '';
+    _nextAction.text = row.nextAction ?? '';
+    setState(() {
+      _deadlineAt = date(row.deadlineAt);
+      _documentStatus = TenderDocumentStatus.fromDb(row.documentStatus);
+      _qualificationStatus = TenderQualificationStatus.fromDb(
+        row.qualificationStatus,
+      );
+      _localTeamStatus = TenderVerificationStatus.fromDb(row.localTeamStatus);
+      _fundingStatus = TenderVerificationStatus.fromDb(row.fundingStatus);
+      _riskLevel = TenderRiskLevel.fromDb(row.riskLevel);
+      _authorizationType = TenderAuthorizationType.fromDb(
+        row.authorizationType,
+      );
+      _authorizationExpiresAt = date(row.authorizationExpiresAt);
+      _status = TenderStatus.fromDb(row.status);
+    });
+  }
+
+  bool get _requiresRiskAcknowledgement =>
+      _riskLevel == TenderRiskLevel.high &&
+      (_authorizationType != TenderAuthorizationType.none ||
+          _floorPriceSupport.text.trim().isNotEmpty);
 
   void _handleRiskInputChanged() {
     final required = _requiresRiskAcknowledgement;
@@ -103,30 +143,54 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
 
     setState(() => _saving = true);
     try {
-      await ref
-          .read(businessServiceProvider)
-          .createTender(
-            customerId: widget.customerId,
-            opportunityId: widget.opportunityId,
-            projectNo: _projectNo.text,
-            name: _name.text,
-            deadlineAt: _deadlineAt,
-            documentStatus: _documentStatus,
-            qualificationStatus: _qualificationStatus,
-            bidder: _bidder.text,
-            depositMinor: deposit,
-            customerExperience: _customerExperience.text,
-            localTeamStatus: _localTeamStatus,
-            fundingStatus: _fundingStatus,
-            riskLevel: _riskLevel,
-            authorizationType: _authorizationType,
-            authorizationExpiresAt: _authorizationExpiresAt,
-            exclusiveQuoteScope: _exclusiveQuoteScope.text,
-            floorPriceSupport: _floorPriceSupport.text,
-            status: _status,
-            nextAction: _nextAction.text,
-            riskAcknowledged: _riskAcknowledged,
-          );
+      final service = ref.read(businessServiceProvider);
+      if (_editing) {
+        await service.updateTender(
+          widget.customerId,
+          widget.tenderId!,
+          projectNo: Value(_projectNo.text),
+          name: Value(_name.text),
+          deadlineAt: Value(_deadlineAt),
+          documentStatus: _documentStatus,
+          qualificationStatus: _qualificationStatus,
+          bidder: Value(_bidder.text),
+          depositMinor: Value(deposit),
+          customerExperience: Value(_customerExperience.text),
+          localTeamStatus: _localTeamStatus,
+          fundingStatus: _fundingStatus,
+          riskLevel: _riskLevel,
+          authorizationType: _authorizationType,
+          authorizationExpiresAt: Value(_authorizationExpiresAt),
+          exclusiveQuoteScope: Value(_exclusiveQuoteScope.text),
+          floorPriceSupport: Value(_floorPriceSupport.text),
+          status: _status,
+          nextAction: Value(_nextAction.text),
+          riskAcknowledged: _riskAcknowledged,
+        );
+      } else {
+        await service.createTender(
+          customerId: widget.customerId,
+          opportunityId: widget.opportunityId,
+          projectNo: _projectNo.text,
+          name: _name.text,
+          deadlineAt: _deadlineAt,
+          documentStatus: _documentStatus,
+          qualificationStatus: _qualificationStatus,
+          bidder: _bidder.text,
+          depositMinor: deposit,
+          customerExperience: _customerExperience.text,
+          localTeamStatus: _localTeamStatus,
+          fundingStatus: _fundingStatus,
+          riskLevel: _riskLevel,
+          authorizationType: _authorizationType,
+          authorizationExpiresAt: _authorizationExpiresAt,
+          exclusiveQuoteScope: _exclusiveQuoteScope.text,
+          floorPriceSupport: _floorPriceSupport.text,
+          status: _status,
+          nextAction: _nextAction.text,
+          riskAcknowledged: _riskAcknowledged,
+        );
+      }
       ref.read(customerRevisionProvider.notifier).refresh();
       if (mounted) context.pop();
     } catch (error) {
@@ -142,7 +206,7 @@ class _TenderFormPageState extends ConsumerState<TenderFormPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('新增招标')),
+    appBar: AppBar(title: Text(_editing ? '编辑招标' : '新增招标')),
     body: SingleChildScrollView(
       padding: const EdgeInsets.all(AppTokens.s16),
       child: Column(
