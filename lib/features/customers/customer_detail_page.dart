@@ -1562,12 +1562,21 @@ class _FollowupTimeline extends StatelessWidget {
         for (var index = 0; index < ordered.length; index++)
           _TimelineEntry(
             followup: ordered[index],
-            contactName: contactNames[ordered[index].contactId],
+            contactName: _followupContactName(ordered[index], contactNames),
             isLast: index == ordered.length - 1,
           ),
       ],
     );
   }
+}
+
+String? _followupContactName(
+  FollowupRow followup,
+  Map<int, String> contactNames,
+) {
+  final snapshot = followup.contactNameSnapshot?.trim();
+  if (snapshot != null && snapshot.isNotEmpty) return snapshot;
+  return contactNames[followup.contactId];
 }
 
 class _TimelineEntry extends StatelessWidget {

@@ -64,13 +64,14 @@ void main() {
     addTearDown(db.close);
     await db.customSelect('SELECT 1').getSingle();
 
-    expect(db.schemaVersion, 9);
+    expect(db.schemaVersion, 10);
     expect((await db.customerDao.findById(1))!.owner, '本人');
     final contact = await db.contactDao.findById(1);
     expect(contact!.email, isNull);
     expect(contact.whatsapp, isNull);
     final followup = await db.followupDao.findById(1);
     expect(followup!.contactId, isNull);
+    expect(followup.contactNameSnapshot, isNull);
     expect(followup.attitude, isNull);
     expect(followup.owner, isNull);
     final fkErrors = await db.customSelect('PRAGMA foreign_key_check').get();

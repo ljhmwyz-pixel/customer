@@ -1,5 +1,17 @@
 # Release Test Checklist
 
+## Current v2.1 Release Gate
+
+- [ ] Working tree is clean, the release commit is reviewed, and an immutable release tag exists.
+- [ ] Runtime version, user guide version, release notes, and Android version code agree.
+- [ ] Release APK is signed by the custodied production certificate, not `Android Debug` or the ephemeral CI certificate.
+- [ ] Production keystore, alias, and recovery instructions have at least two secure offline copies.
+- [x] Fresh schema is v10; controlled historical migrations and foreign-key checks pass.
+- [ ] A copied production-like database and attachment tree complete one destructive backup/restore rehearsal.
+- [ ] Upgrade installation from the previous production APK preserves data, attachments, and future reminders.
+- [ ] OnePlus 13 / ColorOS 15 completes the full seven-day reminder and provider checklist.
+- [ ] Final APK certificate digest and SHA-256 are recorded in release notes.
+
 ## Attachments
 
 ### Automated gate
@@ -20,7 +32,7 @@
 
 ### Automated gate
 
-- [x] Fresh schema is v8 with nullable internal `customers.sample_batch_id` and a partial lookup index.
+- [x] The historical v8 sample-data migration adds nullable internal `customers.sample_batch_id` and a partial lookup index.
 - [x] v7-to-v8 migration preserves formal customers with a null sample marker and passes `PRAGMA foreign_key_check`.
 - [x] Nine PRD scenarios import atomically with deterministic UTC-clock data and realistic opportunity, follow-up, plan, quote, sample, tender, and order rows.
 - [x] Re-import is idempotent and does not reschedule reminders or change any table count.
@@ -109,12 +121,13 @@
 
 ### Automated gate
 
-- [x] Fresh v8 schema, v1-to-v8 historical migration, v6-to-v7 attachment migration, and v7-to-v8 sample-data migration pass with foreign-key checks.
+- [x] Fresh v10 schema, v1-to-v10 historical migration, v6-to-v7 attachment migration, v7-to-v8 sample-data migration, v8-to-v9 PRD migration, and v9-to-v10 contact snapshot migration pass with foreign-key checks.
 - [x] Performance fixture covers 500 customers, 1500 projects, and 5000 follow-ups.
 - [x] In-memory core list, advanced filter, search, stale, and stage-count queries remain below 200 ms.
 - [x] File-backed 500-customer / 5000-follow-up urgency query remains below 200 ms.
 
 ### Release preparation
 
-- [x] Release APK builds successfully after the final backup, migration, and performance changes.
+- [x] Ephemeral-signed release APK builds successfully in the automated code gate.
+- [ ] Production-signed APK builds successfully from the clean release tag.
 - [ ] Perform the same migration/upgrade flow on the target OnePlus 13 installation.

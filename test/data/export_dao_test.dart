@@ -31,9 +31,16 @@ void main() {
       nextAction: '确认报价反馈',
       now: now,
     );
+    final contactId = await db.contactDao.insertContact(
+      customerId: customerId,
+      name: '李经理',
+      now: now,
+    );
     await db.followupDao.insertAndTouchCustomer(
       customerId: customerId,
       opportunityId: opportunityId,
+      contactId: contactId,
+      contactNameSnapshot: '李经理',
       occurredAt: now.subtract(const Duration(days: 1)),
       method: FollowMethod.wechat,
       content: '已发送报价',
@@ -42,6 +49,7 @@ void main() {
       nextAction: '周五再次联系',
       now: now,
     );
+    await db.contactDao.deleteContact(contactId);
     await db.planDao.insertPlan(
       customerId: customerId,
       opportunityId: opportunityId,
@@ -120,6 +128,7 @@ void main() {
     expect(snapshot.followups, hasLength(1));
     expect(snapshot.followups.single.methodLabel, '微信');
     expect(snapshot.followups.single.feedback, '等待采购确认');
+    expect(snapshot.followups.single.contactName, '李经理');
 
     expect(snapshot.businessEvents, hasLength(6));
     expect(

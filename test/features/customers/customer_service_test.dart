@@ -28,6 +28,7 @@ Future<int> _seedOpportunity(
 
 FollowupDraft _followupDraft({
   required int opportunityId,
+  int? contactId,
   DateTime? occurredAt,
   FollowMethod method = FollowMethod.phone,
   String feedback = '认可技术方案',
@@ -38,6 +39,7 @@ FollowupDraft _followupDraft({
   String? pauseReason,
 }) => FollowupDraft(
   opportunityId: opportunityId,
+  contactId: contactId,
   occurredAt: occurredAt ?? DateTime.utc(2026, 8, 5, 10),
   method: method,
   feedback: feedback,
@@ -245,6 +247,58 @@ void main() {
         throwsA(isA<CustomerValidationException>()),
       );
       expect(await db.followupDao.listOf(customerId), isEmpty);
+    });
+
+    test('联系人姓名按跟进发生时保存，并校验联系人属于当前客户', () async {
+      final customerId = await seedCustomer(db);
+      final opportunityId = await _seedOpportunity(
+        db,
+        customerId,
+        name: '密封件项目',
+      );
+      final contactId = await service.createContact(
+        customerId,
+        const ContactDraft(name: '李经理'),
+      );
+
+      final result = await service.addFollowup(
+        customerId,
+        _followupDraft(opportunityId: opportunityId, contactId: contactId),
+      );
+      var followup = await db.followupDao.findById(result.value);
+      expect(followup?.contactNameSnapshot, '李经理');
+
+      await service.updateContact(contactId, const ContactDraft(name: '王经理'));
+      followup = await db.followupDao.findById(result.value);
+      expect(followup?.contactNameSnapshot, '李经理');
+
+      await service.deleteContact(contactId);
+      followup = await db.followupDao.findById(result.value);
+      expect(followup?.contactId, isNull);
+      expect(followup?.contactNameSnapshot, '李经理');
+
+      final otherCustomerId = await seedCustomer(db, name: '其他客户');
+      final otherContactId = await service.createContact(
+        otherCustomerId,
+        const ContactDraft(name: '其他联系人'),
+      );
+      expect(
+        () => service.addFollowup(
+          customerId,
+          _followupDraft(opportunityId: opportunityId, contactId: 999999),
+        ),
+        throwsA(isA<CustomerValidationException>()),
+      );
+      expect(
+        () => service.addFollowup(
+          customerId,
+          _followupDraft(
+            opportunityId: opportunityId,
+            contactId: otherContactId,
+          ),
+        ),
+        throwsA(isA<CustomerValidationException>()),
+      );
     });
 
     test('反馈、下一步行动和后续方式必须填写完整', () async {

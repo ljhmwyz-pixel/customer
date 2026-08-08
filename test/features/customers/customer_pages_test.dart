@@ -1448,9 +1448,15 @@ void main() {
       customerId: customerId,
       name: '输注项目',
     );
+    final contactId = await db.contactDao.insertContact(
+      customerId: customerId,
+      name: '李经理',
+    );
     await db.followupDao.insertAndTouchCustomer(
       customerId: customerId,
       opportunityId: opportunityId,
+      contactId: contactId,
+      contactNameSnapshot: '李经理',
       occurredAt: DateTime.utc(2026, 8, 3, 9),
       method: FollowMethod.phone,
       content: '第一次补充记录',
@@ -1477,6 +1483,7 @@ void main() {
       content: '历史正文',
       conclusion: '历史结论',
     );
+    await db.contactDao.deleteContact(contactId);
     final harness = _TestHarness(
       db: db,
       scheduler: _FakeReminderScheduler(),
@@ -1500,6 +1507,7 @@ void main() {
     expect(find.text('暂不跟进：客户团队休假'), findsOneWidget);
     expect(find.text('历史正文'), findsOneWidget);
     expect(find.text('结论：历史结论'), findsOneWidget);
+    expect(find.text('联系人：李经理'), findsOneWidget);
   });
 
   testWidgets('CustomerDetailPage exposes attachments for six saved records', (

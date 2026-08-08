@@ -7,16 +7,16 @@ import 'package:sqlite3/sqlite3.dart' as sqlite;
 
 import 'helpers.dart';
 
-/// v9 数据库初始化与旧版本真库升级。
+/// v10 数据库初始化与旧版本真库升级。
 void main() {
   late AppDatabase db;
 
-  group('v9 新库', () {
+  group('v10 新库', () {
     setUp(() async => db = await openTestDb());
     tearDown(() async => db.close());
 
-    test('schemaVersion 为 9', () {
-      expect(db.schemaVersion, 9);
+    test('schemaVersion 为 10', () {
+      expect(db.schemaVersion, 10);
     });
 
     test('空库初始化后十三张表全部建成', () async {
@@ -103,6 +103,7 @@ void main() {
           'next_action',
           'next_follow_at',
           'pause_reason',
+          'contact_name_snapshot',
         }),
       );
       expect(
@@ -146,11 +147,11 @@ void main() {
       );
     });
 
-    test('user_version 写入为 9', () async {
+    test('user_version 写入为 10', () async {
       // drift 用 SQLite 的 user_version 记录 schema 版本，
       // 这个值不对的话后续 onUpgrade 会走错分支。
       final row = await db.customSelect('PRAGMA user_version').getSingle();
-      expect(row.data.values.first, 9);
+      expect(row.data.values.first, 10);
     });
 
     test('外键约束在 beforeOpen 后处于开启状态', () async {
@@ -225,7 +226,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 9);
+      expect(version.data.values.first, 10);
 
       final opportunities = await migrated.customSelect('''
             SELECT customer_id, name, stage, status, is_legacy_default
@@ -326,7 +327,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 9);
+      expect(version.data.values.first, 10);
 
       final followup = await migrated.customSelect('''
             SELECT opportunity_id, content, conclusion, feedback, stage,
@@ -408,7 +409,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 9);
+      expect(version.data.values.first, 10);
       await _expectLegacyTaskBackfill(migrated);
 
       final followup = await migrated.customSelect('''
@@ -428,7 +429,7 @@ void main() {
     }
   });
 
-  test('v5 真库升级到 v7 后无损保留订单和附件', () async {
+  test('v5 真库升级到 v10 后无损保留订单和附件', () async {
     final directory = await Directory.systemTemp.createTemp('customer-v5-');
     final file = File('${directory.path}/customer.sqlite');
     final raw = sqlite.sqlite3.open(file.path);
@@ -445,7 +446,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 9);
+      expect(version.data.values.first, 10);
 
       final orders = await migrated.customSelect('''
             SELECT customer_id, opportunity_id, order_no, ordered_at,

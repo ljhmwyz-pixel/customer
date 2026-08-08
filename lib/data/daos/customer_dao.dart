@@ -87,6 +87,46 @@ class DashboardMetrics {
   final Map<String, int> wonByCurrency;
 }
 
+enum DashboardAmountType { forecast, weighted, won }
+
+class DashboardAmountItem {
+  const DashboardAmountItem({
+    required this.customerId,
+    required this.customerName,
+    required this.currency,
+    required this.amountMinor,
+    required this.weightedAmountMinor,
+    this.opportunityId,
+    this.opportunityName,
+    this.orderId,
+    this.orderNo,
+    this.probabilityPercent,
+  });
+
+  final int customerId;
+  final String customerName;
+  final int? opportunityId;
+  final String? opportunityName;
+  final int? orderId;
+  final String? orderNo;
+  final String currency;
+  final int amountMinor;
+  final int? probabilityPercent;
+  final int weightedAmountMinor;
+}
+
+class DashboardAmountDetails {
+  const DashboardAmountDetails({
+    required this.type,
+    required this.items,
+    required this.totalsByCurrency,
+  });
+
+  final DashboardAmountType type;
+  final List<DashboardAmountItem> items;
+  final Map<String, int> totalsByCurrency;
+}
+
 enum DashboardAnomalyKind {
   stalledQuote,
   quoteExpiring,
@@ -704,10 +744,6 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
         .toUtc()
         .millisecondsSinceEpoch;
     final nowMs = now.toUtc().millisecondsSinceEpoch;
-    final threeMonths = now
-        .toUtc()
-        .add(const Duration(days: 90))
-        .millisecondsSinceEpoch;
     final stalledCutoff = now
         .toUtc()
         .subtract(const Duration(days: 30))
@@ -731,29 +767,12 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
       variables: [Variable.withInt(weekStart), Variable.withInt(nowMs)],
       readsFrom: {db.followups},
     ).getSingle();
-    final forecast = await customSelect(
-      '''SELECT UPPER(currency) AS currency,
-                COALESCE(SUM(forecast_amount_minor), 0) AS total,
-                COALESCE(SUM(forecast_amount_minor * probability_percent / 100), 0) AS weighted
-         FROM opportunities
-         WHERE expected_close_at IS NOT NULL AND expected_close_at <= ?
-           AND forecast_amount_minor IS NOT NULL
-           AND status NOT IN ('paused', 'won', 'closed')
-           AND stage NOT IN ('lost', 'paused')
-         GROUP BY UPPER(currency)
-         ORDER BY UPPER(currency)''',
-      variables: [Variable.withInt(threeMonths)],
-      readsFrom: {db.opportunities},
-    ).get();
-    final won = await customSelect(
-      '''SELECT UPPER(currency) AS currency,
-                COALESCE(SUM(amount_cents), 0) AS value
-         FROM orders
-         WHERE order_result = 'completed'
-         GROUP BY UPPER(currency)
-         ORDER BY UPPER(currency)''',
-      readsFrom: {db.orders},
-    ).get();
+    final amountItems = await Future.wait([
+      _dashboardForecastItems(now: now),
+      _dashboardWonItems(),
+    ]);
+    final forecastItems = amountItems[0];
+    final wonItems = amountItems[1];
     final stalled = await customSelect(
       '''SELECT
            (SELECT COUNT(*) FROM quotes
@@ -791,19 +810,122 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
       followupsThisWeek: followupResult.read<int>('value'),
       stalledQuoteCount: stalled.read<int>('quote_count'),
       stalledSampleCount: stalled.read<int>('sample_count'),
-      forecastByCurrency: {
-        for (final row in forecast)
-          row.read<String>('currency'): row.read<int>('total'),
-      },
-      weightedForecastByCurrency: {
-        for (final row in forecast)
-          row.read<String>('currency'): row.read<int>('weighted'),
-      },
-      wonByCurrency: {
-        for (final row in won)
-          row.read<String>('currency'): row.read<int>('value'),
-      },
+      forecastByCurrency: _amountTotals(
+        forecastItems,
+        type: DashboardAmountType.forecast,
+      ),
+      weightedForecastByCurrency: _amountTotals(
+        forecastItems,
+        type: DashboardAmountType.weighted,
+      ),
+      wonByCurrency: _amountTotals(wonItems, type: DashboardAmountType.won),
     );
+  }
+
+  Future<DashboardAmountDetails> dashboardAmountDetails({
+    required DashboardAmountType type,
+    required DateTime now,
+  }) async {
+    final items = switch (type) {
+      DashboardAmountType.forecast ||
+      DashboardAmountType.weighted => await _dashboardForecastItems(now: now),
+      DashboardAmountType.won => await _dashboardWonItems(),
+    };
+    return DashboardAmountDetails(
+      type: type,
+      items: List.unmodifiable(items),
+      totalsByCurrency: Map.unmodifiable(_amountTotals(items, type: type)),
+    );
+  }
+
+  Future<List<DashboardAmountItem>> _dashboardForecastItems({
+    required DateTime now,
+  }) async {
+    final nowMs = now.toUtc().millisecondsSinceEpoch;
+    final threeMonths = now
+        .toUtc()
+        .add(const Duration(days: 90))
+        .millisecondsSinceEpoch;
+    final rows = await customSelect(
+      '''SELECT c.id AS customer_id, c.name AS customer_name,
+                o.id AS opportunity_id, o.name AS opportunity_name,
+                UPPER(o.currency) AS currency,
+                o.forecast_amount_minor AS amount_minor,
+                o.probability_percent AS probability_percent
+         FROM opportunities o
+         INNER JOIN customers c ON c.id = o.customer_id
+         WHERE o.expected_close_at IS NOT NULL
+           AND o.expected_close_at >= ? AND o.expected_close_at <= ?
+           AND o.forecast_amount_minor IS NOT NULL
+           AND o.status NOT IN ('paused', 'won', 'closed')
+           AND o.stage NOT IN ('lost', 'paused')
+         ORDER BY UPPER(o.currency), o.expected_close_at, o.id''',
+      variables: [Variable.withInt(nowMs), Variable.withInt(threeMonths)],
+      readsFrom: {customers, db.opportunities},
+    ).get();
+    return [
+      for (final row in rows)
+        DashboardAmountItem(
+          customerId: row.read<int>('customer_id'),
+          customerName: row.read<String>('customer_name'),
+          opportunityId: row.read<int>('opportunity_id'),
+          opportunityName: row.read<String>('opportunity_name'),
+          currency: row.read<String>('currency'),
+          amountMinor: row.read<int>('amount_minor'),
+          probabilityPercent: row.readNullable<int>('probability_percent'),
+          weightedAmountMinor:
+              row.read<int>('amount_minor') *
+              (row.readNullable<int>('probability_percent') ?? 0) ~/
+              100,
+        ),
+    ];
+  }
+
+  Future<List<DashboardAmountItem>> _dashboardWonItems() async {
+    final rows = await customSelect(
+      '''SELECT c.id AS customer_id, c.name AS customer_name,
+                o.id AS opportunity_id, o.name AS opportunity_name,
+                r.id AS order_id, r.order_no AS order_no,
+                UPPER(r.currency) AS currency, r.amount_cents AS amount_minor
+         FROM orders r
+         INNER JOIN customers c ON c.id = r.customer_id
+         LEFT JOIN opportunities o ON o.id = r.opportunity_id
+         WHERE r.order_result = 'completed'
+         ORDER BY UPPER(r.currency), r.ordered_at DESC, r.id DESC''',
+      readsFrom: {customers, db.opportunities, db.orders},
+    ).get();
+    return [
+      for (final row in rows)
+        DashboardAmountItem(
+          customerId: row.read<int>('customer_id'),
+          customerName: row.read<String>('customer_name'),
+          opportunityId: row.readNullable<int>('opportunity_id'),
+          opportunityName: row.readNullable<String>('opportunity_name'),
+          orderId: row.read<int>('order_id'),
+          orderNo: row.read<String>('order_no'),
+          currency: row.read<String>('currency'),
+          amountMinor: row.read<int>('amount_minor'),
+          weightedAmountMinor: row.read<int>('amount_minor'),
+        ),
+    ];
+  }
+
+  Map<String, int> _amountTotals(
+    List<DashboardAmountItem> items, {
+    required DashboardAmountType type,
+  }) {
+    final totals = <String, int>{};
+    for (final item in items) {
+      final amount = type == DashboardAmountType.weighted
+          ? item.weightedAmountMinor
+          : item.amountMinor;
+      totals.update(
+        item.currency,
+        (value) => value + amount,
+        ifAbsent: () => amount,
+      );
+    }
+    return totals;
   }
 
   Future<List<DashboardAnomaly>> dashboardAnomalies({

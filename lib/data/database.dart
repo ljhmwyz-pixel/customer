@@ -74,7 +74,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -111,6 +111,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 9) {
         await _migrateV8ToV9(m);
+      }
+      if (from < 10) {
+        await _migrateV9ToV10(m);
       }
     },
     beforeOpen: (details) async {
@@ -187,6 +190,23 @@ class AppDatabase extends _$AppDatabase {
       await m.addColumn(followups, followups.owner);
     }
     await _createV9Indexes();
+  }
+
+  Future<void> _migrateV9ToV10(Migrator m) async {
+    if (!await _tableExists('followups')) return;
+    await m.addColumn(followups, followups.contactNameSnapshot);
+    if (await _tableExists('contacts')) {
+      await customStatement('''
+        UPDATE followups
+        SET contact_name_snapshot = (
+          SELECT contacts.name
+          FROM contacts
+          WHERE contacts.id = followups.contact_id
+        )
+        WHERE contact_id IS NOT NULL
+          AND contact_name_snapshot IS NULL
+      ''');
+    }
   }
 
   Future<void> _migrateV7ToV8(Migrator m) async {

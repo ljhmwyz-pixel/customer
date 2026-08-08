@@ -146,8 +146,8 @@ class NotificationService implements ReminderScheduler {
           channelDescription: channelDescription,
           importance: Importance.max,
           priority: Priority.high,
-          // 锁屏上完整展示内容。本应用自用，不需要隐藏敏感信息。
-          visibility: NotificationVisibility.public,
+          // 客户名称和跟进动作属于业务数据，锁屏默认隐藏详细内容。
+          visibility: NotificationVisibility.private,
           actions: <AndroidNotificationAction>[
             AndroidNotificationAction(
               NotificationActions.complete,

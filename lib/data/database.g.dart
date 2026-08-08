@@ -4264,6 +4264,17 @@ class $FollowupsTable extends Followups
       'REFERENCES contacts (id) ON DELETE SET NULL',
     ),
   );
+  static const VerificationMeta _contactNameSnapshotMeta =
+      const VerificationMeta('contactNameSnapshot');
+  @override
+  late final GeneratedColumn<String> contactNameSnapshot =
+      GeneratedColumn<String>(
+        'contact_name_snapshot',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _occurredAtMeta = const VerificationMeta(
     'occurredAt',
   );
@@ -4407,6 +4418,7 @@ class $FollowupsTable extends Followups
     customerId,
     opportunityId,
     contactId,
+    contactNameSnapshot,
     occurredAt,
     method,
     content,
@@ -4457,6 +4469,15 @@ class $FollowupsTable extends Followups
       context.handle(
         _contactIdMeta,
         contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta),
+      );
+    }
+    if (data.containsKey('contact_name_snapshot')) {
+      context.handle(
+        _contactNameSnapshotMeta,
+        contactNameSnapshot.isAcceptableOrUnknown(
+          data['contact_name_snapshot']!,
+          _contactNameSnapshotMeta,
+        ),
       );
     }
     if (data.containsKey('occurred_at')) {
@@ -4578,6 +4599,10 @@ class $FollowupsTable extends Followups
         DriftSqlType.int,
         data['${effectivePrefix}contact_id'],
       ),
+      contactNameSnapshot: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}contact_name_snapshot'],
+      ),
       occurredAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}occurred_at'],
@@ -4647,6 +4672,9 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
   final int? opportunityId;
   final int? contactId;
 
+  /// 跟进发生时的联系人姓名，不随后续改名或删除变化。
+  final String? contactNameSnapshot;
+
   /// 发生时间，UTC 毫秒。可以补录过去的跟进，所以不用 createdAt 代替。
   final int occurredAt;
 
@@ -4678,6 +4706,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     required this.customerId,
     this.opportunityId,
     this.contactId,
+    this.contactNameSnapshot,
     required this.occurredAt,
     required this.method,
     required this.content,
@@ -4702,6 +4731,9 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     }
     if (!nullToAbsent || contactId != null) {
       map['contact_id'] = Variable<int>(contactId);
+    }
+    if (!nullToAbsent || contactNameSnapshot != null) {
+      map['contact_name_snapshot'] = Variable<String>(contactNameSnapshot);
     }
     map['occurred_at'] = Variable<int>(occurredAt);
     map['method'] = Variable<String>(method);
@@ -4745,6 +4777,9 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
       contactId: contactId == null && nullToAbsent
           ? const Value.absent()
           : Value(contactId),
+      contactNameSnapshot: contactNameSnapshot == null && nullToAbsent
+          ? const Value.absent()
+          : Value(contactNameSnapshot),
       occurredAt: Value(occurredAt),
       method: Value(method),
       content: Value(content),
@@ -4787,6 +4822,9 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
       customerId: serializer.fromJson<int>(json['customerId']),
       opportunityId: serializer.fromJson<int?>(json['opportunityId']),
       contactId: serializer.fromJson<int?>(json['contactId']),
+      contactNameSnapshot: serializer.fromJson<String?>(
+        json['contactNameSnapshot'],
+      ),
       occurredAt: serializer.fromJson<int>(json['occurredAt']),
       method: serializer.fromJson<String>(json['method']),
       content: serializer.fromJson<String>(json['content']),
@@ -4810,6 +4848,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
       'customerId': serializer.toJson<int>(customerId),
       'opportunityId': serializer.toJson<int?>(opportunityId),
       'contactId': serializer.toJson<int?>(contactId),
+      'contactNameSnapshot': serializer.toJson<String?>(contactNameSnapshot),
       'occurredAt': serializer.toJson<int>(occurredAt),
       'method': serializer.toJson<String>(method),
       'content': serializer.toJson<String>(content),
@@ -4831,6 +4870,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     int? customerId,
     Value<int?> opportunityId = const Value.absent(),
     Value<int?> contactId = const Value.absent(),
+    Value<String?> contactNameSnapshot = const Value.absent(),
     int? occurredAt,
     String? method,
     String? content,
@@ -4851,6 +4891,9 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
         ? opportunityId.value
         : this.opportunityId,
     contactId: contactId.present ? contactId.value : this.contactId,
+    contactNameSnapshot: contactNameSnapshot.present
+        ? contactNameSnapshot.value
+        : this.contactNameSnapshot,
     occurredAt: occurredAt ?? this.occurredAt,
     method: method ?? this.method,
     content: content ?? this.content,
@@ -4875,6 +4918,9 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
           ? data.opportunityId.value
           : this.opportunityId,
       contactId: data.contactId.present ? data.contactId.value : this.contactId,
+      contactNameSnapshot: data.contactNameSnapshot.present
+          ? data.contactNameSnapshot.value
+          : this.contactNameSnapshot,
       occurredAt: data.occurredAt.present
           ? data.occurredAt.value
           : this.occurredAt,
@@ -4908,6 +4954,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
           ..write('customerId: $customerId, ')
           ..write('opportunityId: $opportunityId, ')
           ..write('contactId: $contactId, ')
+          ..write('contactNameSnapshot: $contactNameSnapshot, ')
           ..write('occurredAt: $occurredAt, ')
           ..write('method: $method, ')
           ..write('content: $content, ')
@@ -4931,6 +4978,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
     customerId,
     opportunityId,
     contactId,
+    contactNameSnapshot,
     occurredAt,
     method,
     content,
@@ -4953,6 +5001,7 @@ class FollowupRow extends DataClass implements Insertable<FollowupRow> {
           other.customerId == this.customerId &&
           other.opportunityId == this.opportunityId &&
           other.contactId == this.contactId &&
+          other.contactNameSnapshot == this.contactNameSnapshot &&
           other.occurredAt == this.occurredAt &&
           other.method == this.method &&
           other.content == this.content &&
@@ -4973,6 +5022,7 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
   final Value<int> customerId;
   final Value<int?> opportunityId;
   final Value<int?> contactId;
+  final Value<String?> contactNameSnapshot;
   final Value<int> occurredAt;
   final Value<String> method;
   final Value<String> content;
@@ -4991,6 +5041,7 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     this.customerId = const Value.absent(),
     this.opportunityId = const Value.absent(),
     this.contactId = const Value.absent(),
+    this.contactNameSnapshot = const Value.absent(),
     this.occurredAt = const Value.absent(),
     this.method = const Value.absent(),
     this.content = const Value.absent(),
@@ -5010,6 +5061,7 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     required int customerId,
     this.opportunityId = const Value.absent(),
     this.contactId = const Value.absent(),
+    this.contactNameSnapshot = const Value.absent(),
     required int occurredAt,
     required String method,
     required String content,
@@ -5034,6 +5086,7 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     Expression<int>? customerId,
     Expression<int>? opportunityId,
     Expression<int>? contactId,
+    Expression<String>? contactNameSnapshot,
     Expression<int>? occurredAt,
     Expression<String>? method,
     Expression<String>? content,
@@ -5053,6 +5106,8 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
       if (customerId != null) 'customer_id': customerId,
       if (opportunityId != null) 'opportunity_id': opportunityId,
       if (contactId != null) 'contact_id': contactId,
+      if (contactNameSnapshot != null)
+        'contact_name_snapshot': contactNameSnapshot,
       if (occurredAt != null) 'occurred_at': occurredAt,
       if (method != null) 'method': method,
       if (content != null) 'content': content,
@@ -5074,6 +5129,7 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     Value<int>? customerId,
     Value<int?>? opportunityId,
     Value<int?>? contactId,
+    Value<String?>? contactNameSnapshot,
     Value<int>? occurredAt,
     Value<String>? method,
     Value<String>? content,
@@ -5093,6 +5149,7 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
       customerId: customerId ?? this.customerId,
       opportunityId: opportunityId ?? this.opportunityId,
       contactId: contactId ?? this.contactId,
+      contactNameSnapshot: contactNameSnapshot ?? this.contactNameSnapshot,
       occurredAt: occurredAt ?? this.occurredAt,
       method: method ?? this.method,
       content: content ?? this.content,
@@ -5123,6 +5180,11 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
     }
     if (contactId.present) {
       map['contact_id'] = Variable<int>(contactId.value);
+    }
+    if (contactNameSnapshot.present) {
+      map['contact_name_snapshot'] = Variable<String>(
+        contactNameSnapshot.value,
+      );
     }
     if (occurredAt.present) {
       map['occurred_at'] = Variable<int>(occurredAt.value);
@@ -5173,6 +5235,7 @@ class FollowupsCompanion extends UpdateCompanion<FollowupRow> {
           ..write('customerId: $customerId, ')
           ..write('opportunityId: $opportunityId, ')
           ..write('contactId: $contactId, ')
+          ..write('contactNameSnapshot: $contactNameSnapshot, ')
           ..write('occurredAt: $occurredAt, ')
           ..write('method: $method, ')
           ..write('content: $content, ')
@@ -16417,6 +16480,7 @@ typedef $$FollowupsTableCreateCompanionBuilder =
       required int customerId,
       Value<int?> opportunityId,
       Value<int?> contactId,
+      Value<String?> contactNameSnapshot,
       required int occurredAt,
       required String method,
       required String content,
@@ -16437,6 +16501,7 @@ typedef $$FollowupsTableUpdateCompanionBuilder =
       Value<int> customerId,
       Value<int?> opportunityId,
       Value<int?> contactId,
+      Value<String?> contactNameSnapshot,
       Value<int> occurredAt,
       Value<String> method,
       Value<String> content,
@@ -16538,6 +16603,11 @@ class $$FollowupsTableFilterComposer
   });
   ColumnFilters<int> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get contactNameSnapshot => $composableBuilder(
+    column: $table.contactNameSnapshot,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -16715,6 +16785,11 @@ class $$FollowupsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get contactNameSnapshot => $composableBuilder(
+    column: $table.contactNameSnapshot,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get occurredAt => $composableBuilder(
     column: $table.occurredAt,
     builder: (column) => ColumnOrderings(column),
@@ -16861,6 +16936,11 @@ class $$FollowupsTableAnnotationComposer
   });
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get contactNameSnapshot => $composableBuilder(
+    column: $table.contactNameSnapshot,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get occurredAt => $composableBuilder(
     column: $table.occurredAt,
@@ -17043,6 +17123,7 @@ class $$FollowupsTableTableManager
                 Value<int> customerId = const Value.absent(),
                 Value<int?> opportunityId = const Value.absent(),
                 Value<int?> contactId = const Value.absent(),
+                Value<String?> contactNameSnapshot = const Value.absent(),
                 Value<int> occurredAt = const Value.absent(),
                 Value<String> method = const Value.absent(),
                 Value<String> content = const Value.absent(),
@@ -17061,6 +17142,7 @@ class $$FollowupsTableTableManager
                 customerId: customerId,
                 opportunityId: opportunityId,
                 contactId: contactId,
+                contactNameSnapshot: contactNameSnapshot,
                 occurredAt: occurredAt,
                 method: method,
                 content: content,
@@ -17081,6 +17163,7 @@ class $$FollowupsTableTableManager
                 required int customerId,
                 Value<int?> opportunityId = const Value.absent(),
                 Value<int?> contactId = const Value.absent(),
+                Value<String?> contactNameSnapshot = const Value.absent(),
                 required int occurredAt,
                 required String method,
                 required String content,
@@ -17099,6 +17182,7 @@ class $$FollowupsTableTableManager
                 customerId: customerId,
                 opportunityId: opportunityId,
                 contactId: contactId,
+                contactNameSnapshot: contactNameSnapshot,
                 occurredAt: occurredAt,
                 method: method,
                 content: content,

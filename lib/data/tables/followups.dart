@@ -27,6 +27,9 @@ class Followups extends Table {
     onDelete: KeyAction.setNull,
   )();
 
+  /// 跟进发生时的联系人姓名，不随后续改名或删除变化。
+  TextColumn get contactNameSnapshot => text().nullable()();
+
   /// 发生时间，UTC 毫秒。可以补录过去的跟进，所以不用 createdAt 代替。
   IntColumn get occurredAt => integer()();
 

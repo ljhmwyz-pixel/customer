@@ -519,11 +519,13 @@ class CustomerService {
     final content = _optional(draft.content) ?? feedback;
     final owner = _required(opportunity.owner, '负责人', 100);
     final contactId = draft.contactId;
+    String? contactNameSnapshot;
     if (contactId != null) {
       final contact = await _db.contactDao.findById(contactId);
       if (contact == null || contact.customerId != customerId) {
         throw const CustomerValidationException('联系人不存在或不属于当前客户');
       }
+      contactNameSnapshot = contact.name.trim();
     }
     final hasNextFollowAt = draft.nextFollowAt != null;
     final hasPauseReason = pauseReason != null;
@@ -566,6 +568,7 @@ class CustomerService {
         nextFollowAt: draft.nextFollowAt,
         pauseReason: pauseReason,
         contactId: contactId,
+        contactNameSnapshot: contactNameSnapshot,
         attitude: draft.attitude,
         owner: owner,
       );

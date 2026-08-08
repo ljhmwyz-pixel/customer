@@ -1,0 +1,6 @@
+# Copy this file to android/key.properties. The real file is gitignored.
+# Keep the keystore and its passwords in a separate secure backup.
+storeFile=/absolute/path/to/customer-release.jks
+storePassword=replace-with-secret
+keyAlias=customer-release
+keyPassword=replace-with-secret

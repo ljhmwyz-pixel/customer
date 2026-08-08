@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -14,12 +16,25 @@ Future<void> main() async {
   // 这样启动期的初始化和界面用的是同一批实例，不会各开一份数据库连接。
   final container = ProviderContainer();
 
-  await _bootstrapReminders(container);
-  await bootstrapAttachmentCleanup(container);
-
   runApp(
     UncontrolledProviderScope(container: container, child: const CustomerApp()),
   );
+
+  // 首屏先展示；提醒重排和附件扫描失败或耗时都不应卡住应用启动。
+  unawaited(bootstrapBackgroundServices(container));
+}
+
+Future<void> bootstrapBackgroundServices(
+  ProviderContainer container, {
+  Future<void> Function()? reminderBootstrap,
+  AttachmentGraphCleaner? cleaner,
+}) async {
+  try {
+    await (reminderBootstrap ?? () => _bootstrapReminders(container))();
+  } catch (e, stack) {
+    debugPrint('提醒初始化失败：$e\n$stack');
+  }
+  await bootstrapAttachmentCleanup(container, cleaner: cleaner);
 }
 
 Future<void> bootstrapAttachmentCleanup(

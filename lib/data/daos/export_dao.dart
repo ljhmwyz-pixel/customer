@@ -343,14 +343,17 @@ class ExportDao extends DatabaseAccessor<AppDatabase> with _$ExportDaoMixin {
       '''
       SELECT followup.*, customer.name AS customer_name,
              opportunity.name AS opportunity_name,
-             contact.name AS contact_name
+             COALESCE(
+               NULLIF(TRIM(followup.contact_name_snapshot), ''),
+               contact.name
+             ) AS contact_name
       FROM followups followup
       JOIN customers customer ON customer.id = followup.customer_id
       LEFT JOIN opportunities opportunity ON opportunity.id = followup.opportunity_id
       LEFT JOIN contacts contact ON contact.id = followup.contact_id
       ORDER BY followup.occurred_at, followup.id
     ''',
-      readsFrom: {followups, customers, opportunities},
+      readsFrom: {followups, customers, opportunities, contacts},
     ).get();
     return [
       for (final row in rows)
