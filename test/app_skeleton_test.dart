@@ -44,6 +44,56 @@ Future<void> _pumpApp(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 300));
 }
 
+Future<Rect> _showShortDialogAt(
+  WidgetTester tester, {
+  required double viewportWidth,
+}) async {
+  await tester.binding.setSurfaceSize(Size(viewportWidth, 800));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: AppTheme.light,
+      home: Builder(
+        builder: (context) => Scaffold(
+          body: Center(
+            child: FilledButton(
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('确认'),
+                  content: const Text('确定吗？', key: Key('short-dialog-content')),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('取消'),
+                    ),
+                    FilledButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('确定'),
+                    ),
+                  ],
+                ),
+              ),
+              child: const Text('打开弹窗'),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  await tester.tap(find.text('打开弹窗'));
+  await tester.pumpAndSettle();
+  final dialogSurface = find
+      .ancestor(
+        of: find.byKey(const Key('short-dialog-content')),
+        matching: find.byType(Material),
+      )
+      .last;
+  return tester.getRect(dialogSurface);
+}
+
 void main() {
   group('应用骨架', () {
     testWidgets('四个 Tab 均可切换且不崩溃', (tester) async {
@@ -150,6 +200,36 @@ void main() {
         AppSemanticColors.light.overdue,
         isNot(AppSemanticColors.dark.overdue),
       );
+    });
+
+    test('明暗主题使用相同的弹窗宽度约束', () {
+      for (final theme in [AppTheme.light, AppTheme.dark]) {
+        expect(
+          theme.dialogTheme.constraints?.minWidth,
+          AppTokens.dialogMinWidth,
+        );
+        expect(
+          theme.dialogTheme.constraints?.maxWidth,
+          AppTokens.dialogMaxWidth,
+        );
+      }
+    });
+
+    testWidgets('常规屏幕上的短弹窗不会收缩成窄条', (tester) async {
+      final rect = await _showShortDialogAt(tester, viewportWidth: 412);
+
+      expect(rect.width, greaterThanOrEqualTo(AppTokens.dialogMinWidth));
+      expect(rect.width, lessThanOrEqualTo(AppTokens.dialogMaxWidth));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('窄屏弹窗自动收缩并保留安全边距', (tester) async {
+      final rect = await _showShortDialogAt(tester, viewportWidth: 320);
+
+      expect(rect.width, closeTo(288, 0.1));
+      expect(rect.left, greaterThanOrEqualTo(AppTokens.s16));
+      expect(320 - rect.right, greaterThanOrEqualTo(AppTokens.s16));
+      expect(tester.takeException(), isNull);
     });
   });
 }

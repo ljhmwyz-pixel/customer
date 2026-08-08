@@ -125,7 +125,10 @@ abstract final class AppTheme {
           horizontal: AppTokens.s16,
           vertical: AppTokens.s24,
         ),
-        constraints: const BoxConstraints(maxWidth: 420),
+        constraints: const BoxConstraints(
+          minWidth: AppTokens.dialogMinWidth,
+          maxWidth: AppTokens.dialogMaxWidth,
+        ),
         actionsPadding: const EdgeInsets.fromLTRB(
           AppTokens.s16,
           AppTokens.s8,

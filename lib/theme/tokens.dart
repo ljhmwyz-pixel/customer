@@ -90,6 +90,12 @@ abstract final class AppTokens {
   static const Color inactiveDark = Color(0xFF9E9E9E);
 
   // ── 布局约束 ──
+  /// 标准弹窗在常规手机上的最小宽度；窄屏由父级可用空间自动收缩
+  static const double dialogMinWidth = 360;
+
+  /// 标准弹窗在平板或宽屏上的最大宽度
+  static const double dialogMaxWidth = 420;
+
   /// 最小触摸目标，所有可点击元素的实际点击区域不得小于此值
   static const double minTouchTarget = 48;
 
