@@ -10,6 +10,9 @@ void main() {
 
     expect(find.text('示例数据'), findsNothing);
     expect(find.text('导入或整体撤销业务示例'), findsNothing);
+    expect(find.text('提醒权限'), findsOneWidget);
+    expect(find.text('提醒记录'), findsOneWidget);
+    expect(find.text('提醒自检'), findsOneWidget);
     expect(find.text('Excel 导出'), findsOneWidget);
   });
 }
