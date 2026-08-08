@@ -153,6 +153,7 @@ class OpportunityDao extends DatabaseAccessor<AppDatabase>
   Future<int> updateOpportunity(
     int id, {
     required String name,
+    String? owner,
     required String currency,
     required OpportunityStage stage,
     required OpportunityStatus status,
@@ -188,6 +189,7 @@ class OpportunityDao extends DatabaseAccessor<AppDatabase>
     return (update(opportunities)..where((table) => table.id.equals(id))).write(
       OpportunitiesCompanion(
         name: Value(name),
+        owner: owner == null ? const Value.absent() : Value(owner),
         productCategory: productCategory,
         productModel: productModel,
         equipmentBrand: equipmentBrand,

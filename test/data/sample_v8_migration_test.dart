@@ -11,7 +11,7 @@ void main() {
   test('v8 新库包含可空示例批次列和局部索引', () async {
     final db = await openTestDb();
     try {
-      expect(db.schemaVersion, 10);
+      expect(db.schemaVersion, 11);
 
       final columns = await db
           .customSelect('PRAGMA table_info(customers)')
@@ -76,7 +76,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.single, 10);
+      expect(version.data.values.single, 11);
 
       final row = await migrated.customSelect('''
         SELECT id, name, company, country, phone, stage, grade,

@@ -292,7 +292,19 @@ class CustomerDetailPage extends ConsumerWidget {
                     ),
                     const SizedBox(height: AppTokens.s16),
                   ],
-                  _SectionHeader(title: '跟进计划', count: value.plans.length),
+                  _SectionHeader(
+                    title: '跟进计划',
+                    count: value.plans.length,
+                    actions: [
+                      IconButton(
+                        key: const ValueKey('add-manual-plan'),
+                        tooltip: '新建任务',
+                        onPressed: () =>
+                            context.push('/customers/$id/plans/new'),
+                        icon: const Icon(Icons.add_alarm_outlined),
+                      ),
+                    ],
+                  ),
                   if (value.plans.isEmpty)
                     const _SectionEmpty(message: '暂无跟进计划')
                   else
@@ -301,6 +313,23 @@ class CustomerDetailPage extends ConsumerWidget {
                         plan: plan,
                         highlighted:
                             hasHighlightedPlan && plan.id == highlightedPlanId,
+                      ),
+                    ),
+                  const SizedBox(height: AppTokens.s24),
+                  _SectionHeader(
+                    title: '项目变更',
+                    count: value.opportunityChanges.length,
+                  ),
+                  if (value.opportunityChanges.isEmpty)
+                    const _SectionEmpty(message: '暂无项目变更')
+                  else
+                    ...value.opportunityChanges.map(
+                      (change) => _OpportunityChangeTile(
+                        change: change,
+                        opportunityName: value.opportunities
+                            .where((item) => item.id == change.opportunityId)
+                            .map((item) => item.name)
+                            .firstOrNull,
                       ),
                     ),
                   const SizedBox(height: AppTokens.s24),
@@ -1542,6 +1571,85 @@ class _PlanTile extends StatelessWidget {
       ),
     );
   }
+}
+
+class _OpportunityChangeTile extends StatelessWidget {
+  const _OpportunityChangeTile({
+    required this.change,
+    required this.opportunityName,
+  });
+
+  final OpportunityChangeRow change;
+  final String? opportunityName;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = _opportunityChangeLabel(change.fieldKey);
+    final oldValue = _opportunityChangeValue(change.fieldKey, change.oldValue);
+    final newValue = _opportunityChangeValue(change.fieldKey, change.newValue);
+    final scheme = Theme.of(context).colorScheme;
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(Icons.manage_history_outlined, color: scheme.primary),
+      title: Text(label),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$oldValue → $newValue',
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            '${opportunityName ?? '已删除项目'} · '
+            '${formatDateTime(localDateTime(change.changedAt))}',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _opportunityChangeLabel(String key) => switch (key) {
+  'name' => '项目名称',
+  'owner' => '负责人',
+  'stage' => '销售阶段',
+  'status' => '投入状态',
+  'forecastAmountMinor' => '预计金额',
+  'currency' => '币种',
+  'probabilityPercent' => '成交概率',
+  'expectedCloseAt' => '预计成交日期',
+  'currentObstacle' => '当前障碍',
+  'nextAction' => '下一步行动',
+  'nextFollowAt' => '下次跟进日期',
+  _ => key,
+};
+
+String _opportunityChangeValue(String key, String? raw) {
+  if (raw == null || raw.trim().isEmpty) return '未填写';
+  return switch (key) {
+    'stage' => OpportunityStage.fromDb(raw).label,
+    'status' => OpportunityStatus.fromDb(raw).label,
+    'forecastAmountMinor' => _minorAmountText(int.tryParse(raw)),
+    'probabilityPercent' => '$raw%',
+    'expectedCloseAt' || 'nextFollowAt' => _changeDateText(raw),
+    _ => raw,
+  };
+}
+
+String _minorAmountText(int? value) {
+  if (value == null) return '未填写';
+  final sign = value < 0 ? '-' : '';
+  final absolute = value.abs();
+  return '$sign${absolute ~/ 100}.${(absolute % 100).toString().padLeft(2, '0')}';
+}
+
+String _changeDateText(String raw) {
+  final value = int.tryParse(raw);
+  return value == null ? raw : formatDateTime(localDateTime(value));
 }
 
 class _FollowupTimeline extends StatelessWidget {

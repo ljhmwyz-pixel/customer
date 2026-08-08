@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/database.dart';
 import '../../data/database_provider.dart';
+import '../../data/daos/opportunity_change_dao.dart';
 import '../../models/enums.dart';
 import 'supplier_substitution.dart';
 
 class OpportunityDraft {
   const OpportunityDraft({
     required this.name,
+    this.owner,
     this.productCategory,
     this.productModel,
     this.equipmentBrand,
@@ -41,6 +43,7 @@ class OpportunityDraft {
   });
 
   final String name;
+  final String? owner;
   final String? productCategory;
   final String? productModel;
   final String? equipmentBrand;
@@ -97,6 +100,7 @@ class OpportunityService {
     return _db.opportunityDao.insertOpportunity(
       customerId: customerId,
       name: value.name,
+      owner: value.owner!,
       productCategory: value.productCategory,
       productModel: value.productModel,
       equipmentBrand: value.equipmentBrand,
@@ -136,39 +140,48 @@ class OpportunityService {
   ) async {
     final existing = await _requireOpportunity(customerId, id);
     final value = _normalize(draft, existing: existing);
-    await _db.opportunityDao.updateOpportunity(
-      id,
-      name: value.name,
-      productCategory: Value(value.productCategory),
-      productModel: Value(value.productModel),
-      equipmentBrand: Value(value.equipmentBrand),
-      equipmentModel: Value(value.equipmentModel),
-      estimatedAnnualVolume: Value(value.estimatedAnnualVolume),
-      forecastAmountMinor: Value(value.forecastAmountMinor),
-      currency: value.currency,
-      probabilityPercent: Value(value.probabilityPercent),
-      expectedCloseAt: Value(value.expectedCloseAt),
-      currentSupplier: Value(value.currentSupplier),
-      currentPurchaseBrand: Value(value.currentPurchaseBrand),
-      currentPurchasePriceMinor: Value(value.currentPurchasePriceMinor),
-      supplierStability: Value(value.supplierStability),
-      supplierProblem: Value(value.supplierProblem),
-      changeWillingness: Value(value.changeWillingness),
-      substitutionDifficulty: Value(value.substitutionDifficulty),
-      latestQuoteMinor: Value(value.latestQuoteMinor),
-      targetPriceMinor: Value(value.targetPriceMinor),
-      entryPoint: Value(value.entryPoint),
-      investmentAdvice: Value(value.investmentAdvice),
-      needsSample: value.needsSample,
-      needsRegistration: value.needsRegistration,
-      needsAuthorization: value.needsAuthorization,
-      stage: value.stage,
-      status: value.status,
-      latestFeedback: Value(value.latestFeedback),
-      currentObstacle: Value(value.currentObstacle),
-      nextAction: Value(value.nextAction),
-      nextFollowAt: Value(value.nextFollowAt),
-    );
+    final changes = _trackedChanges(existing, value);
+    await _db.transaction(() async {
+      await _db.opportunityDao.updateOpportunity(
+        id,
+        name: value.name,
+        owner: value.owner!,
+        productCategory: Value(value.productCategory),
+        productModel: Value(value.productModel),
+        equipmentBrand: Value(value.equipmentBrand),
+        equipmentModel: Value(value.equipmentModel),
+        estimatedAnnualVolume: Value(value.estimatedAnnualVolume),
+        forecastAmountMinor: Value(value.forecastAmountMinor),
+        currency: value.currency,
+        probabilityPercent: Value(value.probabilityPercent),
+        expectedCloseAt: Value(value.expectedCloseAt),
+        currentSupplier: Value(value.currentSupplier),
+        currentPurchaseBrand: Value(value.currentPurchaseBrand),
+        currentPurchasePriceMinor: Value(value.currentPurchasePriceMinor),
+        supplierStability: Value(value.supplierStability),
+        supplierProblem: Value(value.supplierProblem),
+        changeWillingness: Value(value.changeWillingness),
+        substitutionDifficulty: Value(value.substitutionDifficulty),
+        latestQuoteMinor: Value(value.latestQuoteMinor),
+        targetPriceMinor: Value(value.targetPriceMinor),
+        entryPoint: Value(value.entryPoint),
+        investmentAdvice: Value(value.investmentAdvice),
+        needsSample: value.needsSample,
+        needsRegistration: value.needsRegistration,
+        needsAuthorization: value.needsAuthorization,
+        stage: value.stage,
+        status: value.status,
+        latestFeedback: Value(value.latestFeedback),
+        currentObstacle: Value(value.currentObstacle),
+        nextAction: Value(value.nextAction),
+        nextFollowAt: Value(value.nextFollowAt),
+      );
+      await _db.opportunityChangeDao.recordChanges(
+        customerId: customerId,
+        opportunityId: id,
+        changes: changes,
+      );
+    });
   }
 
   Future<void> deleteOpportunity(int customerId, int id) async {
@@ -206,6 +219,12 @@ class OpportunityService {
     }
     if (name.length > 100) {
       throw const OpportunityValidationException('项目名称不能超过 100 个字符');
+    }
+    final owner = value.owner?.trim().isNotEmpty == true
+        ? value.owner!.trim()
+        : existing?.owner ?? '本人';
+    if (owner.length > 100) {
+      throw const OpportunityValidationException('负责人不能超过 100 个字符');
     }
     final currency = value.currency.trim().toUpperCase();
     if (!RegExp(r'^[A-Z]{3}$').hasMatch(currency)) {
@@ -250,6 +269,7 @@ class OpportunityService {
 
     return OpportunityDraft(
       name: name,
+      owner: owner,
       productCategory: text(value.productCategory),
       productModel: text(value.productModel),
       equipmentBrand: text(value.equipmentBrand),
@@ -305,6 +325,45 @@ class OpportunityService {
       nextAction: text(value.nextAction),
       nextFollowAt: value.nextFollowAt,
     );
+  }
+
+  Map<String, OpportunityFieldChange> _trackedChanges(
+    OpportunityRow old,
+    OpportunityDraft next,
+  ) {
+    final changes = <String, OpportunityFieldChange>{};
+    void add(String key, Object? before, Object? after) {
+      final oldValue = before?.toString();
+      final newValue = after?.toString();
+      if (oldValue != newValue) {
+        changes[key] = OpportunityFieldChange(oldValue, newValue);
+      }
+    }
+
+    add('name', old.name, next.name);
+    add('owner', old.owner, next.owner);
+    add('stage', old.stage, next.stage.dbValue);
+    add('status', old.status, next.status.dbValue);
+    add(
+      'forecastAmountMinor',
+      old.forecastAmountMinor,
+      next.forecastAmountMinor,
+    );
+    add('currency', old.currency, next.currency);
+    add('probabilityPercent', old.probabilityPercent, next.probabilityPercent);
+    add(
+      'expectedCloseAt',
+      old.expectedCloseAt,
+      next.expectedCloseAt?.toUtc().millisecondsSinceEpoch,
+    );
+    add('currentObstacle', old.currentObstacle, next.currentObstacle);
+    add('nextAction', old.nextAction, next.nextAction);
+    add(
+      'nextFollowAt',
+      old.nextFollowAt,
+      next.nextFollowAt?.toUtc().millisecondsSinceEpoch,
+    );
+    return changes;
   }
 }
 

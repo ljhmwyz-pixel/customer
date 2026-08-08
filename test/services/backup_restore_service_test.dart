@@ -51,7 +51,7 @@ void main() {
 
     expect(result.fileName, '客户跟进备份_20260806_101112.zip');
     expect(manifest['formatVersion'], 1);
-    expect(manifest['schemaVersion'], 10);
+    expect(manifest['schemaVersion'], 11);
     expect(
       archive.findFile('customer.sqlite')!.content,
       await databaseFile.readAsBytes(),

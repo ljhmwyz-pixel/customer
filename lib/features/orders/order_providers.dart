@@ -268,14 +268,7 @@ class OrderService {
   }
 
   Future<void> _syncTasks(int opportunityId) async {
-    try {
-      await _taskRules?.reconcileForOpportunity(
-        opportunityId,
-        now: DateTime.now(),
-      );
-    } catch (_) {
-      // The order is already durable; startup rebuild is the fallback.
-    }
+    await _taskRules?.reconcileOrQueue(opportunityId, now: DateTime.now());
   }
 }
 

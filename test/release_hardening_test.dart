@@ -47,7 +47,7 @@ void main() {
     );
   });
 
-  test('runtime version matches the v2.1 release line', () {
-    expect(read('pubspec.yaml'), contains('version: 2.1.0+2'));
+  test('runtime version matches the v2.2 release line', () {
+    expect(read('pubspec.yaml'), contains('version: 2.2.0+3'));
   });
 }

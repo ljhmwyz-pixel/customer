@@ -5,6 +5,7 @@ import '../database.dart';
 import '../tables/customers.dart';
 import '../tables/follow_plans.dart';
 import '../tables/opportunities.dart';
+import '../tables/task_reconciliation_jobs.dart';
 
 part 'plan_dao.g.dart';
 
@@ -54,7 +55,9 @@ class TodayPlanItem {
 }
 
 /// 跟进计划数据访问。提醒链路的数据基础。
-@DriftAccessor(tables: [FollowPlans, Customers, Opportunities])
+@DriftAccessor(
+  tables: [FollowPlans, Customers, Opportunities, TaskReconciliationJobs],
+)
 class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
   PlanDao(super.db);
 
@@ -453,4 +456,47 @@ class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
 
   Future<int> deletePlan(int id) =>
       (delete(followPlans)..where((t) => t.id.equals(id))).go();
+
+  Future<void> enqueueTaskReconciliation(
+    int opportunityId, {
+    required Object error,
+    DateTime? now,
+  }) async {
+    final existing =
+        await (select(taskReconciliationJobs)
+              ..where((row) => row.opportunityId.equals(opportunityId)))
+            .getSingleOrNull();
+    final ts = (now ?? DateTime.now()).toUtc().millisecondsSinceEpoch;
+    final message = error.toString();
+    final safeMessage = message.length <= 500
+        ? message
+        : message.substring(0, 500);
+    await into(taskReconciliationJobs).insertOnConflictUpdate(
+      TaskReconciliationJobsCompanion.insert(
+        opportunityId: Value(opportunityId),
+        attemptCount: Value((existing?.attemptCount ?? 0) + 1),
+        lastError: Value(safeMessage),
+        updatedAt: ts,
+      ),
+    );
+  }
+
+  Future<int> clearTaskReconciliation(int opportunityId) => (delete(
+    taskReconciliationJobs,
+  )..where((row) => row.opportunityId.equals(opportunityId))).go();
+
+  Future<List<TaskReconciliationJobRow>> listTaskReconciliationJobs() =>
+      (select(taskReconciliationJobs)..orderBy([
+            (row) => OrderingTerm.asc(row.updatedAt),
+            (row) => OrderingTerm.asc(row.opportunityId),
+          ]))
+          .get();
+
+  Future<int> countTaskReconciliationJobs() async {
+    final count = taskReconciliationJobs.opportunityId.count();
+    final row = await (selectOnly(
+      taskReconciliationJobs,
+    )..addColumns([count])).getSingle();
+    return row.read(count) ?? 0;
+  }
 }

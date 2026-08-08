@@ -311,6 +311,7 @@ class CustomerDetailData {
     required this.opportunities,
     required this.plans,
     required this.followups,
+    required this.opportunityChanges,
     required this.orders,
     required this.businessByOpportunity,
     required this.completedAmountCents,
@@ -322,6 +323,7 @@ class CustomerDetailData {
   final List<OpportunityRow> opportunities;
   final List<FollowPlanRow> plans;
   final List<FollowupRow> followups;
+  final List<OpportunityChangeRow> opportunityChanges;
   final List<OrderRow> orders;
   final Map<int, OpportunityBusinessRecords> businessByOpportunity;
   final int completedAmountCents;
@@ -958,6 +960,7 @@ final customerDetailProvider = FutureProvider.family<CustomerDetailData?, int>((
     db.followupDao.listOf(id),
     db.orderDao.listOf(id),
     db.orderDao.sumAmountByCustomer(id),
+    db.opportunityChangeDao.listOfCustomer(id),
   ]);
   final opportunities = values[2] as List<OpportunityRow>;
   final businessEntries = await Future.wait(
@@ -986,6 +989,7 @@ final customerDetailProvider = FutureProvider.family<CustomerDetailData?, int>((
     opportunities: opportunities,
     plans: values[3] as List<FollowPlanRow>,
     followups: values[4] as List<FollowupRow>,
+    opportunityChanges: values[7] as List<OpportunityChangeRow>,
     orders: values[5] as List<OrderRow>,
     businessByOpportunity: Map.unmodifiable(
       Map<int, OpportunityBusinessRecords>.fromEntries(businessEntries),
@@ -997,6 +1001,11 @@ final customerDetailProvider = FutureProvider.family<CustomerDetailData?, int>((
 final homePlansProvider = FutureProvider<List<TodayPlanItem>>((ref) {
   ref.watch(customerRevisionProvider);
   return ref.watch(databaseProvider).planDao.listToday(now: DateTime.now());
+});
+
+final pendingTaskSyncCountProvider = FutureProvider<int>((ref) {
+  ref.watch(customerRevisionProvider);
+  return ref.watch(databaseProvider).planDao.countTaskReconciliationJobs();
 });
 
 final dashboardProvider = FutureProvider<DashboardData>((ref) async {

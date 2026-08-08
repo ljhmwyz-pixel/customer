@@ -77,6 +77,7 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
   void initState() {
     super.initState();
     _controller('currency').text = 'USD';
+    _controller('owner').text = '本人';
     _load();
   }
 
@@ -106,6 +107,7 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
     }
 
     set('name', value.name);
+    set('owner', value.owner);
     set('productCategory', value.productCategory);
     set('productModel', value.productModel);
     set('equipmentBrand', value.equipmentBrand);
@@ -212,6 +214,7 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
     try {
       final draft = OpportunityDraft(
         name: _controller('name').text,
+        owner: _controller('owner').text,
         productCategory: _text('productCategory'),
         productModel: _text('productModel'),
         equipmentBrand: _text('equipmentBrand'),
@@ -336,6 +339,7 @@ class _OpportunityFormPageState extends ConsumerState<OpportunityFormPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _field('name', '项目名称 *', required: true),
+          _field('owner', '负责人'),
           _field('productCategory', '产品类别'),
           _field('productModel', '产品型号'),
           _field('equipmentBrand', '设备品牌', onChanged: (_) => setState(() {})),

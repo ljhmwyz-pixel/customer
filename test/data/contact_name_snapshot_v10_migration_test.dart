@@ -89,9 +89,9 @@ void main() {
       addTearDown(db.close);
       await db.customSelect('SELECT 1').getSingle();
 
-      expect(db.schemaVersion, 10);
+      expect(db.schemaVersion, 11);
       final version = await db.customSelect('PRAGMA user_version').getSingle();
-      expect(version.data.values.single, 10);
+      expect(version.data.values.single, 11);
 
       final rows = await db.customSelect('''
       SELECT id, contact_id, contact_name_snapshot, content, feedback, stage,

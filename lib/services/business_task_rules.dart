@@ -132,6 +132,37 @@ class BusinessTaskRules {
     );
   }
 
+  Future<BusinessTaskRecoveryResult> reconcileOrQueue(
+    int opportunityId, {
+    required DateTime now,
+  }) async {
+    try {
+      final result = await reconcileForOpportunity(opportunityId, now: now);
+      await _db.planDao.clearTaskReconciliation(opportunityId);
+      return BusinessTaskRecoveryResult(syncResult: result);
+    } catch (error) {
+      await _db.planDao.enqueueTaskReconciliation(
+        opportunityId,
+        error: error,
+        now: now,
+      );
+      return BusinessTaskRecoveryResult(queued: true, error: error.toString());
+    }
+  }
+
+  Future<BusinessTaskRetryReport> retryPending({required DateTime now}) async {
+    final jobs = await _db.planDao.listTaskReconciliationJobs();
+    final recovered = <int>[];
+    for (final job in jobs) {
+      final result = await reconcileOrQueue(job.opportunityId, now: now);
+      if (!result.queued) recovered.add(job.opportunityId);
+    }
+    return BusinessTaskRetryReport(
+      recoveredOpportunityIds: recovered,
+      remainingCount: await _db.planDao.countTaskReconciliationJobs(),
+    );
+  }
+
   List<_Candidate> _quoteCandidates(QuoteRow quote, DateTime now) {
     final base = _local(quote.quotedAt);
     final result = <_Candidate>[];
@@ -417,4 +448,26 @@ class BusinessTaskSyncResult {
   final List<int> createdIds;
   final List<int> cancelledIds;
   final List<String> warnings;
+}
+
+class BusinessTaskRecoveryResult {
+  const BusinessTaskRecoveryResult({
+    this.syncResult = const BusinessTaskSyncResult(),
+    this.queued = false,
+    this.error,
+  });
+
+  final BusinessTaskSyncResult syncResult;
+  final bool queued;
+  final String? error;
+}
+
+class BusinessTaskRetryReport {
+  const BusinessTaskRetryReport({
+    required this.recoveredOpportunityIds,
+    required this.remainingCount,
+  });
+
+  final List<int> recoveredOpportunityIds;
+  final int remainingCount;
 }

@@ -16,6 +16,7 @@ import 'features/business/tender_form_page.dart';
 import 'features/customers/customer_form_page.dart';
 import 'features/customers/customers_page.dart';
 import 'features/customers/followup_form_page.dart';
+import 'features/customers/plan_form_page.dart';
 import 'features/funnel/funnel_page.dart';
 import 'features/home/home_page.dart';
 import 'features/orders/order_form_page.dart';
@@ -133,6 +134,18 @@ final router = GoRouter(
                           return const CustomerDetailPage(customerId: null);
                         }
                         return FollowupFormPage(customerId: customerId);
+                      },
+                    ),
+                    GoRoute(
+                      path: 'plans/new',
+                      builder: (context, state) {
+                        final customerId = int.tryParse(
+                          state.pathParameters['id'] ?? '',
+                        );
+                        if (customerId == null) {
+                          return const _RouteErrorPage(message: '客户编号无效');
+                        }
+                        return PlanFormPage(customerId: customerId);
                       },
                     ),
                     GoRoute(

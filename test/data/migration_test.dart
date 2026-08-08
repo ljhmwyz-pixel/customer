@@ -7,19 +7,19 @@ import 'package:sqlite3/sqlite3.dart' as sqlite;
 
 import 'helpers.dart';
 
-/// v10 数据库初始化与旧版本真库升级。
+/// v11 数据库初始化与旧版本真库升级。
 void main() {
   late AppDatabase db;
 
-  group('v10 新库', () {
+  group('v11 新库', () {
     setUp(() async => db = await openTestDb());
     tearDown(() async => db.close());
 
-    test('schemaVersion 为 10', () {
-      expect(db.schemaVersion, 10);
+    test('schemaVersion 为 11', () {
+      expect(db.schemaVersion, 11);
     });
 
-    test('空库初始化后十三张表全部建成', () async {
+    test('空库初始化后十五张表全部建成', () async {
       final rows = await db
           .customSelect(
             "SELECT name FROM sqlite_master WHERE type = 'table' "
@@ -37,11 +37,13 @@ void main() {
         'followups',
         'orders',
         'opportunities',
+        'opportunity_changes',
         'tags',
         'quotes',
         'registrations',
         'samples',
         'tenders',
+        'task_reconciliation_jobs',
       });
     });
 
@@ -77,6 +79,8 @@ void main() {
         'idx_opportunities_legacy_default',
         'idx_opportunities_next_follow',
         'idx_opportunities_stage',
+        'idx_opportunity_changes_customer_time',
+        'idx_opportunity_changes_opportunity_time',
         'idx_plans_customer_status',
         'idx_plans_opportunity_status',
         'idx_plans_plan_at',
@@ -91,6 +95,7 @@ void main() {
         'idx_registrations_document_due',
         'idx_tenders_opportunity',
         'idx_tenders_status_deadline',
+        'idx_task_reconciliation_updated',
       });
     });
 
@@ -147,11 +152,11 @@ void main() {
       );
     });
 
-    test('user_version 写入为 10', () async {
+    test('user_version 写入为 11', () async {
       // drift 用 SQLite 的 user_version 记录 schema 版本，
       // 这个值不对的话后续 onUpgrade 会走错分支。
       final row = await db.customSelect('PRAGMA user_version').getSingle();
-      expect(row.data.values.first, 10);
+      expect(row.data.values.first, 11);
     });
 
     test('外键约束在 beforeOpen 后处于开启状态', () async {
@@ -203,7 +208,7 @@ void main() {
           )
           .get();
       // 索引没有被重复创建成两条。
-      expect(rows.length, 36);
+      expect(rows.length, 39);
     });
   });
 
@@ -226,7 +231,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 10);
+      expect(version.data.values.first, 11);
 
       final opportunities = await migrated.customSelect('''
             SELECT customer_id, name, stage, status, is_legacy_default
@@ -327,7 +332,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 10);
+      expect(version.data.values.first, 11);
 
       final followup = await migrated.customSelect('''
             SELECT opportunity_id, content, conclusion, feedback, stage,
@@ -409,7 +414,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 10);
+      expect(version.data.values.first, 11);
       await _expectLegacyTaskBackfill(migrated);
 
       final followup = await migrated.customSelect('''
@@ -446,7 +451,7 @@ void main() {
       final version = await migrated
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.first, 10);
+      expect(version.data.values.first, 11);
 
       final orders = await migrated.customSelect('''
             SELECT customer_id, opportunity_id, order_no, ordered_at,

@@ -30,7 +30,7 @@ Future<void> bootstrapBackgroundServices(
   AttachmentGraphCleaner? cleaner,
 }) async {
   try {
-    await (reminderBootstrap ?? () => _bootstrapReminders(container))();
+    await (reminderBootstrap ?? () => bootstrapReminders(container))();
   } catch (e, stack) {
     debugPrint('提醒初始化失败：$e\n$stack');
   }
@@ -61,15 +61,24 @@ Future<void> bootstrapAttachmentCleanup(
 ///
 /// 失败不阻塞启动：提醒排不上是功能受损，但应用本身还能正常记录客户。
 /// 把异常吞在这里而不是让 main 崩掉。
-Future<void> _bootstrapReminders(ProviderContainer container) async {
+Future<void> bootstrapReminders(
+  ProviderContainer container, {
+  DateTime? now,
+}) async {
   try {
     final scheduler = container.read(reminderSchedulerProvider);
     await scheduler.init();
+    final currentTime = now ?? DateTime.now();
+
+    // 业务记录已经保存、自动任务尚未同步的项目先在这里补齐，再统一重排提醒。
+    await container
+        .read(businessTaskRulesProvider)
+        .retryPending(now: currentTime);
 
     // 逾期状态是派生的，由启动时批量刷新。放在重排之前：
     // 已逾期的计划不该再排闹钟，先刷状态能让 listUpcoming 过滤掉它们。
     final db = container.read(databaseProvider);
-    await db.planDao.markOverdue(now: DateTime.now());
+    await db.planDao.markOverdue(now: currentTime);
 
     await scheduler.rescheduleAll();
   } catch (e, stack) {

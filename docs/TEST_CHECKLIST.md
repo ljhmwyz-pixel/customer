@@ -1,12 +1,12 @@
 # Release Test Checklist
 
-## Current v2.1 Release Gate
+## Current v2.2 Release Gate
 
 - [ ] Working tree is clean, the release commit is reviewed, and an immutable release tag exists.
 - [ ] Runtime version, user guide version, release notes, and Android version code agree.
 - [ ] Release APK is signed by the custodied production certificate, not `Android Debug` or the ephemeral CI certificate.
 - [ ] Production keystore, alias, and recovery instructions have at least two secure offline copies.
-- [x] Fresh schema is v10; controlled historical migrations and foreign-key checks pass.
+- [x] Fresh schema is v11; controlled historical migrations and foreign-key checks pass.
 - [ ] A copied production-like database and attachment tree complete one destructive backup/restore rehearsal.
 - [ ] Upgrade installation from the previous production APK preserves data, attachments, and future reminders.
 - [ ] OnePlus 13 / ColorOS 15 completes the full seven-day reminder and provider checklist.
@@ -121,7 +121,10 @@
 
 ### Automated gate
 
-- [x] Fresh v10 schema, v1-to-v10 historical migration, v6-to-v7 attachment migration, v7-to-v8 sample-data migration, v8-to-v9 PRD migration, and v9-to-v10 contact snapshot migration pass with foreign-key checks.
+- [x] Fresh v11 schema, v1-to-v11 historical migration, v6-to-v7 attachment migration, v7-to-v8 sample-data migration, v8-to-v9 PRD migration, v9-to-v10 contact snapshot migration, and v10-to-v11 history/repair-queue migration pass with foreign-key checks.
+- [x] Manual task creation persists and schedules a project-scoped reminder with validation and unsaved-change protection.
+- [x] Opportunity key-field edits append changed-only history rows and render field-aware values in the customer activity tab.
+- [x] Failed automatic-task reconciliation persists one repair job per opportunity, retries on startup, and exposes a home-page retry action.
 - [x] Performance fixture covers 500 customers, 1500 projects, and 5000 follow-ups.
 - [x] In-memory core list, advanced filter, search, stale, and stage-count queries remain below 200 ms.
 - [x] File-backed 500-customer / 5000-follow-up urgency query remains below 200 ms.

@@ -13,6 +13,7 @@ import 'daos/export_dao.dart';
 import 'daos/followup_dao.dart';
 import 'daos/order_dao.dart';
 import 'daos/opportunity_dao.dart';
+import 'daos/opportunity_change_dao.dart';
 import 'daos/plan_dao.dart';
 import 'daos/quote_dao.dart';
 import 'daos/registration_dao.dart';
@@ -25,11 +26,13 @@ import 'tables/follow_plans.dart';
 import 'tables/followups.dart';
 import 'tables/orders.dart';
 import 'tables/opportunities.dart';
+import 'tables/opportunity_changes.dart';
 import 'tables/quotes.dart';
 import 'tables/registrations.dart';
 import 'tables/samples.dart';
 import 'tables/tags.dart';
 import 'tables/tenders.dart';
+import 'tables/task_reconciliation_jobs.dart';
 
 part 'database.g.dart';
 
@@ -48,6 +51,8 @@ part 'database.g.dart';
     Samples,
     Registrations,
     Tenders,
+    OpportunityChanges,
+    TaskReconciliationJobs,
   ],
   daos: [
     CustomerDao,
@@ -62,6 +67,7 @@ part 'database.g.dart';
     SampleDao,
     RegistrationDao,
     TenderDao,
+    OpportunityChangeDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -74,7 +80,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -86,6 +92,7 @@ class AppDatabase extends _$AppDatabase {
       await _createAttachmentOwnerIndexes();
       await _createSampleDataIndexes();
       await _createV9Indexes();
+      await _createV11Indexes();
     },
     onUpgrade: (m, from, to) async {
       if (from < 2) {
@@ -114,6 +121,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 10) {
         await _migrateV9ToV10(m);
+      }
+      if (from < 11) {
+        await _migrateV10ToV11(m);
       }
     },
     beforeOpen: (details) async {
@@ -160,6 +170,27 @@ class AppDatabase extends _$AppDatabase {
         '${hasOccurredAt ? 'ON followups(contact_id, occurred_at DESC)' : 'ON followups(contact_id)'}',
       );
     }
+  }
+
+  Future<void> _createV11Indexes() async {
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_opportunity_changes_customer_time '
+      'ON opportunity_changes(customer_id, changed_at DESC)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_opportunity_changes_opportunity_time '
+      'ON opportunity_changes(opportunity_id, changed_at DESC)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_task_reconciliation_updated '
+      'ON task_reconciliation_jobs(updated_at)',
+    );
+  }
+
+  Future<void> _migrateV10ToV11(Migrator m) async {
+    await m.createTable(opportunityChanges);
+    await m.createTable(taskReconciliationJobs);
+    await _createV11Indexes();
   }
 
   Future<bool> _tableExists(String name) async => (await customSelect(

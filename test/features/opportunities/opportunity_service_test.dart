@@ -44,6 +44,46 @@ void main() {
     expect(updated?.stage, OpportunityStage.quoted.dbValue);
   });
 
+  test('项目编辑只记录真正变化的关键字段', () async {
+    final customerId = await seedCustomer(db);
+    final id = await service.createOpportunity(
+      customerId,
+      const OpportunityDraft(
+        name: '审计项目',
+        owner: '甲',
+        currency: 'USD',
+        forecastAmountMinor: 10000,
+        probabilityPercent: 20,
+      ),
+    );
+
+    const changed = OpportunityDraft(
+      name: '审计项目',
+      owner: '乙',
+      currency: 'EUR',
+      forecastAmountMinor: 25000,
+      probabilityPercent: 60,
+      stage: OpportunityStage.quoted,
+      nextAction: '确认报价反馈',
+    );
+    await service.updateOpportunity(customerId, id, changed);
+
+    final rows = await db.opportunityChangeDao.listOfOpportunity(id);
+    expect(rows.map((row) => row.fieldKey).toSet(), {
+      'owner',
+      'currency',
+      'forecastAmountMinor',
+      'probabilityPercent',
+      'stage',
+      'nextAction',
+    });
+    expect(rows.firstWhere((row) => row.fieldKey == 'owner').oldValue, '甲');
+    expect(rows.firstWhere((row) => row.fieldKey == 'owner').newValue, '乙');
+
+    await service.updateOpportunity(customerId, id, changed);
+    expect(await db.opportunityChangeDao.listOfOpportunity(id), hasLength(6));
+  });
+
   test('拒绝空名称、负数、非法币种和越界概率', () async {
     final customerId = await seedCustomer(db);
     for (final draft in [

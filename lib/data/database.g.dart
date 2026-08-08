@@ -12938,6 +12938,807 @@ class AttachmentsCompanion extends UpdateCompanion<AttachmentRow> {
   }
 }
 
+class $OpportunityChangesTable extends OpportunityChanges
+    with TableInfo<$OpportunityChangesTable, OpportunityChangeRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $OpportunityChangesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _customerIdMeta = const VerificationMeta(
+    'customerId',
+  );
+  @override
+  late final GeneratedColumn<int> customerId = GeneratedColumn<int>(
+    'customer_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES customers (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _opportunityIdMeta = const VerificationMeta(
+    'opportunityId',
+  );
+  @override
+  late final GeneratedColumn<int> opportunityId = GeneratedColumn<int>(
+    'opportunity_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES opportunities (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _fieldKeyMeta = const VerificationMeta(
+    'fieldKey',
+  );
+  @override
+  late final GeneratedColumn<String> fieldKey = GeneratedColumn<String>(
+    'field_key',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 50,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _oldValueMeta = const VerificationMeta(
+    'oldValue',
+  );
+  @override
+  late final GeneratedColumn<String> oldValue = GeneratedColumn<String>(
+    'old_value',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _newValueMeta = const VerificationMeta(
+    'newValue',
+  );
+  @override
+  late final GeneratedColumn<String> newValue = GeneratedColumn<String>(
+    'new_value',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _changedAtMeta = const VerificationMeta(
+    'changedAt',
+  );
+  @override
+  late final GeneratedColumn<int> changedAt = GeneratedColumn<int>(
+    'changed_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    customerId,
+    opportunityId,
+    fieldKey,
+    oldValue,
+    newValue,
+    changedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'opportunity_changes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<OpportunityChangeRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('customer_id')) {
+      context.handle(
+        _customerIdMeta,
+        customerId.isAcceptableOrUnknown(data['customer_id']!, _customerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_customerIdMeta);
+    }
+    if (data.containsKey('opportunity_id')) {
+      context.handle(
+        _opportunityIdMeta,
+        opportunityId.isAcceptableOrUnknown(
+          data['opportunity_id']!,
+          _opportunityIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_opportunityIdMeta);
+    }
+    if (data.containsKey('field_key')) {
+      context.handle(
+        _fieldKeyMeta,
+        fieldKey.isAcceptableOrUnknown(data['field_key']!, _fieldKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fieldKeyMeta);
+    }
+    if (data.containsKey('old_value')) {
+      context.handle(
+        _oldValueMeta,
+        oldValue.isAcceptableOrUnknown(data['old_value']!, _oldValueMeta),
+      );
+    }
+    if (data.containsKey('new_value')) {
+      context.handle(
+        _newValueMeta,
+        newValue.isAcceptableOrUnknown(data['new_value']!, _newValueMeta),
+      );
+    }
+    if (data.containsKey('changed_at')) {
+      context.handle(
+        _changedAtMeta,
+        changedAt.isAcceptableOrUnknown(data['changed_at']!, _changedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_changedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  OpportunityChangeRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return OpportunityChangeRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      customerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}customer_id'],
+      )!,
+      opportunityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}opportunity_id'],
+      )!,
+      fieldKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}field_key'],
+      )!,
+      oldValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}old_value'],
+      ),
+      newValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}new_value'],
+      ),
+      changedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}changed_at'],
+      )!,
+    );
+  }
+
+  @override
+  $OpportunityChangesTable createAlias(String alias) {
+    return $OpportunityChangesTable(attachedDatabase, alias);
+  }
+}
+
+class OpportunityChangeRow extends DataClass
+    implements Insertable<OpportunityChangeRow> {
+  final int id;
+  final int customerId;
+  final int opportunityId;
+  final String fieldKey;
+  final String? oldValue;
+  final String? newValue;
+  final int changedAt;
+  const OpportunityChangeRow({
+    required this.id,
+    required this.customerId,
+    required this.opportunityId,
+    required this.fieldKey,
+    this.oldValue,
+    this.newValue,
+    required this.changedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['customer_id'] = Variable<int>(customerId);
+    map['opportunity_id'] = Variable<int>(opportunityId);
+    map['field_key'] = Variable<String>(fieldKey);
+    if (!nullToAbsent || oldValue != null) {
+      map['old_value'] = Variable<String>(oldValue);
+    }
+    if (!nullToAbsent || newValue != null) {
+      map['new_value'] = Variable<String>(newValue);
+    }
+    map['changed_at'] = Variable<int>(changedAt);
+    return map;
+  }
+
+  OpportunityChangesCompanion toCompanion(bool nullToAbsent) {
+    return OpportunityChangesCompanion(
+      id: Value(id),
+      customerId: Value(customerId),
+      opportunityId: Value(opportunityId),
+      fieldKey: Value(fieldKey),
+      oldValue: oldValue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(oldValue),
+      newValue: newValue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(newValue),
+      changedAt: Value(changedAt),
+    );
+  }
+
+  factory OpportunityChangeRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return OpportunityChangeRow(
+      id: serializer.fromJson<int>(json['id']),
+      customerId: serializer.fromJson<int>(json['customerId']),
+      opportunityId: serializer.fromJson<int>(json['opportunityId']),
+      fieldKey: serializer.fromJson<String>(json['fieldKey']),
+      oldValue: serializer.fromJson<String?>(json['oldValue']),
+      newValue: serializer.fromJson<String?>(json['newValue']),
+      changedAt: serializer.fromJson<int>(json['changedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'customerId': serializer.toJson<int>(customerId),
+      'opportunityId': serializer.toJson<int>(opportunityId),
+      'fieldKey': serializer.toJson<String>(fieldKey),
+      'oldValue': serializer.toJson<String?>(oldValue),
+      'newValue': serializer.toJson<String?>(newValue),
+      'changedAt': serializer.toJson<int>(changedAt),
+    };
+  }
+
+  OpportunityChangeRow copyWith({
+    int? id,
+    int? customerId,
+    int? opportunityId,
+    String? fieldKey,
+    Value<String?> oldValue = const Value.absent(),
+    Value<String?> newValue = const Value.absent(),
+    int? changedAt,
+  }) => OpportunityChangeRow(
+    id: id ?? this.id,
+    customerId: customerId ?? this.customerId,
+    opportunityId: opportunityId ?? this.opportunityId,
+    fieldKey: fieldKey ?? this.fieldKey,
+    oldValue: oldValue.present ? oldValue.value : this.oldValue,
+    newValue: newValue.present ? newValue.value : this.newValue,
+    changedAt: changedAt ?? this.changedAt,
+  );
+  OpportunityChangeRow copyWithCompanion(OpportunityChangesCompanion data) {
+    return OpportunityChangeRow(
+      id: data.id.present ? data.id.value : this.id,
+      customerId: data.customerId.present
+          ? data.customerId.value
+          : this.customerId,
+      opportunityId: data.opportunityId.present
+          ? data.opportunityId.value
+          : this.opportunityId,
+      fieldKey: data.fieldKey.present ? data.fieldKey.value : this.fieldKey,
+      oldValue: data.oldValue.present ? data.oldValue.value : this.oldValue,
+      newValue: data.newValue.present ? data.newValue.value : this.newValue,
+      changedAt: data.changedAt.present ? data.changedAt.value : this.changedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OpportunityChangeRow(')
+          ..write('id: $id, ')
+          ..write('customerId: $customerId, ')
+          ..write('opportunityId: $opportunityId, ')
+          ..write('fieldKey: $fieldKey, ')
+          ..write('oldValue: $oldValue, ')
+          ..write('newValue: $newValue, ')
+          ..write('changedAt: $changedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    customerId,
+    opportunityId,
+    fieldKey,
+    oldValue,
+    newValue,
+    changedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is OpportunityChangeRow &&
+          other.id == this.id &&
+          other.customerId == this.customerId &&
+          other.opportunityId == this.opportunityId &&
+          other.fieldKey == this.fieldKey &&
+          other.oldValue == this.oldValue &&
+          other.newValue == this.newValue &&
+          other.changedAt == this.changedAt);
+}
+
+class OpportunityChangesCompanion
+    extends UpdateCompanion<OpportunityChangeRow> {
+  final Value<int> id;
+  final Value<int> customerId;
+  final Value<int> opportunityId;
+  final Value<String> fieldKey;
+  final Value<String?> oldValue;
+  final Value<String?> newValue;
+  final Value<int> changedAt;
+  const OpportunityChangesCompanion({
+    this.id = const Value.absent(),
+    this.customerId = const Value.absent(),
+    this.opportunityId = const Value.absent(),
+    this.fieldKey = const Value.absent(),
+    this.oldValue = const Value.absent(),
+    this.newValue = const Value.absent(),
+    this.changedAt = const Value.absent(),
+  });
+  OpportunityChangesCompanion.insert({
+    this.id = const Value.absent(),
+    required int customerId,
+    required int opportunityId,
+    required String fieldKey,
+    this.oldValue = const Value.absent(),
+    this.newValue = const Value.absent(),
+    required int changedAt,
+  }) : customerId = Value(customerId),
+       opportunityId = Value(opportunityId),
+       fieldKey = Value(fieldKey),
+       changedAt = Value(changedAt);
+  static Insertable<OpportunityChangeRow> custom({
+    Expression<int>? id,
+    Expression<int>? customerId,
+    Expression<int>? opportunityId,
+    Expression<String>? fieldKey,
+    Expression<String>? oldValue,
+    Expression<String>? newValue,
+    Expression<int>? changedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (customerId != null) 'customer_id': customerId,
+      if (opportunityId != null) 'opportunity_id': opportunityId,
+      if (fieldKey != null) 'field_key': fieldKey,
+      if (oldValue != null) 'old_value': oldValue,
+      if (newValue != null) 'new_value': newValue,
+      if (changedAt != null) 'changed_at': changedAt,
+    });
+  }
+
+  OpportunityChangesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? customerId,
+    Value<int>? opportunityId,
+    Value<String>? fieldKey,
+    Value<String?>? oldValue,
+    Value<String?>? newValue,
+    Value<int>? changedAt,
+  }) {
+    return OpportunityChangesCompanion(
+      id: id ?? this.id,
+      customerId: customerId ?? this.customerId,
+      opportunityId: opportunityId ?? this.opportunityId,
+      fieldKey: fieldKey ?? this.fieldKey,
+      oldValue: oldValue ?? this.oldValue,
+      newValue: newValue ?? this.newValue,
+      changedAt: changedAt ?? this.changedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (customerId.present) {
+      map['customer_id'] = Variable<int>(customerId.value);
+    }
+    if (opportunityId.present) {
+      map['opportunity_id'] = Variable<int>(opportunityId.value);
+    }
+    if (fieldKey.present) {
+      map['field_key'] = Variable<String>(fieldKey.value);
+    }
+    if (oldValue.present) {
+      map['old_value'] = Variable<String>(oldValue.value);
+    }
+    if (newValue.present) {
+      map['new_value'] = Variable<String>(newValue.value);
+    }
+    if (changedAt.present) {
+      map['changed_at'] = Variable<int>(changedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OpportunityChangesCompanion(')
+          ..write('id: $id, ')
+          ..write('customerId: $customerId, ')
+          ..write('opportunityId: $opportunityId, ')
+          ..write('fieldKey: $fieldKey, ')
+          ..write('oldValue: $oldValue, ')
+          ..write('newValue: $newValue, ')
+          ..write('changedAt: $changedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TaskReconciliationJobsTable extends TaskReconciliationJobs
+    with TableInfo<$TaskReconciliationJobsTable, TaskReconciliationJobRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TaskReconciliationJobsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _opportunityIdMeta = const VerificationMeta(
+    'opportunityId',
+  );
+  @override
+  late final GeneratedColumn<int> opportunityId = GeneratedColumn<int>(
+    'opportunity_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES opportunities (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _attemptCountMeta = const VerificationMeta(
+    'attemptCount',
+  );
+  @override
+  late final GeneratedColumn<int> attemptCount = GeneratedColumn<int>(
+    'attempt_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _lastErrorMeta = const VerificationMeta(
+    'lastError',
+  );
+  @override
+  late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
+    'last_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    opportunityId,
+    attemptCount,
+    lastError,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'task_reconciliation_jobs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TaskReconciliationJobRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('opportunity_id')) {
+      context.handle(
+        _opportunityIdMeta,
+        opportunityId.isAcceptableOrUnknown(
+          data['opportunity_id']!,
+          _opportunityIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('attempt_count')) {
+      context.handle(
+        _attemptCountMeta,
+        attemptCount.isAcceptableOrUnknown(
+          data['attempt_count']!,
+          _attemptCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_error')) {
+      context.handle(
+        _lastErrorMeta,
+        lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {opportunityId};
+  @override
+  TaskReconciliationJobRow map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TaskReconciliationJobRow(
+      opportunityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}opportunity_id'],
+      )!,
+      attemptCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}attempt_count'],
+      )!,
+      lastError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $TaskReconciliationJobsTable createAlias(String alias) {
+    return $TaskReconciliationJobsTable(attachedDatabase, alias);
+  }
+}
+
+class TaskReconciliationJobRow extends DataClass
+    implements Insertable<TaskReconciliationJobRow> {
+  final int opportunityId;
+  final int attemptCount;
+  final String? lastError;
+  final int updatedAt;
+  const TaskReconciliationJobRow({
+    required this.opportunityId,
+    required this.attemptCount,
+    this.lastError,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['opportunity_id'] = Variable<int>(opportunityId);
+    map['attempt_count'] = Variable<int>(attemptCount);
+    if (!nullToAbsent || lastError != null) {
+      map['last_error'] = Variable<String>(lastError);
+    }
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  TaskReconciliationJobsCompanion toCompanion(bool nullToAbsent) {
+    return TaskReconciliationJobsCompanion(
+      opportunityId: Value(opportunityId),
+      attemptCount: Value(attemptCount),
+      lastError: lastError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastError),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory TaskReconciliationJobRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TaskReconciliationJobRow(
+      opportunityId: serializer.fromJson<int>(json['opportunityId']),
+      attemptCount: serializer.fromJson<int>(json['attemptCount']),
+      lastError: serializer.fromJson<String?>(json['lastError']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'opportunityId': serializer.toJson<int>(opportunityId),
+      'attemptCount': serializer.toJson<int>(attemptCount),
+      'lastError': serializer.toJson<String?>(lastError),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  TaskReconciliationJobRow copyWith({
+    int? opportunityId,
+    int? attemptCount,
+    Value<String?> lastError = const Value.absent(),
+    int? updatedAt,
+  }) => TaskReconciliationJobRow(
+    opportunityId: opportunityId ?? this.opportunityId,
+    attemptCount: attemptCount ?? this.attemptCount,
+    lastError: lastError.present ? lastError.value : this.lastError,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  TaskReconciliationJobRow copyWithCompanion(
+    TaskReconciliationJobsCompanion data,
+  ) {
+    return TaskReconciliationJobRow(
+      opportunityId: data.opportunityId.present
+          ? data.opportunityId.value
+          : this.opportunityId,
+      attemptCount: data.attemptCount.present
+          ? data.attemptCount.value
+          : this.attemptCount,
+      lastError: data.lastError.present ? data.lastError.value : this.lastError,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TaskReconciliationJobRow(')
+          ..write('opportunityId: $opportunityId, ')
+          ..write('attemptCount: $attemptCount, ')
+          ..write('lastError: $lastError, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(opportunityId, attemptCount, lastError, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TaskReconciliationJobRow &&
+          other.opportunityId == this.opportunityId &&
+          other.attemptCount == this.attemptCount &&
+          other.lastError == this.lastError &&
+          other.updatedAt == this.updatedAt);
+}
+
+class TaskReconciliationJobsCompanion
+    extends UpdateCompanion<TaskReconciliationJobRow> {
+  final Value<int> opportunityId;
+  final Value<int> attemptCount;
+  final Value<String?> lastError;
+  final Value<int> updatedAt;
+  const TaskReconciliationJobsCompanion({
+    this.opportunityId = const Value.absent(),
+    this.attemptCount = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  TaskReconciliationJobsCompanion.insert({
+    this.opportunityId = const Value.absent(),
+    this.attemptCount = const Value.absent(),
+    this.lastError = const Value.absent(),
+    required int updatedAt,
+  }) : updatedAt = Value(updatedAt);
+  static Insertable<TaskReconciliationJobRow> custom({
+    Expression<int>? opportunityId,
+    Expression<int>? attemptCount,
+    Expression<String>? lastError,
+    Expression<int>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (opportunityId != null) 'opportunity_id': opportunityId,
+      if (attemptCount != null) 'attempt_count': attemptCount,
+      if (lastError != null) 'last_error': lastError,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  TaskReconciliationJobsCompanion copyWith({
+    Value<int>? opportunityId,
+    Value<int>? attemptCount,
+    Value<String?>? lastError,
+    Value<int>? updatedAt,
+  }) {
+    return TaskReconciliationJobsCompanion(
+      opportunityId: opportunityId ?? this.opportunityId,
+      attemptCount: attemptCount ?? this.attemptCount,
+      lastError: lastError ?? this.lastError,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (opportunityId.present) {
+      map['opportunity_id'] = Variable<int>(opportunityId.value);
+    }
+    if (attemptCount.present) {
+      map['attempt_count'] = Variable<int>(attemptCount.value);
+    }
+    if (lastError.present) {
+      map['last_error'] = Variable<String>(lastError.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TaskReconciliationJobsCompanion(')
+          ..write('opportunityId: $opportunityId, ')
+          ..write('attemptCount: $attemptCount, ')
+          ..write('lastError: $lastError, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -12954,6 +13755,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $RegistrationsTable registrations = $RegistrationsTable(this);
   late final $TendersTable tenders = $TendersTable(this);
   late final $AttachmentsTable attachments = $AttachmentsTable(this);
+  late final $OpportunityChangesTable opportunityChanges =
+      $OpportunityChangesTable(this);
+  late final $TaskReconciliationJobsTable taskReconciliationJobs =
+      $TaskReconciliationJobsTable(this);
   late final CustomerDao customerDao = CustomerDao(this as AppDatabase);
   late final ExportDao exportDao = ExportDao(this as AppDatabase);
   late final ContactDao contactDao = ContactDao(this as AppDatabase);
@@ -12970,6 +13775,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this as AppDatabase,
   );
   late final TenderDao tenderDao = TenderDao(this as AppDatabase);
+  late final OpportunityChangeDao opportunityChangeDao = OpportunityChangeDao(
+    this as AppDatabase,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -12988,6 +13796,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     registrations,
     tenders,
     attachments,
+    opportunityChanges,
+    taskReconciliationJobs,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -13137,6 +13947,29 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('attachments', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'customers',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('opportunity_changes', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'opportunities',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('opportunity_changes', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'opportunities',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [
+        TableUpdate('task_reconciliation_jobs', kind: UpdateKind.delete),
+      ],
     ),
   ]);
 }
@@ -13302,6 +14135,30 @@ final class $$CustomersTableReferences
     ).filter((f) => f.customerId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_customerTagsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $OpportunityChangesTable,
+    List<OpportunityChangeRow>
+  >
+  _opportunityChangesRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.opportunityChanges,
+        aliasName: 'customers__id__opportunity_changes__customer_id',
+      );
+
+  $$OpportunityChangesTableProcessedTableManager get opportunityChangesRefs {
+    final manager = $$OpportunityChangesTableTableManager(
+      $_db,
+      $_db.opportunityChanges,
+    ).filter((f) => f.customerId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _opportunityChangesRefsTable($_db),
+    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -13573,6 +14430,31 @@ class $$CustomersTableFilterComposer
           }) => $$CustomerTagsTableFilterComposer(
             $db: $db,
             $table: $db.customerTags,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> opportunityChangesRefs(
+    Expression<bool> Function($$OpportunityChangesTableFilterComposer f) f,
+  ) {
+    final $$OpportunityChangesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.opportunityChanges,
+      getReferencedColumn: (t) => t.customerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunityChangesTableFilterComposer(
+            $db: $db,
+            $table: $db.opportunityChanges,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -13953,6 +14835,32 @@ class $$CustomersTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> opportunityChangesRefs<T extends Object>(
+    Expression<T> Function($$OpportunityChangesTableAnnotationComposer a) f,
+  ) {
+    final $$OpportunityChangesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.opportunityChanges,
+          getReferencedColumn: (t) => t.customerId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$OpportunityChangesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.opportunityChanges,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$CustomersTableTableManager
@@ -13975,6 +14883,7 @@ class $$CustomersTableTableManager
             bool followPlansRefs,
             bool ordersRefs,
             bool customerTagsRefs,
+            bool opportunityChangesRefs,
           })
         > {
   $$CustomersTableTableManager(_$AppDatabase db, $CustomersTable table)
@@ -14104,6 +15013,7 @@ class $$CustomersTableTableManager
                 followPlansRefs = false,
                 ordersRefs = false,
                 customerTagsRefs = false,
+                opportunityChangesRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -14114,6 +15024,7 @@ class $$CustomersTableTableManager
                     if (followPlansRefs) db.followPlans,
                     if (ordersRefs) db.orders,
                     if (customerTagsRefs) db.customerTags,
+                    if (opportunityChangesRefs) db.opportunityChanges,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -14244,6 +15155,27 @@ class $$CustomersTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (opportunityChangesRefs)
+                        await $_getPrefetchedData<
+                          CustomerRow,
+                          $CustomersTable,
+                          OpportunityChangeRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$CustomersTableReferences
+                              ._opportunityChangesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$CustomersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).opportunityChangesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.customerId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -14271,6 +15203,7 @@ typedef $$CustomersTableProcessedTableManager =
         bool followPlansRefs,
         bool ordersRefs,
         bool customerTagsRefs,
+        bool opportunityChangesRefs,
       })
     >;
 typedef $$OpportunitiesTableCreateCompanionBuilder =
@@ -14506,6 +15439,56 @@ final class $$OpportunitiesTableReferences
     ).filter((f) => f.opportunityId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_tendersRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $OpportunityChangesTable,
+    List<OpportunityChangeRow>
+  >
+  _opportunityChangesRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.opportunityChanges,
+        aliasName: 'opportunities__id__opportunity_changes__opportunity_id',
+      );
+
+  $$OpportunityChangesTableProcessedTableManager get opportunityChangesRefs {
+    final manager = $$OpportunityChangesTableTableManager(
+      $_db,
+      $_db.opportunityChanges,
+    ).filter((f) => f.opportunityId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _opportunityChangesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $TaskReconciliationJobsTable,
+    List<TaskReconciliationJobRow>
+  >
+  _taskReconciliationJobsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.taskReconciliationJobs,
+        aliasName:
+            'opportunities__id__task_reconciliation_jobs__opportunity_id',
+      );
+
+  $$TaskReconciliationJobsTableProcessedTableManager
+  get taskReconciliationJobsRefs {
+    final manager = $$TaskReconciliationJobsTableTableManager(
+      $_db,
+      $_db.taskReconciliationJobs,
+    ).filter((f) => f.opportunityId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _taskReconciliationJobsRefsTable($_db),
+    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -14901,6 +15884,57 @@ class $$OpportunitiesTableFilterComposer
                 $removeJoinBuilderFromRootComposer,
           ),
     );
+    return f(composer);
+  }
+
+  Expression<bool> opportunityChangesRefs(
+    Expression<bool> Function($$OpportunityChangesTableFilterComposer f) f,
+  ) {
+    final $$OpportunityChangesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.opportunityChanges,
+      getReferencedColumn: (t) => t.opportunityId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunityChangesTableFilterComposer(
+            $db: $db,
+            $table: $db.opportunityChanges,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> taskReconciliationJobsRefs(
+    Expression<bool> Function($$TaskReconciliationJobsTableFilterComposer f) f,
+  ) {
+    final $$TaskReconciliationJobsTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.taskReconciliationJobs,
+          getReferencedColumn: (t) => t.opportunityId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$TaskReconciliationJobsTableFilterComposer(
+                $db: $db,
+                $table: $db.taskReconciliationJobs,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
     return f(composer);
   }
 }
@@ -15498,6 +16532,58 @@ class $$OpportunitiesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> opportunityChangesRefs<T extends Object>(
+    Expression<T> Function($$OpportunityChangesTableAnnotationComposer a) f,
+  ) {
+    final $$OpportunityChangesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.opportunityChanges,
+          getReferencedColumn: (t) => t.opportunityId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$OpportunityChangesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.opportunityChanges,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> taskReconciliationJobsRefs<T extends Object>(
+    Expression<T> Function($$TaskReconciliationJobsTableAnnotationComposer a) f,
+  ) {
+    final $$TaskReconciliationJobsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.taskReconciliationJobs,
+          getReferencedColumn: (t) => t.opportunityId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$TaskReconciliationJobsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.taskReconciliationJobs,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$OpportunitiesTableTableManager
@@ -15522,6 +16608,8 @@ class $$OpportunitiesTableTableManager
             bool samplesRefs,
             bool registrationsRefs,
             bool tendersRefs,
+            bool opportunityChangesRefs,
+            bool taskReconciliationJobsRefs,
           })
         > {
   $$OpportunitiesTableTableManager(_$AppDatabase db, $OpportunitiesTable table)
@@ -15713,6 +16801,8 @@ class $$OpportunitiesTableTableManager
                 samplesRefs = false,
                 registrationsRefs = false,
                 tendersRefs = false,
+                opportunityChangesRefs = false,
+                taskReconciliationJobsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -15724,6 +16814,8 @@ class $$OpportunitiesTableTableManager
                     if (samplesRefs) db.samples,
                     if (registrationsRefs) db.registrations,
                     if (tendersRefs) db.tenders,
+                    if (opportunityChangesRefs) db.opportunityChanges,
+                    if (taskReconciliationJobsRefs) db.taskReconciliationJobs,
                   ],
                   addJoins:
                       <
@@ -15908,6 +17000,48 @@ class $$OpportunitiesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (opportunityChangesRefs)
+                        await $_getPrefetchedData<
+                          OpportunityRow,
+                          $OpportunitiesTable,
+                          OpportunityChangeRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OpportunitiesTableReferences
+                              ._opportunityChangesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OpportunitiesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).opportunityChangesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.opportunityId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (taskReconciliationJobsRefs)
+                        await $_getPrefetchedData<
+                          OpportunityRow,
+                          $OpportunitiesTable,
+                          TaskReconciliationJobRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OpportunitiesTableReferences
+                              ._taskReconciliationJobsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OpportunitiesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).taskReconciliationJobsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.opportunityId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -15937,6 +17071,8 @@ typedef $$OpportunitiesTableProcessedTableManager =
         bool samplesRefs,
         bool registrationsRefs,
         bool tendersRefs,
+        bool opportunityChangesRefs,
+        bool taskReconciliationJobsRefs,
       })
     >;
 typedef $$ContactsTableCreateCompanionBuilder =
@@ -23015,6 +24151,778 @@ typedef $$AttachmentsTableProcessedTableManager =
         bool tenderId,
       })
     >;
+typedef $$OpportunityChangesTableCreateCompanionBuilder =
+    OpportunityChangesCompanion Function({
+      Value<int> id,
+      required int customerId,
+      required int opportunityId,
+      required String fieldKey,
+      Value<String?> oldValue,
+      Value<String?> newValue,
+      required int changedAt,
+    });
+typedef $$OpportunityChangesTableUpdateCompanionBuilder =
+    OpportunityChangesCompanion Function({
+      Value<int> id,
+      Value<int> customerId,
+      Value<int> opportunityId,
+      Value<String> fieldKey,
+      Value<String?> oldValue,
+      Value<String?> newValue,
+      Value<int> changedAt,
+    });
+
+final class $$OpportunityChangesTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $OpportunityChangesTable,
+          OpportunityChangeRow
+        > {
+  $$OpportunityChangesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $CustomersTable _customerIdTable(_$AppDatabase db) => db.customers
+      .createAlias('opportunity_changes__customer_id__customers__id');
+
+  $$CustomersTableProcessedTableManager get customerId {
+    final $_column = $_itemColumn<int>('customer_id')!;
+
+    final manager = $$CustomersTableTableManager(
+      $_db,
+      $_db.customers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_customerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $OpportunitiesTable _opportunityIdTable(_$AppDatabase db) => db
+      .opportunities
+      .createAlias('opportunity_changes__opportunity_id__opportunities__id');
+
+  $$OpportunitiesTableProcessedTableManager get opportunityId {
+    final $_column = $_itemColumn<int>('opportunity_id')!;
+
+    final manager = $$OpportunitiesTableTableManager(
+      $_db,
+      $_db.opportunities,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_opportunityIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$OpportunityChangesTableFilterComposer
+    extends Composer<_$AppDatabase, $OpportunityChangesTable> {
+  $$OpportunityChangesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fieldKey => $composableBuilder(
+    column: $table.fieldKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get oldValue => $composableBuilder(
+    column: $table.oldValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get newValue => $composableBuilder(
+    column: $table.newValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get changedAt => $composableBuilder(
+    column: $table.changedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$CustomersTableFilterComposer get customerId {
+    final $$CustomersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.customerId,
+      referencedTable: $db.customers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CustomersTableFilterComposer(
+            $db: $db,
+            $table: $db.customers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$OpportunitiesTableFilterComposer get opportunityId {
+    final $$OpportunitiesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableFilterComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$OpportunityChangesTableOrderingComposer
+    extends Composer<_$AppDatabase, $OpportunityChangesTable> {
+  $$OpportunityChangesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fieldKey => $composableBuilder(
+    column: $table.fieldKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get oldValue => $composableBuilder(
+    column: $table.oldValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get newValue => $composableBuilder(
+    column: $table.newValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get changedAt => $composableBuilder(
+    column: $table.changedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$CustomersTableOrderingComposer get customerId {
+    final $$CustomersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.customerId,
+      referencedTable: $db.customers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CustomersTableOrderingComposer(
+            $db: $db,
+            $table: $db.customers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$OpportunitiesTableOrderingComposer get opportunityId {
+    final $$OpportunitiesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableOrderingComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$OpportunityChangesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $OpportunityChangesTable> {
+  $$OpportunityChangesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get fieldKey =>
+      $composableBuilder(column: $table.fieldKey, builder: (column) => column);
+
+  GeneratedColumn<String> get oldValue =>
+      $composableBuilder(column: $table.oldValue, builder: (column) => column);
+
+  GeneratedColumn<String> get newValue =>
+      $composableBuilder(column: $table.newValue, builder: (column) => column);
+
+  GeneratedColumn<int> get changedAt =>
+      $composableBuilder(column: $table.changedAt, builder: (column) => column);
+
+  $$CustomersTableAnnotationComposer get customerId {
+    final $$CustomersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.customerId,
+      referencedTable: $db.customers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CustomersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.customers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$OpportunitiesTableAnnotationComposer get opportunityId {
+    final $$OpportunitiesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$OpportunityChangesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $OpportunityChangesTable,
+          OpportunityChangeRow,
+          $$OpportunityChangesTableFilterComposer,
+          $$OpportunityChangesTableOrderingComposer,
+          $$OpportunityChangesTableAnnotationComposer,
+          $$OpportunityChangesTableCreateCompanionBuilder,
+          $$OpportunityChangesTableUpdateCompanionBuilder,
+          (OpportunityChangeRow, $$OpportunityChangesTableReferences),
+          OpportunityChangeRow,
+          PrefetchHooks Function({bool customerId, bool opportunityId})
+        > {
+  $$OpportunityChangesTableTableManager(
+    _$AppDatabase db,
+    $OpportunityChangesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$OpportunityChangesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$OpportunityChangesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$OpportunityChangesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> customerId = const Value.absent(),
+                Value<int> opportunityId = const Value.absent(),
+                Value<String> fieldKey = const Value.absent(),
+                Value<String?> oldValue = const Value.absent(),
+                Value<String?> newValue = const Value.absent(),
+                Value<int> changedAt = const Value.absent(),
+              }) => OpportunityChangesCompanion(
+                id: id,
+                customerId: customerId,
+                opportunityId: opportunityId,
+                fieldKey: fieldKey,
+                oldValue: oldValue,
+                newValue: newValue,
+                changedAt: changedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int customerId,
+                required int opportunityId,
+                required String fieldKey,
+                Value<String?> oldValue = const Value.absent(),
+                Value<String?> newValue = const Value.absent(),
+                required int changedAt,
+              }) => OpportunityChangesCompanion.insert(
+                id: id,
+                customerId: customerId,
+                opportunityId: opportunityId,
+                fieldKey: fieldKey,
+                oldValue: oldValue,
+                newValue: newValue,
+                changedAt: changedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$OpportunityChangesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({customerId = false, opportunityId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (customerId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.customerId,
+                                referencedTable:
+                                    $$OpportunityChangesTableReferences
+                                        ._customerIdTable(db),
+                                referencedColumn:
+                                    $$OpportunityChangesTableReferences
+                                        ._customerIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+                    if (opportunityId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.opportunityId,
+                                referencedTable:
+                                    $$OpportunityChangesTableReferences
+                                        ._opportunityIdTable(db),
+                                referencedColumn:
+                                    $$OpportunityChangesTableReferences
+                                        ._opportunityIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$OpportunityChangesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $OpportunityChangesTable,
+      OpportunityChangeRow,
+      $$OpportunityChangesTableFilterComposer,
+      $$OpportunityChangesTableOrderingComposer,
+      $$OpportunityChangesTableAnnotationComposer,
+      $$OpportunityChangesTableCreateCompanionBuilder,
+      $$OpportunityChangesTableUpdateCompanionBuilder,
+      (OpportunityChangeRow, $$OpportunityChangesTableReferences),
+      OpportunityChangeRow,
+      PrefetchHooks Function({bool customerId, bool opportunityId})
+    >;
+typedef $$TaskReconciliationJobsTableCreateCompanionBuilder =
+    TaskReconciliationJobsCompanion Function({
+      Value<int> opportunityId,
+      Value<int> attemptCount,
+      Value<String?> lastError,
+      required int updatedAt,
+    });
+typedef $$TaskReconciliationJobsTableUpdateCompanionBuilder =
+    TaskReconciliationJobsCompanion Function({
+      Value<int> opportunityId,
+      Value<int> attemptCount,
+      Value<String?> lastError,
+      Value<int> updatedAt,
+    });
+
+final class $$TaskReconciliationJobsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $TaskReconciliationJobsTable,
+          TaskReconciliationJobRow
+        > {
+  $$TaskReconciliationJobsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $OpportunitiesTable _opportunityIdTable(_$AppDatabase db) =>
+      db.opportunities.createAlias(
+        'task_reconciliation_jobs__opportunity_id__opportunities__id',
+      );
+
+  $$OpportunitiesTableProcessedTableManager get opportunityId {
+    final $_column = $_itemColumn<int>('opportunity_id')!;
+
+    final manager = $$OpportunitiesTableTableManager(
+      $_db,
+      $_db.opportunities,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_opportunityIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$TaskReconciliationJobsTableFilterComposer
+    extends Composer<_$AppDatabase, $TaskReconciliationJobsTable> {
+  $$TaskReconciliationJobsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get attemptCount => $composableBuilder(
+    column: $table.attemptCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$OpportunitiesTableFilterComposer get opportunityId {
+    final $$OpportunitiesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableFilterComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TaskReconciliationJobsTableOrderingComposer
+    extends Composer<_$AppDatabase, $TaskReconciliationJobsTable> {
+  $$TaskReconciliationJobsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get attemptCount => $composableBuilder(
+    column: $table.attemptCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$OpportunitiesTableOrderingComposer get opportunityId {
+    final $$OpportunitiesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableOrderingComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TaskReconciliationJobsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TaskReconciliationJobsTable> {
+  $$TaskReconciliationJobsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get attemptCount => $composableBuilder(
+    column: $table.attemptCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$OpportunitiesTableAnnotationComposer get opportunityId {
+    final $$OpportunitiesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.opportunityId,
+      referencedTable: $db.opportunities,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OpportunitiesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.opportunities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TaskReconciliationJobsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TaskReconciliationJobsTable,
+          TaskReconciliationJobRow,
+          $$TaskReconciliationJobsTableFilterComposer,
+          $$TaskReconciliationJobsTableOrderingComposer,
+          $$TaskReconciliationJobsTableAnnotationComposer,
+          $$TaskReconciliationJobsTableCreateCompanionBuilder,
+          $$TaskReconciliationJobsTableUpdateCompanionBuilder,
+          (TaskReconciliationJobRow, $$TaskReconciliationJobsTableReferences),
+          TaskReconciliationJobRow,
+          PrefetchHooks Function({bool opportunityId})
+        > {
+  $$TaskReconciliationJobsTableTableManager(
+    _$AppDatabase db,
+    $TaskReconciliationJobsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TaskReconciliationJobsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$TaskReconciliationJobsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$TaskReconciliationJobsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> opportunityId = const Value.absent(),
+                Value<int> attemptCount = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+              }) => TaskReconciliationJobsCompanion(
+                opportunityId: opportunityId,
+                attemptCount: attemptCount,
+                lastError: lastError,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> opportunityId = const Value.absent(),
+                Value<int> attemptCount = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                required int updatedAt,
+              }) => TaskReconciliationJobsCompanion.insert(
+                opportunityId: opportunityId,
+                attemptCount: attemptCount,
+                lastError: lastError,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$TaskReconciliationJobsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({opportunityId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (opportunityId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.opportunityId,
+                                referencedTable:
+                                    $$TaskReconciliationJobsTableReferences
+                                        ._opportunityIdTable(db),
+                                referencedColumn:
+                                    $$TaskReconciliationJobsTableReferences
+                                        ._opportunityIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$TaskReconciliationJobsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TaskReconciliationJobsTable,
+      TaskReconciliationJobRow,
+      $$TaskReconciliationJobsTableFilterComposer,
+      $$TaskReconciliationJobsTableOrderingComposer,
+      $$TaskReconciliationJobsTableAnnotationComposer,
+      $$TaskReconciliationJobsTableCreateCompanionBuilder,
+      $$TaskReconciliationJobsTableUpdateCompanionBuilder,
+      (TaskReconciliationJobRow, $$TaskReconciliationJobsTableReferences),
+      TaskReconciliationJobRow,
+      PrefetchHooks Function({bool opportunityId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -23044,4 +24952,11 @@ class $AppDatabaseManager {
       $$TendersTableTableManager(_db, _db.tenders);
   $$AttachmentsTableTableManager get attachments =>
       $$AttachmentsTableTableManager(_db, _db.attachments);
+  $$OpportunityChangesTableTableManager get opportunityChanges =>
+      $$OpportunityChangesTableTableManager(_db, _db.opportunityChanges);
+  $$TaskReconciliationJobsTableTableManager get taskReconciliationJobs =>
+      $$TaskReconciliationJobsTableTableManager(
+        _db,
+        _db.taskReconciliationJobs,
+      );
 }

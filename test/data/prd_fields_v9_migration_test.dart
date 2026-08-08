@@ -64,7 +64,7 @@ void main() {
     addTearDown(db.close);
     await db.customSelect('SELECT 1').getSingle();
 
-    expect(db.schemaVersion, 10);
+    expect(db.schemaVersion, 11);
     expect((await db.customerDao.findById(1))!.owner, '本人');
     final contact = await db.contactDao.findById(1);
     expect(contact!.email, isNull);

@@ -438,6 +438,51 @@ void main() {
       everyElement(PlanStatus.cancelled.dbValue),
     );
   });
+
+  test('failed reconciliation is queued and a later retry clears it', () async {
+    final now = DateTime.utc(2026, 8, 5);
+    final customerId = await seedCustomer(db);
+    final opportunityId = await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '待修复项目',
+      now: now,
+    );
+    await db.registrationDao.insertRegistration(
+      opportunityId: opportunityId,
+      expectedCompletedAt: DateTime.utc(2026, 9, 20),
+      now: now,
+    );
+    final rules = _FailOnceRules(db, scheduler);
+
+    final first = await rules.reconcileOrQueue(opportunityId, now: now);
+    expect(first.queued, isTrue);
+    expect(await db.planDao.listTaskReconciliationJobs(), hasLength(1));
+    expect(await db.planDao.listOf(customerId), isEmpty);
+
+    final retry = await rules.retryPending(now: now);
+    expect(retry.recoveredOpportunityIds, [opportunityId]);
+    expect(retry.remainingCount, 0);
+    expect(await db.planDao.listTaskReconciliationJobs(), isEmpty);
+    expect(await db.planDao.listOf(customerId), hasLength(1));
+  });
+}
+
+class _FailOnceRules extends BusinessTaskRules {
+  _FailOnceRules(super.db, super.scheduler);
+
+  bool fail = true;
+
+  @override
+  Future<BusinessTaskSyncResult> reconcileForOpportunity(
+    int opportunityId, {
+    required DateTime now,
+  }) {
+    if (fail) {
+      fail = false;
+      throw StateError('temporary reconcile failure');
+    }
+    return super.reconcileForOpportunity(opportunityId, now: now);
+  }
 }
 
 class _Scheduler implements ReminderScheduler {

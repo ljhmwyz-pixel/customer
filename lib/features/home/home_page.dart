@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../data/daos/plan_dao.dart';
 import '../../models/enums.dart';
+import '../../services/service_providers.dart';
 import '../../theme/semantic_colors.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/empty_state.dart';
@@ -16,6 +17,11 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final plans = ref.watch(homePlansProvider);
+    final pendingSyncs = ref.watch(pendingTaskSyncCountProvider);
+    final pendingSyncCount = switch (pendingSyncs) {
+      AsyncData(:final value) => value,
+      _ => 0,
+    };
     return Scaffold(
       appBar: AppBar(title: const Text('今日')),
       body: plans.when(
@@ -26,6 +32,27 @@ class HomePage extends ConsumerWidget {
         data: (values) => _PlanList(
           values: values,
           onRefresh: () => ref.refresh(homePlansProvider.future),
+          pendingSyncCount: pendingSyncCount,
+          onRetrySync: () => _retryTaskSync(context, ref),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _retryTaskSync(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final rules = ref.read(businessTaskRulesProvider);
+    final report = await rules.retryPending(now: DateTime.now());
+    ref.read(customerRevisionProvider.notifier).refresh();
+    ref.invalidate(pendingTaskSyncCountProvider);
+    ref.invalidate(homePlansProvider);
+    if (!context.mounted) return;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          report.remainingCount == 0
+              ? '自动任务已同步'
+              : '仍有 ${report.remainingCount} 个项目待同步，请稍后重试',
         ),
       ),
     );
@@ -33,10 +60,17 @@ class HomePage extends ConsumerWidget {
 }
 
 class _PlanList extends StatelessWidget {
-  const _PlanList({required this.values, required this.onRefresh});
+  const _PlanList({
+    required this.values,
+    required this.onRefresh,
+    required this.pendingSyncCount,
+    required this.onRetrySync,
+  });
 
   final List<TodayPlanItem> values;
   final Future<void> Function() onRefresh;
+  final int pendingSyncCount;
+  final Future<void> Function() onRetrySync;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +84,21 @@ class _PlanList extends StatelessWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             const SliverToBoxAdapter(child: _QuickActions()),
+            if (pendingSyncCount > 0)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTokens.s16,
+                    AppTokens.s16,
+                    AppTokens.s16,
+                    0,
+                  ),
+                  child: _TaskSyncNotice(
+                    count: pendingSyncCount,
+                    onRetry: onRetrySync,
+                  ),
+                ),
+              ),
             SliverFillRemaining(
               hasScrollBody: false,
               child: EmptyState(
@@ -77,6 +126,10 @@ class _PlanList extends StatelessWidget {
         ),
         children: [
           const _QuickActions(),
+          if (pendingSyncCount > 0) ...[
+            const SizedBox(height: AppTokens.s16),
+            _TaskSyncNotice(count: pendingSyncCount, onRetry: onRetrySync),
+          ],
           const SizedBox(height: AppTokens.s16),
           Text(
             '逾期 ${overdue.length} · 今天 ${today.length}',
@@ -109,6 +162,49 @@ class _PlanList extends StatelessWidget {
       for (final item in items) _PlanTile(item: item, color: color),
     ],
   );
+}
+
+class _TaskSyncNotice extends StatelessWidget {
+  const _TaskSyncNotice({required this.count, required this.onRetry});
+
+  final int count;
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.errorContainer,
+      borderRadius: BorderRadius.circular(AppTokens.r8),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppTokens.s12,
+          AppTokens.s8,
+          AppTokens.s8,
+          AppTokens.s8,
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.sync_problem_outlined, color: scheme.onErrorContainer),
+            const SizedBox(width: AppTokens.s8),
+            Expanded(
+              child: Text(
+                '$count 个项目的自动任务待同步',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: scheme.onErrorContainer,
+                ),
+              ),
+            ),
+            TextButton(
+              key: const ValueKey('retry-task-sync'),
+              onPressed: onRetry,
+              child: const Text('重试'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _QuickActions extends StatelessWidget {

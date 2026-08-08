@@ -7,6 +7,8 @@ mixin _$PlanDaoMixin on DatabaseAccessor<AppDatabase> {
   $CustomersTable get customers => attachedDatabase.customers;
   $OpportunitiesTable get opportunities => attachedDatabase.opportunities;
   $FollowPlansTable get followPlans => attachedDatabase.followPlans;
+  $TaskReconciliationJobsTable get taskReconciliationJobs =>
+      attachedDatabase.taskReconciliationJobs;
   PlanDaoManager get managers => PlanDaoManager(this);
 }
 
@@ -19,4 +21,9 @@ class PlanDaoManager {
       $$OpportunitiesTableTableManager(_db.attachedDatabase, _db.opportunities);
   $$FollowPlansTableTableManager get followPlans =>
       $$FollowPlansTableTableManager(_db.attachedDatabase, _db.followPlans);
+  $$TaskReconciliationJobsTableTableManager get taskReconciliationJobs =>
+      $$TaskReconciliationJobsTableTableManager(
+        _db.attachedDatabase,
+        _db.taskReconciliationJobs,
+      );
 }
