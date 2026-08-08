@@ -23,7 +23,17 @@ class HomePage extends ConsumerWidget {
       _ => 0,
     };
     return Scaffold(
-      appBar: AppBar(title: const Text('今日')),
+      appBar: AppBar(
+        title: const Text('今日'),
+        actions: [
+          IconButton(
+            key: const ValueKey('open-global-search'),
+            tooltip: '全局搜索',
+            onPressed: () => context.push('/search'),
+            icon: const Icon(Icons.search),
+          ),
+        ],
+      ),
       body: plans.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => CustomerAsyncError(
@@ -315,6 +325,27 @@ class _PlanTileState extends ConsumerState<_PlanTile> {
     }
   }
 
+  Future<void> _postpone() async {
+    if (busy) return;
+    setState(() => busy = true);
+    try {
+      warning = await ref
+          .read(customerServiceProvider)
+          .postponePlan(widget.item.customer.id, widget.item.plan.id);
+      ref.read(customerRevisionProvider.notifier).refresh();
+      ref.invalidate(homePlansProvider);
+      ref.invalidate(customerDetailProvider(widget.item.customer.id));
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$error')));
+      }
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
@@ -420,8 +451,18 @@ class _PlanTileState extends ConsumerState<_PlanTile> {
                             PopupMenuButton<String>(
                               key: ValueKey('home-plan-menu-${item.plan.id}'),
                               tooltip: '更多操作',
-                              onSelected: (_) => _cancel(),
+                              onSelected: (action) {
+                                if (action == 'postpone') {
+                                  _postpone();
+                                } else {
+                                  _cancel();
+                                }
+                              },
                               itemBuilder: (_) => const [
+                                PopupMenuItem(
+                                  value: 'postpone',
+                                  child: Text('延期一天'),
+                                ),
                                 PopupMenuItem(
                                   value: 'cancel',
                                   child: Text('取消任务'),

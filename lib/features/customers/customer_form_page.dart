@@ -212,6 +212,14 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
     );
     try {
       final service = ref.read(customerServiceProvider);
+      final duplicates = await service.findPotentialCustomerDuplicates(
+        draft,
+        excludeCustomerId: widget.customerId,
+      );
+      if (duplicates.isNotEmpty) {
+        final continueSaving = await _confirmDuplicateCustomers(duplicates);
+        if (!continueSaving || !mounted) return;
+      }
       if (_isEditing) {
         await service.updateCustomer(widget.customerId!, draft);
         ref.read(customerRevisionProvider.notifier).refresh();
@@ -236,6 +244,49 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  Future<bool> _confirmDuplicateCustomers(
+    List<CustomerDuplicateCandidate> duplicates,
+  ) async {
+    final shown = duplicates.take(3).toList(growable: false);
+    final hasPhoneMatch = duplicates.any((item) => item.hasPhoneMatch);
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(hasPhoneMatch ? '发现相同电话客户' : '发现可能重复的客户'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(hasPhoneMatch ? '请确认是否仍要保存：' : '名称或公司与现有客户相同：'),
+                const SizedBox(height: AppTokens.s12),
+                for (final duplicate in shown)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppTokens.s8),
+                    child: Text(
+                      '• ${duplicate.customer.name}'
+                      '${duplicate.customer.company == null ? '' : ' · ${duplicate.customer.company}'}',
+                    ),
+                  ),
+                if (duplicates.length > shown.length)
+                  Text('另有 ${duplicates.length - shown.length} 条匹配记录'),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('返回检查'),
+              ),
+              FilledButton(
+                key: const ValueKey('confirm-duplicate-customer'),
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('仍然保存'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   Future<void> _showCreatedActions(int customerId) async {

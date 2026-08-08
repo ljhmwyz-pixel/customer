@@ -24,6 +24,7 @@ import 'features/opportunities/opportunity_form_page.dart';
 import 'features/reminders/permission_page.dart';
 import 'features/reminders/reminder_log_page.dart';
 import 'features/reminders/reminder_test_page.dart';
+import 'features/search/global_search_page.dart';
 import 'features/settings/settings_page.dart';
 import 'features/settings/sample_data_page.dart';
 import 'features/settings/excel_export_page.dart';
@@ -47,6 +48,10 @@ String customerDetailLocation(int customerId) => '/customers/$customerId';
 final router = GoRouter(
   initialLocation: '/',
   routes: [
+    GoRoute(
+      path: '/search',
+      builder: (context, state) => const GlobalSearchPage(),
+    ),
     GoRoute(
       path: '/attachments/preview/:id',
       builder: (context, state) {
@@ -146,6 +151,24 @@ final router = GoRouter(
                           return const _RouteErrorPage(message: '客户编号无效');
                         }
                         return PlanFormPage(customerId: customerId);
+                      },
+                    ),
+                    GoRoute(
+                      path: 'plans/:planId/edit',
+                      builder: (context, state) {
+                        final customerId = int.tryParse(
+                          state.pathParameters['id'] ?? '',
+                        );
+                        final planId = int.tryParse(
+                          state.pathParameters['planId'] ?? '',
+                        );
+                        if (customerId == null || planId == null) {
+                          return const _RouteErrorPage(message: '计划编号无效');
+                        }
+                        return PlanFormPage(
+                          customerId: customerId,
+                          planId: planId,
+                        );
                       },
                     ),
                     GoRoute(

@@ -1,5 +1,6 @@
 import 'package:customer/data/database.dart';
 import 'package:customer/data/daos/attachment_dao.dart';
+import 'package:customer/data/daos/customer_dao.dart';
 import 'package:customer/features/customers/customer_providers.dart';
 import 'package:customer/features/opportunities/supplier_substitution.dart';
 import 'package:customer/models/enums.dart';
@@ -162,6 +163,87 @@ void main() {
         '重点',
         '复购',
       });
+    });
+
+    test('重复客户预警区分电话与名称公司并可排除当前客户', () async {
+      final firstId = await service.createCustomer(
+        const CustomerDraft(
+          name: ' 星河科技 ',
+          company: '星河集团',
+          phone: '138 0000 0000',
+        ),
+      );
+
+      final duplicates = await service.findPotentialCustomerDuplicates(
+        const CustomerDraft(
+          name: '星河 科技',
+          company: ' 星河集团 ',
+          phone: '138-0000-0000',
+        ),
+      );
+      expect(duplicates, hasLength(1));
+      expect(duplicates.single.customer.id, firstId);
+      expect(duplicates.single.matches, {
+        CustomerDuplicateMatch.phone,
+        CustomerDuplicateMatch.name,
+        CustomerDuplicateMatch.company,
+      });
+
+      expect(
+        await service.findPotentialCustomerDuplicates(
+          const CustomerDraft(name: '星河科技', phone: '13800000000'),
+          excludeCustomerId: firstId,
+        ),
+        isEmpty,
+      );
+    });
+
+    test('全局搜索覆盖联系人项目订单与跟进记录', () async {
+      final customerId = await seedCustomer(db, name: '远航工业');
+      final contactId = await db.contactDao.insertContact(
+        customerId: customerId,
+        name: '林采购',
+        email: 'lin@example.com',
+      );
+      final opportunityId = await _seedOpportunity(
+        db,
+        customerId,
+        name: '海水泵升级',
+      );
+      await db.orderDao.insertOrder(
+        customerId: customerId,
+        opportunityId: opportunityId,
+        orderNo: 'SO-SEARCH-001',
+        orderedAt: DateTime.utc(2026, 8, 8),
+        amountCents: 10000,
+        description: '耐腐蚀叶轮',
+      );
+      await db.followupDao.insertAndTouchCustomer(
+        customerId: customerId,
+        opportunityId: opportunityId,
+        contactId: contactId,
+        contactNameSnapshot: '林采购',
+        occurredAt: DateTime.utc(2026, 8, 8),
+        method: FollowMethod.phone,
+        content: '确认船期安排',
+      );
+
+      expect(
+        (await db.customerDao.globalSearch('lin@example.com')).single.type,
+        GlobalSearchResultType.contact,
+      );
+      expect(
+        (await db.customerDao.globalSearch('海水泵')).single.type,
+        GlobalSearchResultType.opportunity,
+      );
+      expect(
+        (await db.customerDao.globalSearch('耐腐蚀')).single.type,
+        GlobalSearchResultType.order,
+      );
+      expect(
+        (await db.customerDao.globalSearch('船期')).single.type,
+        GlobalSearchResultType.followup,
+      );
     });
   });
 
@@ -657,6 +739,102 @@ void main() {
       expect(plan?.nextAction, '电话确认');
       expect(plan?.title, '电话确认');
       expect(TaskSourceType.fromDb(plan!.sourceType), TaskSourceType.manual);
+    });
+
+    test('手工任务可完整编辑和延期并重排提醒', () async {
+      final customerId = await seedCustomer(db, name: '任务客户');
+      final firstOpportunityId = await _seedOpportunity(
+        db,
+        customerId,
+        name: '项目 A',
+      );
+      final secondOpportunityId = await _seedOpportunity(
+        db,
+        customerId,
+        name: '项目 B',
+      );
+      final created = await service.createPlan(
+        customerId,
+        PlanDraft(
+          opportunityId: firstOpportunityId,
+          reason: '首次联系',
+          talkingDirection: '确认需求',
+          nextAction: '电话联系',
+          planAt: DateTime.utc(2026, 8, 8, 10),
+        ),
+      );
+
+      final warning = await service.updatePlan(
+        customerId,
+        created.value,
+        PlanDraft(
+          opportunityId: secondOpportunityId,
+          reason: '方案回访',
+          talkingDirection: '确认技术意见',
+          nextAction: '发送修订方案',
+          owner: '销售 A',
+          planAt: DateTime.utc(2026, 8, 10, 9),
+        ),
+      );
+      expect(warning, isNull);
+      var plan = await db.planDao.findById(created.value);
+      expect(plan?.opportunityId, secondOpportunityId);
+      expect(plan?.reason, '方案回访');
+      expect(plan?.nextAction, '发送修订方案');
+      expect(plan?.owner, '销售 A');
+      expect(scheduler.cancelledPlanIds, [created.value]);
+
+      await service.postponePlan(customerId, created.value);
+      plan = await db.planDao.findById(created.value);
+      expect(
+        DateTime.fromMillisecondsSinceEpoch(plan!.planAt, isUtc: true),
+        DateTime.utc(2026, 8, 11, 9),
+      );
+      expect(scheduler.cancelledPlanIds, [created.value, created.value]);
+      expect(scheduler.scheduleAttempts, [
+        created.value,
+        created.value,
+        created.value,
+      ]);
+    });
+
+    test('自动任务不允许编辑内容', () async {
+      final customerId = await seedCustomer(db);
+      final opportunityId = await _seedOpportunity(
+        db,
+        customerId,
+        name: '项目 A',
+      );
+      final planId = await db.planDao.insertPlan(
+        customerId: customerId,
+        opportunityId: opportunityId,
+        sourceType: TaskSourceType.quote,
+        sourceId: 1,
+        ruleKey: 'quote_followup',
+        title: '自动任务',
+        planAt: DateTime.utc(2026, 8, 8),
+      );
+
+      expect(
+        () => service.updatePlan(
+          customerId,
+          planId,
+          PlanDraft(
+            opportunityId: opportunityId,
+            reason: '修改',
+            talkingDirection: '修改',
+            nextAction: '修改',
+            planAt: DateTime.utc(2026, 8, 9),
+          ),
+        ),
+        throwsA(
+          isA<CustomerValidationException>().having(
+            (error) => error.message,
+            'message',
+            contains('手工创建'),
+          ),
+        ),
+      );
     });
 
     test('取消计划先持久化，提醒清理失败时返回警告', () async {

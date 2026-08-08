@@ -87,7 +87,17 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
     final tags = ref.watch(allCustomerTagsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('客户')),
+      appBar: AppBar(
+        title: const Text('客户'),
+        actions: [
+          IconButton(
+            key: const ValueKey('open-global-search'),
+            tooltip: '全局搜索',
+            onPressed: () => context.push('/search'),
+            icon: const Icon(Icons.manage_search_outlined),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         key: const ValueKey('add-customer'),
         onPressed: () => context.push('/customers/new'),

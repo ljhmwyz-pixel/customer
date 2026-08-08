@@ -118,14 +118,20 @@ class CustomerRowTile extends StatelessWidget {
     final semantic = AppSemanticColors.of(context);
     final company = item.customer.company?.trim();
     final planAt = item.nextPlanAt;
-    final supporting = planAt == null
+    final planLabel = planAt == null
         ? company == null || company.isEmpty
               ? '暂无跟进计划'
               : company
         : planTimingLabel(planAt, now: current);
+    final owner = item.customer.owner.trim().isEmpty
+        ? '未指定负责人'
+        : item.customer.owner.trim();
+    final taskLabel = item.openPlanCount == 0
+        ? '无开放任务'
+        : '${item.openPlanCount} 项开放任务';
 
     return SizedBox(
-      height: AppTokens.minTouchTarget + AppTokens.s32,
+      height: AppTokens.minTouchTarget + AppTokens.s32 + AppTokens.s16,
       child: Material(
         color: scheme.surface,
         child: InkWell(
@@ -166,7 +172,7 @@ class CustomerRowTile extends StatelessWidget {
                             ),
                             const SizedBox(height: AppTokens.s4),
                             Text(
-                              supporting,
+                              planLabel,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.bodySmall
@@ -174,6 +180,17 @@ class CustomerRowTile extends StatelessWidget {
                                     color: overdue
                                         ? semantic.overdue
                                         : scheme.onSurfaceVariant,
+                                    fontSize: AppTokens.f12,
+                                  ),
+                            ),
+                            const SizedBox(height: AppTokens.s4),
+                            Text(
+                              '$owner · $taskLabel',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: scheme.onSurfaceVariant,
                                     fontSize: AppTokens.f12,
                                   ),
                             ),

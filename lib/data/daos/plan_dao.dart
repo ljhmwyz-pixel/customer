@@ -436,6 +436,39 @@ class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
         );
   }
 
+  Future<int> updateManualPlan(
+    int id, {
+    required int opportunityId,
+    required String reason,
+    required String talkingDirection,
+    required String nextAction,
+    required String owner,
+    required DateTime planAt,
+    DateTime? now,
+  }) {
+    final ts = (now ?? DateTime.now()).toUtc().millisecondsSinceEpoch;
+    return (update(followPlans)..where(
+          (t) =>
+              t.id.equals(id) &
+              t.sourceType.equals(TaskSourceType.manual.dbValue) &
+              t.status.isIn(_openStatusValues),
+        ))
+        .write(
+          FollowPlansCompanion(
+            opportunityId: Value(opportunityId),
+            title: Value(nextAction),
+            reason: Value(reason),
+            talkingDirection: Value(talkingDirection),
+            nextAction: Value(nextAction),
+            owner: Value(owner),
+            planAt: Value(planAt.toUtc().millisecondsSinceEpoch),
+            status: Value(PlanStatus.pending.dbValue),
+            notifiedAt: const Value(null),
+            updatedAt: Value(ts),
+          ),
+        );
+  }
+
   Future<int> updatePlan(
     int id, {
     String? title,

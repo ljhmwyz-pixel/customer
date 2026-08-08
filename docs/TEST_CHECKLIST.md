@@ -12,6 +12,23 @@
 - [ ] OnePlus 13 / ColorOS 15 completes the full seven-day reminder and provider checklist.
 - [ ] Final APK certificate digest and SHA-256 are recorded in release notes.
 
+## Search, Task Closure, and Duplicate Warning
+
+### Automated gate
+
+- [x] Global search covers customers, contacts, opportunities, orders, and follow-up snapshots without a schema migration.
+- [x] Search results retain their business type and navigate to the owning customer.
+- [x] Manual tasks support full-field editing and one-day postponement with reminder rescheduling.
+- [x] Automatic task content remains protected from direct editing; completion and cancellation retain history.
+- [x] Customer duplicate detection normalizes phone formatting and name/company whitespace, and excludes the current customer during editing.
+
+### OnePlus 13 / ColorOS 15
+
+- [ ] Search Chinese names, phone numbers, order numbers, products, and follow-up text; open each result.
+- [ ] Edit and postpone a manual task, then verify the updated reminder survives process exit and device restart.
+- [ ] Confirm an exact-phone duplicate warning and deliberately save a legitimate same-name customer.
+- [ ] Verify customer rows remain readable with long names and owners at the target font/display scale.
+
 ## Attachments
 
 ### Automated gate

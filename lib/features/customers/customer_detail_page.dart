@@ -313,6 +313,8 @@ class CustomerDetailPage extends ConsumerWidget {
                         plan: plan,
                         highlighted:
                             hasHighlightedPlan && plan.id == highlightedPlanId,
+                        onAction: (action) =>
+                            _handlePlanAction(context, ref, id, plan, action),
                       ),
                     ),
                   const SizedBox(height: AppTokens.s24),
@@ -605,6 +607,45 @@ class CustomerDetailPage extends ConsumerWidget {
       if (context.mounted) context.go('/customers');
     } catch (_) {
       if (context.mounted) _showMessage(context, '删除失败，请重试');
+    }
+  }
+
+  Future<void> _handlePlanAction(
+    BuildContext context,
+    WidgetRef ref,
+    int customerId,
+    FollowPlanRow plan,
+    _PlanAction action,
+  ) async {
+    if (action == _PlanAction.edit) {
+      await context.push('/customers/$customerId/plans/${plan.id}/edit');
+      return;
+    }
+    if (action == _PlanAction.cancel) {
+      final confirmed = await _confirm(
+        context,
+        title: '取消任务',
+        message: '任务会保留在历史记录中。',
+        confirmLabel: '确认取消',
+      );
+      if (!confirmed || !context.mounted) return;
+    }
+    try {
+      final service = ref.read(customerServiceProvider);
+      final warning = switch (action) {
+        _PlanAction.complete => await service.completePlan(customerId, plan.id),
+        _PlanAction.postpone => await service.postponePlan(customerId, plan.id),
+        _PlanAction.cancel => await service.cancelPlan(customerId, plan.id),
+        _PlanAction.edit => null,
+      };
+      ref.read(customerRevisionProvider.notifier).refresh();
+      ref.invalidate(homePlansProvider);
+      ref.invalidate(customerDetailProvider(customerId));
+      if (warning != null && context.mounted) _showMessage(context, warning);
+    } on CustomerValidationException catch (error) {
+      if (context.mounted) _showMessage(context, error.message);
+    } catch (_) {
+      if (context.mounted) _showMessage(context, '任务更新失败，请重试');
     }
   }
 
@@ -1503,10 +1544,15 @@ class _OrderTile extends StatelessWidget {
 }
 
 class _PlanTile extends StatelessWidget {
-  const _PlanTile({required this.plan, required this.highlighted});
+  const _PlanTile({
+    required this.plan,
+    required this.highlighted,
+    required this.onAction,
+  });
 
   final FollowPlanRow plan;
   final bool highlighted;
+  final ValueChanged<_PlanAction> onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -1567,11 +1613,39 @@ class _PlanTile extends StatelessWidget {
               ],
             ),
           ),
+          if (status.isOpen)
+            PopupMenuButton<_PlanAction>(
+              key: ValueKey('plan-actions-${plan.id}'),
+              tooltip: '任务操作',
+              onSelected: onAction,
+              itemBuilder: (context) => [
+                if (TaskSourceType.fromDb(plan.sourceType) ==
+                    TaskSourceType.manual)
+                  const PopupMenuItem(
+                    value: _PlanAction.edit,
+                    child: Text('编辑'),
+                  ),
+                const PopupMenuItem(
+                  value: _PlanAction.postpone,
+                  child: Text('延期一天'),
+                ),
+                const PopupMenuItem(
+                  value: _PlanAction.complete,
+                  child: Text('标记完成'),
+                ),
+                const PopupMenuItem(
+                  value: _PlanAction.cancel,
+                  child: Text('取消任务'),
+                ),
+              ],
+            ),
         ],
       ),
     );
   }
 }
+
+enum _PlanAction { edit, postpone, complete, cancel }
 
 class _OpportunityChangeTile extends StatelessWidget {
   const _OpportunityChangeTile({

@@ -42,6 +42,28 @@ class CustomerListItem {
   }
 }
 
+enum GlobalSearchResultType { customer, contact, opportunity, order, followup }
+
+class GlobalSearchResult {
+  const GlobalSearchResult({
+    required this.type,
+    required this.recordId,
+    required this.customerId,
+    required this.customerName,
+    required this.title,
+    required this.subtitle,
+    required this.updatedAt,
+  });
+
+  final GlobalSearchResultType type;
+  final int recordId;
+  final int customerId;
+  final String customerName;
+  final String title;
+  final String subtitle;
+  final DateTime updatedAt;
+}
+
 /// 客户列表筛选器中从现有业务数据提取的动态选项。
 class CustomerFilterOptions {
   const CustomerFilterOptions({
@@ -254,6 +276,109 @@ class CustomerDao extends DatabaseAccessor<AppDatabase>
     final q = selectOnly(customers)..addColumns([customers.id.count()]);
     final row = await q.getSingle();
     return row.read(customers.id.count()) ?? 0;
+  }
+
+  Future<List<GlobalSearchResult>> globalSearch(
+    String keyword, {
+    int limit = 80,
+  }) async {
+    final value = keyword.trim();
+    if (value.isEmpty) return const [];
+    final escaped = value
+        .replaceAll(r'\', r'\\')
+        .replaceAll('%', r'\%')
+        .replaceAll('_', r'\_');
+    final pattern = '%$escaped%';
+    final variables = List<Variable<String>>.generate(
+      22,
+      (_) => Variable.withString(pattern),
+    );
+    final rows = await customSelect(
+      '''
+      SELECT * FROM (
+        SELECT 'customer' AS result_type, c.id AS record_id,
+               c.id AS customer_id, c.name AS customer_name,
+               c.name AS title,
+               COALESCE(NULLIF(c.company, ''), NULLIF(c.phone, ''),
+                        NULLIF(c.customer_no, ''), '客户资料') AS subtitle,
+               c.updated_at AS updated_at
+          FROM customers c
+         WHERE c.name LIKE ? ESCAPE '\\'
+            OR c.company LIKE ? ESCAPE '\\'
+            OR c.phone LIKE ? ESCAPE '\\'
+            OR c.customer_no LIKE ? ESCAPE '\\'
+        UNION ALL
+        SELECT 'contact', contact.id, c.id, c.name, contact.name,
+               COALESCE(NULLIF(contact.position, ''), NULLIF(contact.phone, ''),
+                        NULLIF(contact.email, ''), '联系人'), contact.updated_at
+          FROM contacts contact
+          JOIN customers c ON c.id = contact.customer_id
+         WHERE contact.name LIKE ? ESCAPE '\\'
+            OR contact.phone LIKE ? ESCAPE '\\'
+            OR contact.email LIKE ? ESCAPE '\\'
+            OR contact.whatsapp LIKE ? ESCAPE '\\'
+        UNION ALL
+        SELECT 'opportunity', o.id, c.id, c.name, o.name,
+               COALESCE(NULLIF(o.product_model, ''),
+                        NULLIF(o.product_category, ''),
+                        NULLIF(o.next_action, ''), '项目') AS subtitle,
+               o.updated_at
+          FROM opportunities o
+          JOIN customers c ON c.id = o.customer_id
+         WHERE o.name LIKE ? ESCAPE '\\'
+            OR o.product_category LIKE ? ESCAPE '\\'
+            OR o.product_model LIKE ? ESCAPE '\\'
+            OR o.equipment_brand LIKE ? ESCAPE '\\'
+            OR o.equipment_model LIKE ? ESCAPE '\\'
+            OR o.next_action LIKE ? ESCAPE '\\'
+        UNION ALL
+        SELECT 'order', orders.id, c.id, c.name, orders.order_no,
+               COALESCE(NULLIF(orders.description, ''),
+                        NULLIF(orders.pi_po_no, ''), '订单') AS subtitle,
+               orders.updated_at
+          FROM orders
+          JOIN customers c ON c.id = orders.customer_id
+         WHERE orders.order_no LIKE ? ESCAPE '\\'
+            OR orders.pi_po_no LIKE ? ESCAPE '\\'
+            OR orders.description LIKE ? ESCAPE '\\'
+        UNION ALL
+        SELECT 'followup', f.id, c.id, c.name,
+               CASE WHEN TRIM(f.content) = '' THEN '跟进记录'
+                    ELSE f.content END,
+               COALESCE(NULLIF(f.feedback, ''),
+                        NULLIF(f.contact_name_snapshot, ''), '跟进记录'),
+               f.occurred_at
+          FROM followups f
+          JOIN customers c ON c.id = f.customer_id
+         WHERE f.content LIKE ? ESCAPE '\\'
+            OR f.feedback LIKE ? ESCAPE '\\'
+            OR f.conclusion LIKE ? ESCAPE '\\'
+            OR f.contact_name_snapshot LIKE ? ESCAPE '\\'
+            OR f.next_action LIKE ? ESCAPE '\\'
+      ) results
+      ORDER BY updated_at DESC, record_id DESC
+      LIMIT ?
+      ''',
+      variables: [...variables, Variable.withInt(limit)],
+      readsFrom: {customers, contacts, opportunities, orders, followups},
+    ).get();
+    return rows
+        .map((row) {
+          final typeName = row.read<String>('result_type');
+          return GlobalSearchResult(
+            type: GlobalSearchResultType.values.byName(typeName),
+            recordId: row.read<int>('record_id'),
+            customerId: row.read<int>('customer_id'),
+            customerName: row.read<String>('customer_name'),
+            title: row.read<String>('title'),
+            subtitle: row.read<String>('subtitle'),
+            updatedAt: DateTime.fromMillisecondsSinceEpoch(
+              row.read<int>('updated_at'),
+              isUtc: true,
+            ),
+          );
+        })
+        .toList(growable: false);
   }
 
   /// 更新客户。只改传入的字段，未传的保持原值。

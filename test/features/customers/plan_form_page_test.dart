@@ -2,6 +2,7 @@ import 'package:customer/app.dart';
 import 'package:customer/data/database.dart';
 import 'package:customer/data/database_provider.dart';
 import 'package:customer/features/customers/plan_form_page.dart';
+import 'package:customer/models/enums.dart';
 import 'package:customer/router.dart';
 import 'package:customer/services/reminder_scheduler.dart';
 import 'package:customer/services/service_providers.dart';
@@ -83,6 +84,47 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('save-plan')));
     await tester.pumpAndSettle();
     expect(find.text('跟进原因不能为空'), findsOneWidget);
+  });
+
+  testWidgets('manual task edit form loads saved task fields', (tester) async {
+    final db = await openTestDb();
+    addTearDown(db.close);
+    final customerId = await seedCustomer(db, name: '编辑任务客户');
+    final opportunityId = await db.opportunityDao.insertOpportunity(
+      customerId: customerId,
+      name: '编辑任务项目',
+    );
+    final planId = await db.planDao.insertPlan(
+      customerId: customerId,
+      opportunityId: opportunityId,
+      sourceType: TaskSourceType.manual,
+      reason: '回访原因',
+      talkingDirection: '确认意见',
+      nextAction: '发送方案',
+      owner: '销售 A',
+      planAt: DateTime.utc(2026, 8, 10, 9),
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          databaseProvider.overrideWithValue(db),
+          reminderSchedulerProvider.overrideWithValue(_Scheduler()),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: PlanFormPage(customerId: customerId, planId: planId),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('编辑任务'), findsOneWidget);
+    expect(find.text('回访原因'), findsOneWidget);
+    expect(find.text('确认意见'), findsOneWidget);
+    expect(find.text('发送方案'), findsOneWidget);
+    expect(find.text('销售 A'), findsOneWidget);
+    expect(find.text('保存修改'), findsOneWidget);
   });
 }
 

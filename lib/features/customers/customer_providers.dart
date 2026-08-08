@@ -57,6 +57,20 @@ class CustomerDraft {
   final List<String> tagNames;
 }
 
+enum CustomerDuplicateMatch { phone, name, company }
+
+class CustomerDuplicateCandidate {
+  const CustomerDuplicateCandidate({
+    required this.customer,
+    required this.matches,
+  });
+
+  final CustomerRow customer;
+  final Set<CustomerDuplicateMatch> matches;
+
+  bool get hasPhoneMatch => matches.contains(CustomerDuplicateMatch.phone);
+}
+
 class ContactDraft {
   const ContactDraft({
     required this.name,
@@ -362,6 +376,45 @@ class CustomerService {
   final ReminderScheduler _scheduler;
   final AttachmentGraphCleaner _attachmentCleaner;
 
+  Future<List<CustomerDuplicateCandidate>> findPotentialCustomerDuplicates(
+    CustomerDraft draft, {
+    int? excludeCustomerId,
+  }) async {
+    final normalized = _normalizeCustomer(draft);
+    final name = _identityText(normalized.name);
+    final company = _identityText(normalized.company);
+    final phone = _phoneIdentity(normalized.phone);
+    final customers = await _db.customerDao.allCustomers();
+    final matches = <CustomerDuplicateCandidate>[];
+    for (final customer in customers) {
+      if (customer.id == excludeCustomerId) continue;
+      final kinds = <CustomerDuplicateMatch>{};
+      if (phone != null && phone == _phoneIdentity(customer.phone)) {
+        kinds.add(CustomerDuplicateMatch.phone);
+      }
+      if (name != null && name == _identityText(customer.name)) {
+        kinds.add(CustomerDuplicateMatch.name);
+      }
+      if (company != null && company == _identityText(customer.company)) {
+        kinds.add(CustomerDuplicateMatch.company);
+      }
+      if (kinds.isNotEmpty) {
+        matches.add(
+          CustomerDuplicateCandidate(customer: customer, matches: kinds),
+        );
+      }
+    }
+    matches.sort((left, right) {
+      final phoneOrder = (right.hasPhoneMatch ? 1 : 0).compareTo(
+        left.hasPhoneMatch ? 1 : 0,
+      );
+      return phoneOrder != 0
+          ? phoneOrder
+          : right.customer.updatedAt.compareTo(left.customer.updatedAt);
+    });
+    return matches;
+  }
+
   Future<int> createCustomer(CustomerDraft draft) async {
     final normalized = _normalizeCustomer(draft);
     return _db.transaction(() async {
@@ -503,6 +556,69 @@ class CustomerService {
     );
     final warning = await _schedule(planId, customer.name);
     return WriteResult(planId, warning: warning);
+  }
+
+  Future<String?> updatePlan(
+    int customerId,
+    int planId,
+    PlanDraft draft,
+  ) async {
+    final customer = await _requireCustomer(customerId);
+    final plan = await _db.planDao.findById(planId);
+    if (plan == null || plan.customerId != customerId) {
+      throw const CustomerValidationException('计划不存在或不属于当前客户');
+    }
+    if (TaskSourceType.fromDb(plan.sourceType) != TaskSourceType.manual) {
+      throw const CustomerValidationException('只有手工创建的任务可以编辑');
+    }
+    if (!PlanStatus.fromDb(plan.status).isOpen) {
+      throw const CustomerValidationException('只有开放中的计划可以编辑');
+    }
+    final opportunity = await _db.opportunityDao.findById(draft.opportunityId);
+    if (opportunity == null || opportunity.customerId != customerId) {
+      throw const CustomerValidationException('项目不存在或不属于当前客户');
+    }
+    final normalized = _normalizePlan(draft);
+    final affected = await _db.planDao.updateManualPlan(
+      planId,
+      opportunityId: normalized.opportunityId,
+      reason: normalized.reason,
+      talkingDirection: normalized.talkingDirection,
+      nextAction: normalized.nextAction,
+      owner: normalized.owner,
+      planAt: normalized.planAt,
+    );
+    if (affected == 0) {
+      throw const CustomerValidationException('计划状态已变化，请刷新后重试');
+    }
+    try {
+      await _scheduler.cancelForPlan(planId);
+      return await _schedule(planId, customer.name);
+    } catch (_) {
+      return '计划已保存，但提醒重排失败；下次启动会自动重建提醒';
+    }
+  }
+
+  Future<String?> postponePlan(
+    int customerId,
+    int planId, {
+    Duration by = const Duration(days: 1),
+  }) async {
+    final customer = await _requireCustomer(customerId);
+    final plan = await _db.planDao.findById(planId);
+    if (plan == null || plan.customerId != customerId) {
+      throw const CustomerValidationException('计划不存在或不属于当前客户');
+    }
+    final affected = await _db.planDao.postpone(planId, by: by);
+    if (affected == 0) {
+      throw const CustomerValidationException('只有开放中的计划可以延期');
+    }
+    try {
+      await _scheduler.cancelForPlan(planId);
+      return await _schedule(planId, customer.name);
+    } catch (_) {
+      return '计划已延期，但提醒重排失败；下次启动会自动重建提醒';
+    }
   }
 
   Future<WriteResult<int>> addFollowup(
@@ -767,6 +883,16 @@ class CustomerService {
 
   String? _optional(String? raw) {
     final value = raw?.trim();
+    return value == null || value.isEmpty ? null : value;
+  }
+
+  String? _identityText(String? raw) {
+    final value = raw?.trim().toLowerCase().replaceAll(RegExp(r'\s+'), '');
+    return value == null || value.isEmpty ? null : value;
+  }
+
+  String? _phoneIdentity(String? raw) {
+    final value = raw?.replaceAll(RegExp(r'[^0-9+]'), '');
     return value == null || value.isEmpty ? null : value;
   }
 }

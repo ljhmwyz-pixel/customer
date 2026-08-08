@@ -13,9 +13,10 @@ import 'customer_providers.dart';
 import 'customer_widgets.dart';
 
 class PlanFormPage extends ConsumerStatefulWidget {
-  const PlanFormPage({required this.customerId, super.key});
+  const PlanFormPage({required this.customerId, this.planId, super.key});
 
   final int customerId;
+  final int? planId;
 
   @override
   ConsumerState<PlanFormPage> createState() => _PlanFormPageState();
@@ -43,6 +44,8 @@ class _PlanFormPageState extends ConsumerState<PlanFormPage> {
   bool _saving = false;
   bool _allowLeave = false;
 
+  bool get _isEditing => widget.planId != null;
+
   @override
   void initState() {
     super.initState();
@@ -62,16 +65,30 @@ class _PlanFormPageState extends ConsumerState<PlanFormPage> {
     if (_initialized && !_dirty && mounted) setState(() => _dirty = true);
   }
 
-  void _initialize(List<OpportunityRow> opportunities) {
+  void _initialize(
+    List<OpportunityRow> opportunities,
+    List<FollowPlanRow> plans,
+  ) {
     if (_initialized) return;
     _initialized = true;
     if (opportunities.isEmpty) return;
-    final opportunity = opportunities.first;
+    final plan = _isEditing
+        ? plans.where((item) => item.id == widget.planId).firstOrNull
+        : null;
+    final opportunity = plan?.opportunityId == null
+        ? opportunities.first
+        : opportunities
+                  .where((item) => item.id == plan!.opportunityId)
+                  .firstOrNull ??
+              opportunities.first;
     _selectedOpportunityId = opportunity.id;
-    _directionController.text = talkingDirectionForStage(
-      OpportunityStage.fromDb(opportunity.stage),
-    );
-    _ownerController.text = opportunity.owner;
+    _reasonController.text = plan?.reason ?? '';
+    _directionController.text =
+        plan?.talkingDirection ??
+        talkingDirectionForStage(OpportunityStage.fromDb(opportunity.stage));
+    _nextActionController.text = plan?.nextAction ?? plan?.title ?? '';
+    _ownerController.text = plan?.owner ?? opportunity.owner;
+    if (plan != null) _planAt = localDateTime(plan.planAt);
     _dirty = false;
   }
 
@@ -141,27 +158,30 @@ class _PlanFormPageState extends ConsumerState<PlanFormPage> {
     if (opportunityId == null) return;
     setState(() => _saving = true);
     try {
-      final result = await ref
-          .read(customerServiceProvider)
-          .createPlan(
-            widget.customerId,
-            PlanDraft(
-              opportunityId: opportunityId,
-              reason: _reasonController.text,
-              talkingDirection: _directionController.text,
-              nextAction: _nextActionController.text,
-              owner: _ownerController.text,
-              planAt: _planAt,
-            ),
-          );
+      final draft = PlanDraft(
+        opportunityId: opportunityId,
+        reason: _reasonController.text,
+        talkingDirection: _directionController.text,
+        nextAction: _nextActionController.text,
+        owner: _ownerController.text,
+        planAt: _planAt,
+      );
+      final warning = _isEditing
+          ? await ref
+                .read(customerServiceProvider)
+                .updatePlan(widget.customerId, widget.planId!, draft)
+          : (await ref
+                    .read(customerServiceProvider)
+                    .createPlan(widget.customerId, draft))
+                .warning;
       ref.read(customerRevisionProvider.notifier).refresh();
       ref.invalidate(homePlansProvider);
       ref.invalidate(customerDetailProvider(widget.customerId));
       if (!mounted) return;
-      if (result.warning != null) {
+      if (warning != null) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(result.warning!)));
+        ).showSnackBar(SnackBar(content: Text(warning)));
       }
       setState(() {
         _dirty = false;
@@ -227,7 +247,7 @@ class _PlanFormPageState extends ConsumerState<PlanFormPage> {
   Widget build(BuildContext context) {
     final detail = ref.watch(customerDetailProvider(widget.customerId));
     return Scaffold(
-      appBar: AppBar(title: const Text('新建任务')),
+      appBar: AppBar(title: Text(_isEditing ? '编辑任务' : '新建任务')),
       body: detail.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => CustomerAsyncError(
@@ -238,13 +258,17 @@ class _PlanFormPageState extends ConsumerState<PlanFormPage> {
           if (value == null) {
             return const Center(child: Text('客户不存在'));
           }
-          _initialize(value.opportunities);
+          _initialize(value.opportunities, value.plans);
+          if (_isEditing &&
+              !value.plans.any((item) => item.id == widget.planId)) {
+            return const Center(child: Text('任务不存在'));
+          }
           final hasOpportunity = value.opportunities.isNotEmpty;
           return StickyFormScaffold(
             onSubmit: _save,
             enabled: hasOpportunity,
             submitting: _saving,
-            submitLabel: '保存任务',
+            submitLabel: _isEditing ? '保存修改' : '保存任务',
             submitKey: const ValueKey('save-plan'),
             body: Form(
               key: _formKey,
